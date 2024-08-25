@@ -10,7 +10,6 @@ export default function PlayScreen() {
   };
 
   const handleCloseModal = () => {
-
     setModalVisible(false);
   };
 
@@ -45,7 +44,8 @@ export default function PlayScreen() {
         visible={modalVisible}
         onRequestClose={handleCloseModal}
       >
-       <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={handleCloseModal}>
+        {/* TouchableOpacity acts as a backdrop */}
+        <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={handleCloseModal}>
           <View style={styles.modalContentContainer}>
             <View style={styles.modalContent}>
               <View style={styles.modalProfileImage} />
@@ -73,10 +73,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 20,
     padding: 0,
-    position: 'relative', 
-    borderColor: '#rgba(255, 255, 255, 0.6)', 
+    position: 'relative',
+    borderColor: '#rgba(255, 255, 255, 0.6)',
     borderWidth: 1,
-    overflow: 'hidden', 
+    overflow: 'hidden',
     marginBottom: 16
   },
   profileImagePlaceholder: {
@@ -124,41 +124,42 @@ const styles = StyleSheet.create({
     right: -25,
     width: 50,
     height: 50,
-    backgroundColor: '#121515', 
-    borderColor: '#rgba(255, 255, 255, 0.6)', 
-    borderTopWidth: 1, 
+    backgroundColor: '#121515',
+    borderColor: '#rgba(255, 255, 255, 0.6)',
+    borderTopWidth: 1,
     borderLeftWidth: 1,
-    transform: [{ rotate: '45deg' }], 
-    zIndex: 100, 
+    transform: [{ rotate: '45deg' }],
+    zIndex: 100,
   },
   modalBackdrop: {
     flex: 1,
+    justifyContent: 'flex-end', 
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   modalContentContainer: {
-    width: '80%',
+    width: '100%',
+    height: '40%',
     backgroundColor: '#333',
-    borderRadius: 8,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     padding: 20,
   },
   modalContent: {
     alignItems: 'center',
   },
   modalProfileImage: {
-    width: 80,
-    height: 80,
+    width: 156,
+    height: 156,
     backgroundColor: '#000',
-    borderRadius: 40,
+    borderRadius: 80,
     borderWidth: 2,
     borderColor: '#fff',
   },
   modalVerificationBadge: {
-    width: 24,
-    height: 24,
+    width: 45,
+    height: 45,
     position: 'absolute',
-    bottom: 70,
+    bottom: 60,
     right: 100,
   },
   modalProfileName: {
@@ -170,7 +171,7 @@ const styles = StyleSheet.create({
   modalProfileDescription: {
     fontSize: 18,
     color: '#7D92FF',
-    marginTop: 5,
-    fontWeight: '400'
+    marginTop: 16,
+    fontWeight: '400',
   },
 });
