@@ -45,6 +45,7 @@ export default function AppLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="VerificationScreen" /> 
       <Stack.Screen name="ProfileSetupScreen" />
+      <Stack.Screen name="navigator/AppNavigator" />
     </Stack>
   );
 }

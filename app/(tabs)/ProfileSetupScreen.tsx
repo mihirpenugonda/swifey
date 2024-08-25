@@ -5,8 +5,11 @@ import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, FlatList } 
 import CustomButton from '../../components/CustomButton';
 import AppBar from '../../components/AppBar'; 
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 
 export default function ProfileSetupScreen() {
+  const router = useRouter();
+  
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [bio, setBio] = useState('');
@@ -24,7 +27,7 @@ export default function ProfileSetupScreen() {
   };
 
   const handleSubmit = () => {
-
+    router.push('/navigator/AppNavigator'); 
   };
 
   const renderImageSlot = ({ item, index }: { item: string | null; index: number }) => (

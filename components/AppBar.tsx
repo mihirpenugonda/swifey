@@ -4,6 +4,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Logo from '../assets/images/logo.svg'; 
 
+
 const AppBar = () => {
   return (
     <View style={styles.appBar}>
