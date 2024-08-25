@@ -1,14 +1,12 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Image, ImageSourcePropType } from 'react-native';
-
+import { Image, ImageSourcePropType, View, Text, ImageStyle } from 'react-native';
 
 import HomeScreen from '../../../components/screens/HomeScreen/PlayScreen';
 import KissesScreen from '../../../components/screens/KissesScreen/KissesScreen';
 import YourMoveScreen from '../../../components/screens/YourMove/YourMoveScreen';
 import BagScreen from '../../../components/screens/BagScreen/BagScreen';
 import ProfileScreen from '../../../components/screens/ProfileScreen/ProfileScreen';
-
 
 const HomeIcon = require('../../../assets/images/play.png');
 const KissesIcon = require('../../../assets/images/kisses.png');
@@ -26,15 +24,29 @@ export default function AppNavigator() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: '#000000',
+          height: 70, 
         },
         tabBarActiveTintColor: '#E54D51',
-        tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.8)', 
+        tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.8)',
         tabBarIcon: ({ focused }) => {
           let iconSource: ImageSourcePropType;
+          let iconStyle: ImageStyle = { width: 24, height: 24 }; 
 
           switch (route.name) {
             case 'Home':
               iconSource = HomeIcon;
+              if (focused) {
+              
+                iconStyle = {
+                  width: 50,
+                  height: 50,
+                  borderWidth: 3,
+                  borderColor: 'rgba(255, 98, 239, 0.5)', 
+                  borderRadius: 30,
+                  marginBottom: 25,
+                  backgroundColor: '#000000',
+                };
+              }
               break;
             case 'Kisses':
               iconSource = KissesIcon;
@@ -54,17 +66,31 @@ export default function AppNavigator() {
           }
 
           return (
-            <Image
-              source={iconSource}
-              style={{ width: 24, height: 24 }}
-              resizeMode="contain"
-            />
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              <View style={{ margin: focused ? 10 : 0 }}>
+                <Image
+                  source={iconSource}
+                  style={iconStyle}
+                  resizeMode="contain"
+                />
+              </View>
+            </View>
           );
         },
-        tabBarLabelStyle: { fontSize: 12 }, 
+        tabBarLabel: ({ focused, color }) => {
+          if (route.name === 'Home') {
+            return (
+              <View style={{ alignItems: 'center' }}>
+                <Text style={{ color: focused ? '#FFF' : color, fontSize: 12, fontWeight: 'bold' }}>Play</Text>
+              </View>
+            );
+          }
+          return (
+            <Text style={{ color, fontSize: 12 }}>{route.name}</Text>
+          ); // Normal label for other tabs
+        },
       })}
     >
-    
       <Tab.Screen name="Kisses" component={KissesScreen} options={{ tabBarLabel: 'Kisses' }} />
       <Tab.Screen name="YourMove" component={YourMoveScreen} options={{ tabBarLabel: 'Your Move' }} />
       <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Play' }} />

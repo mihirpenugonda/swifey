@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     width: 45,
     height: 45,
     position: 'absolute',
-    bottom: 60,
+    bottom: 75,
     right: 100,
   },
   modalProfileName: {
