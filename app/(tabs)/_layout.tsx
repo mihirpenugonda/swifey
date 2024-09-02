@@ -25,6 +25,7 @@ export default function AppLayout() {
       <Stack.Screen name="GenderSelectionScreen" />
       <Stack.Screen name="SignUpScreen" />
       <Stack.Screen name="LocationAccessScreen" />
+      <Stack.Screen name="LoginScreen" />
     </Stack>
   );
 }

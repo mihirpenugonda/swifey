@@ -3,6 +3,7 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, Alert } from
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
+import { supabase } from '../../supabaseClient';
 import HeaderLogo from '../../components/HeaderLogo';
 import { router } from 'expo-router';
 
@@ -40,9 +41,102 @@ export default function AddPhotosScreen() {
     });
   };
 
-  const handleNext = () => {
-    router.push('/GenderSelectionScreen');
-  }
+  const handleNext = async () => {
+    try {
+      // Get the current authenticated user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User not logged in or error fetching user.');
+      }
+  
+      const uploadedImagePaths = [];
+  
+      for (let i = 0; i < images.length; i++) {
+        const imageUri = images[i];
+        if (imageUri) {
+          console.log(`Processing image ${i + 1}/${images.length} with URI: ${imageUri}`);
+          try {
+            // Fetch the image from the URI
+            const response = await fetch(imageUri);
+            
+            // Check if the fetch was successful
+            if (!response.ok) {
+              throw new Error(`Failed to fetch image: ${response.statusText}`);
+            }
+  
+            // Convert the fetched image to a blob
+            const blob = await response.blob();
+  
+            // Check if the blob has content
+            if (!blob.size) {
+              throw new Error('The fetched blob is empty.');
+            }
+  
+            const fileExt = imageUri.split('.').pop();
+            const fileName = `photo-${i}-${user.id}.${fileExt}`;
+  
+            console.log(`Uploading image: ${fileName}, Blob size: ${blob.size}`);
+  
+            // Convert blob to a file
+            const file = new File([blob], fileName, { type: blob.type });
+  
+            // Upload the image to Supabase Storage
+            const { data: storageData, error: storageError } = await supabase.storage
+              .from('kiss-or-rug')
+              .upload(`photos/${fileName}`, file, {
+                cacheControl: '3600',
+                upsert: false,
+              });
+  
+            if (storageError) {
+              console.error('Storage Error:', JSON.stringify(storageError));
+              throw new Error('Error uploading image to storage');
+            }
+  
+            // Store the uploaded image path
+            if (storageData && storageData.path) {
+              uploadedImagePaths.push(storageData.path);
+              console.log(`Uploaded image path: ${storageData.path}`);
+            } else {
+              throw new Error('Storage data is missing the path.');
+            }
+          } catch (error) {
+            if (error instanceof Error) {
+              console.error('Upload Error:', error.message);
+              Alert.alert('Upload Error', error.message);
+            } else {
+              console.error('Unexpected upload error:', error);
+              Alert.alert('Upload Error', 'An unexpected error occurred.');
+            }
+          }
+        } else {
+          console.log(`Skipping empty image slot ${i + 1}`);
+        }
+      }
+  
+      console.log('All uploaded image paths:', uploadedImagePaths);
+  
+      // Update the user profile with the uploaded image paths
+      const { error: updateError } = await supabase.from('profiles').update({ photos: uploadedImagePaths }).eq('id', user.id);
+  
+      if (updateError) {
+        throw new Error('Error updating user profile');
+      }
+  
+      console.log('Profile updated successfully with photos:', uploadedImagePaths);
+      router.push('/GenderSelectionScreen');
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('Error:', error.message);
+        Alert.alert('Error', error.message);
+      } else {
+        console.error('Unexpected error:', error);
+        Alert.alert('Error', 'An unexpected error occurred.');
+      }
+    }
+  };
+  
+  
 
   const renderImageSlot = ({ item, index }: { item: string | null; index: number }) => (
     <View style={styles.imageSlotContainer}>

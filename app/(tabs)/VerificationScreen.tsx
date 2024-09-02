@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TextInput, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Dimensions, Alert } from 'react-native';
 import HeaderLogo from '../../components/HeaderLogo'; 
 import { useRouter } from 'expo-router';
+import { supabase } from '../../supabaseClient';
 
 export default function VerificationScreen() { 
   const router = useRouter();
@@ -21,9 +22,33 @@ export default function VerificationScreen() {
         inputRefs.current[index + 1]?.focus();
       }
 
-      // If all OTP inputs are filled, navigate to the next screen
+      // If all OTP inputs are filled, attempt verification
       if (updatedOtp.every(value => value.trim().length > 0)) {
-        router.push('/NameInputScreen');
+        verifyOtp(updatedOtp.join('')); // Join OTP array to form a single string
+      }
+    }
+  };
+
+  const verifyOtp = async (otpCode: string) => {
+    const email = 'user-email@example.com'; // Retrieve this from the user's input or global state
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email: email,  // Use the user's email
+        token: otpCode,
+        type: 'signup'  // Specify the OTP type as 'signup'
+      });
+
+      if (error) {
+        Alert.alert('Verification Failed', error.message);
+      } else {
+        Alert.alert('Success', 'Your email has been verified. Welcome to KissOrRug!');
+        router.push('/NameInputScreen');  // Navigate to the next screen after verification
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        Alert.alert('Error', error.message);
+      } else {
+        Alert.alert('Error', 'An unexpected error occurred');
       }
     }
   };

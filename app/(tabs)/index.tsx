@@ -1,5 +1,3 @@
-// index.tsx
-
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
@@ -9,6 +7,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 const HomeScreen: React.FC = () => {
   const handleHandshakePress = () => {
     router.push('/SignUpScreen'); 
+  };
+
+  const handleLoginPress = () => {
+    router.push('/LoginScreen');  
   };
 
   return (
@@ -34,6 +36,11 @@ const HomeScreen: React.FC = () => {
         <TouchableOpacity style={styles.handshakeButton} onPress={handleHandshakePress}>
           <Text style={styles.handshakeButtonText}>DO AN IRL HANDSHAKE</Text>
         </TouchableOpacity>
+
+        {/* Login Button */}
+        <TouchableOpacity style={styles.loginButton} onPress={handleLoginPress}>
+          <Text style={styles.loginButtonText}>LOG IN</Text>
+        </TouchableOpacity>
       </View>
     </LinearGradient>
   );
@@ -55,7 +62,6 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     justifyContent: 'center',
-
     paddingHorizontal: 20,
   },
   logo: {
@@ -80,10 +86,10 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   handshakeButton: {
-    width: '100%',  // Match width of the input field
+    width: '100%',
     backgroundColor: '#ff69b4',
     paddingVertical: 15,
-    borderRadius: 8,  // Add a border radius to match the input style
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 10,
@@ -102,5 +108,19 @@ const styles = StyleSheet.create({
     letterSpacing: -0.02,
     textAlign: 'center',
     marginVertical: 10,
+  },
+  loginButton: {
+    width: '100%',
+    backgroundColor: '#333',  // Different color for Login button
+    paddingVertical: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,  // Adds some space between the handshake button and the login button
+  },
+  loginButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
