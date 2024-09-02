@@ -1,31 +1,68 @@
-import React from 'react';
-import { View, Text, StyleSheet, TextInput , Dimensions} from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, TextInput, Dimensions } from 'react-native';
 import HeaderLogo from '../../components/HeaderLogo'; 
-import CustomButton from '../../components/CustomButton';
 import { useRouter } from 'expo-router';
 
 export default function VerificationScreen() { 
-    const router = useRouter();
-    const handleEnterOTP = () => {
-        router.push('/ProfileSetupScreen');
-      };
-    const { width } = Dimensions.get('window');
-const boxSize = width * 0.12;
+  const router = useRouter();
+  const { width } = Dimensions.get('window');
+  const boxSize = width * 0.12;
+  const [otp, setOtp] = useState<string[]>(Array(6).fill('')); // State to manage OTP input
+  const inputRefs = useRef<TextInput[]>([]); // Ref to hold references to TextInput components
+
+  const handleOtpChange = (text: string, index: number) => {
+    if (text.length > 0) {
+      const updatedOtp = [...otp];
+      updatedOtp[index] = text;
+      setOtp(updatedOtp);
+
+      // Move focus to the next input box if there is one
+      if (index < otp.length - 1) {
+        inputRefs.current[index + 1]?.focus();
+      }
+
+      // If all OTP inputs are filled, navigate to the next screen
+      if (updatedOtp.every(value => value.trim().length > 0)) {
+        router.push('/NameInputScreen');
+      }
+    }
+  };
+
+  const handleBackspace = (index: number) => {
+    if (index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
   return (
     <View style={styles.container}>
-         <HeaderLogo/>
-      <Text style={styles.title}>VERIFY YOUR EMAIL</Text>
-      <View style={styles.boxContainer}>
-        {Array(6).fill('').map((_, index) => (
-          <TextInput
-          key={index}
-          style={[styles.inputBox, { width: boxSize, height: boxSize }]} 
-          keyboardType="numeric"
-          maxLength={1}
-        />
-        ))}
+      {/* HeaderLogo at the top */}
+      <HeaderLogo />
+
+      {/* Centered Content */}
+      <View style={styles.contentContainer}>
+        <Text style={styles.title}>VERIFY YOUR EMAIL</Text>
+
+        {/* OTP input boxes */}
+        <View style={styles.boxContainer}>
+          {otp.map((value, index) => (
+            <TextInput
+              key={index}
+              ref={(ref) => inputRefs.current[index] = ref!} // Assign ref to each TextInput
+              style={[styles.inputBox, { width: boxSize, height: boxSize }]}
+              keyboardType="numeric"
+              maxLength={1}
+              value={value}
+              onChangeText={text => handleOtpChange(text, index)}
+              onKeyPress={({ nativeEvent }) => {
+                if (nativeEvent.key === 'Backspace' && value === '') {
+                  handleBackspace(index);
+                }
+              }}
+            />
+          ))}
+        </View>
       </View>
-      <CustomButton buttonText="ENTER OTP" onPress={handleEnterOTP} />
     </View>
   );
 }
@@ -33,28 +70,35 @@ const boxSize = width * 0.12;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#121515',  
+    paddingHorizontal: 20,
+    paddingVertical: 40,
+  },
+  contentContainer: {
+    flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#121515',
+    alignItems: 'flex-start',
   },
   title: {
     color: '#FFFFFF',
     fontSize: 18,
     marginBottom: 20,
+    textAlign: 'left',
+    paddingLeft: 16,
   },
   boxContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '90%',
-    paddingHorizontal: 12, 
-    marginBottom: 16
+    justifyContent: 'center',
+    width: '100%',
+    marginBottom: 16,
   },
   inputBox: {
     borderWidth: 1,
-    borderColor: '#rgba(255, 255, 255, 0.5)',
+    borderColor: 'rgba(255, 255, 255, 0.5)', 
     borderRadius: 8,
     textAlign: 'center',
     fontSize: 24,
-    color: '#rgba(255, 255, 255, 0.5)',
+    color: '#FFFFFF',
+    marginHorizontal: 4,
   },
 });

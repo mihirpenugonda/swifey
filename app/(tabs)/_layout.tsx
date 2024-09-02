@@ -1,51 +1,30 @@
-// import { Tabs } from 'expo-router';
-// import React from 'react';
-
-// import { TabBarIcon } from '@/components/navigation/TabBarIcon';
-// import { Colors } from '@/constants/Colors';
-// import { useColorScheme } from '@/hooks/useColorScheme';
-
-// export default function TabLayout() {
-//   const colorScheme = useColorScheme();
-
-//   return (
-//     <Tabs
-//       screenOptions={{
-//         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-//         headerShown: false,
-//       }}>
-//       <Tabs.Screen
-//         name="index"
-//         options={{
-//           title: 'Home',
-//           tabBarIcon: ({ color, focused }) => (
-//             <TabBarIcon name={focused ? 'home' : 'home-outline'} color={color} />
-//           ),
-//         }}
-//       />
-//       <Tabs.Screen
-//         name="explore"
-//         options={{
-//           title: 'Explore',
-//           tabBarIcon: ({ color, focused }) => (
-//             <TabBarIcon name={focused ? 'code-slash' : 'code-slash-outline'} color={color} />
-//           ),
-//         }}
-//       />
-//     </Tabs>
-//   );
-// }
-
 import { Stack } from 'expo-router';
 import React from 'react';
+import { useFonts, WorkSans_700Bold_Italic } from '@expo-google-fonts/work-sans';
+import { ActivityIndicator } from 'react-native';
 
 export default function AppLayout() {
+  const [fontsLoaded] = useFonts({
+    WorkSans_700Bold_Italic,
+  });
+
+  if (!fontsLoaded) {
+    return <ActivityIndicator size="large" />;
+  }
+
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
-      <Stack.Screen name="VerificationScreen" /> 
-      <Stack.Screen name="ProfileSetupScreen" />
       <Stack.Screen name="navigator/AppNavigator" />
+      <Stack.Screen name="VerificationScreen" /> 
+      <Stack.Screen name="NameInputScreen" />
+      <Stack.Screen name="BirthdayInputScreen" />
+      <Stack.Screen name="AddPhotosScreen" />
+      <Stack.Screen name="ProfileSetupScreen" />
+      <Stack.Screen name="PreferenceScreen" />
+      <Stack.Screen name="GenderSelectionScreen" />
+      <Stack.Screen name="SignUpScreen" />
+      <Stack.Screen name="LocationAccessScreen" />
     </Stack>
   );
 }
