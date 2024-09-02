@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { LinearGradient } from 'expo-linear-gradient';
 import HeaderLogo from '../../components/HeaderLogo';
@@ -39,8 +39,10 @@ export default function BirthdayInputScreen() {
 
       <View style={styles.contentContainer}>
         <Text style={styles.title}>When's your Birthday?</Text>
+
+        {/* Date Selection Input */}
         <TouchableOpacity 
-          style={styles.input}
+          style={[styles.input, styles.buttonWidth]}
           onPress={() => setShowPicker(true)}
         >
           <Text style={{ color: '#FFFFFF' }}>
@@ -48,11 +50,12 @@ export default function BirthdayInputScreen() {
           </Text>
         </TouchableOpacity>
 
+        {/* Confirm Button */}
         <TouchableOpacity onPress={handleConfirm} style={styles.buttonWrapper}>
           <LinearGradient
             colors={['#FF56F8', '#B6E300']}
-            start={{x: 0, y: 0.5}}
-            end={{x: 1, y: 0.5}}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
             style={[
               styles.gradientButton,
               date ? styles.buttonEnabled : styles.buttonDisabled,
@@ -65,6 +68,7 @@ export default function BirthdayInputScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Date Picker */}
       {showPicker && (
         <View style={styles.datePickerContainer}>
           <DateTimePicker
@@ -82,17 +86,17 @@ export default function BirthdayInputScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#121515',  
-        paddingHorizontal: 20,
-        paddingVertical: 40,
-      },
-      contentContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-      },
+  container: {
+    flex: 1,
+    backgroundColor: '#121515',  
+    paddingHorizontal: 20,
+    paddingVertical: 40,
+  },
+  contentContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center', // Center align to make buttons and text centered
+  },
   title: {
     color: '#FFFFFF',
     fontSize: 18,
@@ -100,7 +104,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   input: {
-    width: '90%',
     height: 50,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.5)',
@@ -108,12 +111,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
+    backgroundColor: '#121515',
+  },
+  buttonWidth: {
+    width: '100%', // Set to full width to match the confirm button
   },
   buttonWrapper: {
-    width: '90%',
+    width: '100%', 
   },
   gradientButton: {
-    width: '100%',
+    width: '100%', // Ensure button takes full width
     paddingVertical: 15,
     borderRadius: 8,
     justifyContent: 'center',
@@ -135,10 +142,11 @@ const styles = StyleSheet.create({
   datePickerContainer: {
     position: 'absolute',
     bottom: 0,
-    width: '100%',
+    left: 0,
+    right: 0, // Make sure the date picker spans the full width of the screen
     backgroundColor: '#FFFFFF',
   },
   datePicker: {
-    width: '100%',
+    width: '100%', // Ensure the date picker takes the full width of the container
   },
 });
