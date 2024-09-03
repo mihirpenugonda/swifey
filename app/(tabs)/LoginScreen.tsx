@@ -1,5 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  Keyboard,
+  Animated,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import { supabase } from '../../supabaseClient';
 import { useRouter } from 'expo-router';
 import HeaderLogo from '@/components/HeaderLogo';
@@ -9,7 +19,34 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(new Animated.Value(0));
   const router = useRouter();
+
+  useEffect(() => {
+    const keyboardWillShow = (event: { duration: any; endCoordinates: { height: any; }; }) => {
+      Animated.timing(keyboardHeight, {
+        duration: event.duration || 300,
+        toValue: event.endCoordinates.height,
+        useNativeDriver: false,
+      }).start();
+    };
+
+    const keyboardWillHide = (event: { duration: any; }) => {
+      Animated.timing(keyboardHeight, {
+        duration: event.duration || 300,
+        toValue: 0,
+        useNativeDriver: false,
+      }).start();
+    };
+
+    const showSubscription = Keyboard.addListener('keyboardWillShow', keyboardWillShow);
+    const hideSubscription = Keyboard.addListener('keyboardWillHide', keyboardWillHide);
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const handleLogin = async () => {
     setLoading(true);
@@ -30,63 +67,69 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <HeaderLogo />
-      <View style={styles.contentContainer}>
-      <Text style={styles.title}>Enter your email and password</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your email"
-        placeholderTextColor="#666"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your password"
-        placeholderTextColor="#666"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
-  <TouchableOpacity 
-        style={styles.buttonWrapper} 
-        onPress={handleLogin} 
-        disabled={loading} 
-      >
-        <LinearGradient
-          colors={['#FF56F8', '#B6E300']}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={styles.gradientButton}
-        >
-          <Text style={styles.buttonText}>{loading ? 'Loading...' : 'Log In'}</Text>
-        </LinearGradient>
-      </TouchableOpacity>
-    </View>
-    </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <Animated.View style={[styles.container, { paddingBottom: keyboardHeight }]}>
+        <HeaderLogo />
+        <View style={styles.contentContainer}>
+        <Text style={styles.title}>What's your email address?</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your email"
+            placeholderTextColor="#666"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your password"
+            placeholderTextColor="#666"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
+          <TouchableOpacity
+            style={styles.buttonWrapper}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            <LinearGradient
+              colors={['#FF56F8', '#B6E300']}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.gradientButton}
+            >
+              <Text style={styles.buttonText}>
+                {loading ? 'Loading...' : 'Log In'}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
+    </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#121515',
-        paddingHorizontal: 20,
-        paddingVertical: 40,
-      },
-      contentContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-      },
+  container: {
+    flex: 1,
+    backgroundColor: '#121515',
+    paddingHorizontal: 20,
+    justifyContent: 'flex-start', 
+    paddingVertical: 40,
+  },
+  contentContainer: {
+    flex: 1,
+    justifyContent: 'center', 
+    alignItems: 'flex-start',
+    width: '100%',
+  },
   title: {
     color: '#FFFFFF',
     fontSize: 18,
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: 'left',
   },
   input: {
     width: '100%',
@@ -101,6 +144,7 @@ const styles = StyleSheet.create({
   },
   buttonWrapper: {
     width: '100%',
+    marginTop: 20,
   },
   gradientButton: {
     paddingVertical: 15,

@@ -1,5 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  Keyboard,
+  Animated,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import HeaderLogo from '../../components/HeaderLogo';
 import { supabase } from '../../supabaseClient'; 
 import { useRouter } from 'expo-router';
@@ -9,6 +19,33 @@ export default function NameInputScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState('');
+  const [keyboardHeight, setKeyboardHeight] = useState(new Animated.Value(0)); 
+
+  useEffect(() => {
+    const keyboardWillShow = (event: { duration: any; endCoordinates: { height: any; }; }) => {
+      Animated.timing(keyboardHeight, {
+        duration: event.duration || 300,
+        toValue: event.endCoordinates.height,
+        useNativeDriver: false,
+      }).start();
+    };
+
+    const keyboardWillHide = (event: { duration: any; }) => {
+      Animated.timing(keyboardHeight, {
+        duration: event.duration || 300,
+        toValue: 0,
+        useNativeDriver: false,
+      }).start();
+    };
+
+    const showSubscription = Keyboard.addListener('keyboardWillShow', keyboardWillShow);
+    const hideSubscription = Keyboard.addListener('keyboardWillHide', keyboardWillHide);
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const handleNameSubmit = async () => {
     if (name.trim().length === 0) {
@@ -18,12 +55,7 @@ export default function NameInputScreen() {
 
     setLoading(true);
 
-
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-
-    console.log('User data:', user);
-    console.log('User error:', userError);
 
     if (userError || !user) {
       setLoading(false);
@@ -43,40 +75,41 @@ export default function NameInputScreen() {
       Alert.alert('Error', error.message);
     } else {
       Alert.alert('Success', 'Name has been saved.');
-      router.push('/BirthdayInputScreen');  
+      router.push('/BirthdayInputScreen');
     }
   };
 
   return (
-    <View style={styles.container}>
-      <HeaderLogo />
-      <View style={styles.contentContainer}>
-        <Text style={styles.title}>What's your name?</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter your name"
-          placeholderTextColor="#666"
-          value={name}
-          onChangeText={setName}
-          onSubmitEditing={handleNameSubmit}
-        />
-  
-        <TouchableOpacity 
-        style={styles.buttonWrapper} 
-        onPress={handleNameSubmit} 
-        disabled={loading} 
-      >
-        <LinearGradient
-          colors={['#FF56F8', '#B6E300']}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={styles.gradientButton}
-        >
-          <Text style={styles.buttonText}>{loading ? 'Saving...' : 'Next'}</Text>
-        </LinearGradient>
-      </TouchableOpacity>
-      </View>
-    </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <Animated.View style={[styles.container, { paddingBottom: keyboardHeight }]}>
+        <HeaderLogo />
+        <View style={styles.contentContainer}>
+          <Text style={styles.title}>What's your name?</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your name"
+            placeholderTextColor="#666"
+            value={name}
+            onChangeText={setName}
+            onSubmitEditing={handleNameSubmit}
+          />
+          <TouchableOpacity 
+            style={styles.buttonWrapper} 
+            onPress={handleNameSubmit} 
+            disabled={loading} 
+          >
+            <LinearGradient
+              colors={['#FF56F8', '#B6E300']}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.gradientButton}
+            >
+              <Text style={styles.buttonText}>{loading ? 'Saving...' : 'Next'}</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -85,12 +118,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#121515',
     paddingHorizontal: 20,
-    paddingVertical: 40,
+    justifyContent: 'flex-start',
+    paddingVertical: 40
   },
   contentContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'flex-start',
+    width: '100%',
   },
   title: {
     color: '#FFFFFF',
@@ -111,6 +146,7 @@ const styles = StyleSheet.create({
   },
   buttonWrapper: {
     width: '100%',
+    marginTop: 20,
   },
   gradientButton: {
     paddingVertical: 15,

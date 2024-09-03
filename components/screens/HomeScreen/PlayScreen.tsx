@@ -1,64 +1,145 @@
-import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Modal, SafeAreaView } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
+import Swiper from 'react-native-deck-swiper';
 import AppBar from '../../AppBar';
 
-export default function PlayScreen() {
-  const [modalVisible, setModalVisible] = useState(false);
+const { width } = Dimensions.get('window');
 
-  const handleProfileButtonPress = () => {
-    setModalVisible(true);
+// Mock data for profiles
+const profiles = [
+  {
+    id: 1,
+    name: 'TattooGirl',
+    age: 28,
+    images: [
+      require('../../../assets/images/profile1_1.png'),
+      require('../../../assets/images/profile1_2.png'),
+      require('../../../assets/images/profile1_3.png'),
+      require('../../../assets/images/profile1_1.png'),
+      require('../../../assets/images/profile1_2.png'),
+      require('../../../assets/images/profile1_3.png'),
+    ],
+    description: "If you're an attractive woman or a man, you want to be on this app. You'll rug a lot of people and make money.",
+  },
+  {
+    id: 2,
+    name: 'T',
+    age: 8,
+    images: [
+      require('../../../assets/images/profile1_1.png'),
+      require('../../../assets/images/profile1_2.png'),
+      require('../../../assets/images/profile1_3.png'),
+      require('../../../assets/images/profile1_1.png'),
+      require('../../../assets/images/profile1_2.png'),
+      require('../../../assets/images/profile1_3.png'),
+    ],
+    description: "If you're an attractive woman or a man, you want to be on this app. You'll rug a lot of people and make money.",
+  },
+  {
+    id: 3,
+    name: 'A',
+    age: 18,
+    images: [
+      require('../../../assets/images/profile1_1.png'),
+      require('../../../assets/images/profile1_2.png'),
+      require('../../../assets/images/profile1_3.png'),
+      require('../../../assets/images/profile1_1.png'),
+      require('../../../assets/images/profile1_2.png'),
+      require('../../../assets/images/profile1_3.png'),
+    ],
+    description: "If you're an attractive woman or a man, you want to be on this app. You'll rug a lot of people and make money.",
+  },
+
+];
+
+export default function PlayScreen() {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentProfileIndex, setCurrentProfileIndex] = useState(0);
+  const swiperRef = useRef(null);
+
+  const handleSwipeLeft = () => {
+    console.log('Rejected');
+    resetImageIndex();
   };
 
-  const handleCloseModal = () => {
-    setModalVisible(false);
+  const handleSwipeRight = () => {
+    console.log('Accepted');
+    resetImageIndex();
+  };
+
+  const resetImageIndex = () => {
+    setCurrentImageIndex(0);
+  };
+
+  const handleImageTap = (direction: string) => {
+    setCurrentImageIndex((prevIndex) => {
+      const imagesLength = profiles[currentProfileIndex].images.length;
+      let newIndex = prevIndex;
+
+      if (direction === 'left' && prevIndex > 0) {
+        newIndex = prevIndex - 1;
+      } else if (direction === 'right' && prevIndex < imagesLength - 1) {
+        newIndex = prevIndex + 1;
+      }
+
+      console.log(`Image tapped: ${direction}`);
+      console.log(`New image index: ${newIndex}`);
+
+      return newIndex;
+    });
+  };
+
+  const renderProgressBar = () => {
+    return (
+      <View style={styles.progressContainer}>
+        {profiles[currentProfileIndex].images.map((_, index) => (
+          <View key={index} style={styles.progressBar}>
+            <View
+              style={[
+                styles.activeProgress,
+                {
+                  width: index <= currentImageIndex ? '100%' : '0%',
+                  backgroundColor: index <= currentImageIndex ? 'white' : 'rgba(255, 255, 255, 0.3)',
+                },
+              ]}
+            />
+          </View>
+        ))}
+      </View>
+    );
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <AppBar />
-
-      <View style={styles.profileContainer}>
-        <View style={styles.profileImagePlaceholder} />
-
-        <TouchableOpacity style={styles.profileButton} onPress={handleProfileButtonPress}>
-          <View style={styles.profileImage} />
-          <Image
-            source={require('../../../assets/images/verificationbadge.png')}
-            style={styles.verificationBadge}
-          />
-        </TouchableOpacity>
-
-        <View style={styles.profileTextContainer}>
-          <Text style={styles.profileName}>TattooGirl, 28</Text>
-          <Text style={styles.profileDescription}>
-            If you’re an attractive woman or a man, you want to be on this app. You’ll rug a lot of people and make money.
-          </Text>
-        </View>
-
-        <View style={styles.cutCornerOverlay} />
-      </View>
-
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={handleCloseModal}
-      >
-        {/* TouchableOpacity acts as a backdrop */}
-        <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={handleCloseModal}>
-          <View style={styles.modalContentContainer}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalProfileImage} />
-              <Image
-                source={require('../../../assets/images/verificationbadge.png')}
-                style={styles.modalVerificationBadge}
-              />
-              <Text style={styles.modalProfileName}>TattooGirl, 28</Text>
-              <Text style={styles.modalProfileDescription}>This profile is verified.</Text>
+      {renderProgressBar()}
+      <Swiper
+        ref={swiperRef}
+        cards={profiles}
+        renderCard={(profile) => (
+          <View style={styles.card} key={`${profile.id}-${currentImageIndex}`}>
+            {/* Ensure the Text components are used correctly */}
+            <Image source={profile.images[currentImageIndex]} style={styles.image} />
+            <TouchableOpacity style={styles.leftTapArea} onPress={() => handleImageTap('left')} />
+            <TouchableOpacity style={styles.rightTapArea} onPress={() => handleImageTap('right')} />
+            <View style={styles.profileInfo}>
+              <Text style={styles.profileName}>
+                {profile.name}, {profile.age}
+              </Text>
+              <Text style={styles.profileDescription}>{profile.description}</Text>
             </View>
           </View>
-        </TouchableOpacity>
-      </Modal>
+        )}
+        onSwipedLeft={handleSwipeLeft}
+        onSwipedRight={handleSwipeRight}
+        onSwipedAll={() => console.log('All cards swiped')}
+        cardIndex={0}
+        stackSize={3}
+        onSwiped={(cardIndex) => {
+          setCurrentProfileIndex(cardIndex + 1);
+          resetImageIndex();
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -66,112 +147,68 @@ export default function PlayScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#121515',
+    backgroundColor: '#F4F9F5',
   },
-  profileContainer: {
+  card: {
     flex: 1,
-    marginHorizontal: 16,
-    marginTop: 20,
-    padding: 0,
-    position: 'relative',
-    borderColor: '#rgba(255, 255, 255, 0.6)',
-    borderWidth: 1,
-    overflow: 'hidden',
-    marginBottom: 16
-  },
-  profileImagePlaceholder: {
-    width: '100%',
-    height: '70%',
-    backgroundColor: '#555',
-    marginBottom: 16,
-  },
-  profileButton: {
-    position: 'absolute',
-    bottom: '32%',
-    left: 10,
-    zIndex: 10,
-  },
-  profileImage: {
-    width: 68,
-    height: 73,
-    backgroundColor: '#000',
     borderRadius: 8,
-    borderWidth: 1,
+    justifyContent: 'center',
+    backgroundColor: 'white',
+    overflow: 'hidden',
   },
-  verificationBadge: {
-    width: 20,
-    height: 20,
+  image: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  leftTapArea: {
     position: 'absolute',
-    right: -5,
-    top: -5,
+    left: 0,
+    top: 0,
+    width: '50%',
+    height: '100%',
   },
-  profileTextContainer: {
-    paddingHorizontal: 16,
+  rightTapArea: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    width: '50%',
+    height: '100%',
+  },
+  profileInfo: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
   },
   profileName: {
     fontSize: 24,
     color: '#FFF',
     fontWeight: 'bold',
-    marginBottom: 8,
   },
   profileDescription: {
     fontSize: 14,
     color: '#FFF',
   },
-  cutCornerOverlay: {
-    position: 'absolute',
-    bottom: -25,
-    right: -25,
-    width: 50,
-    height: 50,
-    backgroundColor: '#121515',
-    borderColor: '#rgba(255, 255, 255, 0.6)',
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    transform: [{ rotate: '45deg' }],
-    zIndex: 100,
-  },
-  modalBackdrop: {
-    flex: 1,
-    justifyContent: 'flex-end', 
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContentContainer: {
-    width: '100%',
-    height: '40%',
-    backgroundColor: '#333',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-  },
-  modalContent: {
+  progressContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 100,
+    width: '90%',
+    alignSelf: 'center',
+    marginVertical: 10,
   },
-  modalProfileImage: {
-    width: 156,
-    height: 156,
-    backgroundColor: '#000',
-    borderRadius: 80,
-    borderWidth: 2,
-    borderColor: '#fff',
+  progressBar: {
+    flex: 1,
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    marginHorizontal: 2,
+    borderRadius: 2,
+    overflow: 'hidden',
   },
-  modalVerificationBadge: {
-    width: 45,
-    height: 45,
-    position: 'absolute',
-    bottom: 75,
-    right: 100,
-  },
-  modalProfileName: {
-    fontSize: 24,
-    color: '#FFF',
-    fontWeight: 'bold',
-    marginTop: 16,
-  },
-  modalProfileDescription: {
-    fontSize: 18,
-    color: '#7D92FF',
-    marginTop: 16,
-    fontWeight: '400',
+  activeProgress: {
+    height: '100%',
+    backgroundColor: 'white',
   },
 });
