@@ -10,7 +10,7 @@ const HomeScreen: React.FC = () => {
   };
 
   const handleLoginPress = () => {
-    router.push('/LoginScreen');  
+    router.push('/navigator/AppNavigator');  
   };
 
   return (

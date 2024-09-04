@@ -2,10 +2,11 @@ import React, { useState, useRef } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
 import AppBar from '../../AppBar';
+import BottomSheet from '@gorhom/bottom-sheet';
+import { Image as ProfileImage } from 'react-native';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
-// Mock data for profiles
 const profiles = [
   {
     id: 1,
@@ -15,21 +16,15 @@ const profiles = [
       require('../../../assets/images/profile1_1.png'),
       require('../../../assets/images/profile1_2.png'),
       require('../../../assets/images/profile1_3.png'),
-      require('../../../assets/images/profile1_1.png'),
-      require('../../../assets/images/profile1_2.png'),
-      require('../../../assets/images/profile1_3.png'),
     ],
     description: "If you're an attractive woman or a man, you want to be on this app. You'll rug a lot of people and make money.",
   },
   {
     id: 2,
-    name: 'T',
-    age: 8,
+    name: 'AB',
+    age: 16,
     images: [
-      require('../../../assets/images/profile1_1.png'),
       require('../../../assets/images/profile1_2.png'),
-      require('../../../assets/images/profile1_3.png'),
-      require('../../../assets/images/profile1_1.png'),
       require('../../../assets/images/profile1_2.png'),
       require('../../../assets/images/profile1_3.png'),
     ],
@@ -37,34 +32,56 @@ const profiles = [
   },
   {
     id: 3,
-    name: 'A',
-    age: 18,
+    name: 'BC',
+    age: 26,
     images: [
-      require('../../../assets/images/profile1_1.png'),
+      require('../../../assets/images/profile1_3.png'),
       require('../../../assets/images/profile1_2.png'),
       require('../../../assets/images/profile1_3.png'),
+    ],
+    description: "If you're an attractive woman or a man, you want to be on this app. You'll rug a lot of people and make money.",
+  },
+  {
+    id: 4,
+    name: 'CD',
+    age: 19,
+    images: [
       require('../../../assets/images/profile1_1.png'),
       require('../../../assets/images/profile1_2.png'),
       require('../../../assets/images/profile1_3.png'),
     ],
     description: "If you're an attractive woman or a man, you want to be on this app. You'll rug a lot of people and make money.",
   },
-
+  {
+    id: 5,
+    name: 'Test124',
+    age: 29,
+    images: [
+      require('../../../assets/images/profile1_1.png'),
+      require('../../../assets/images/profile1_2.png'),
+      require('../../../assets/images/profile1_3.png'),
+    ],
+    description: "If you're an attractive woman or a man, you want to be on this app. You'll rug a lot of people and make money.",
+  },
 ];
 
 export default function PlayScreen() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [currentProfileIndex, setCurrentProfileIndex] = useState(0);
-  const swiperRef = useRef(null);
+  const [isBottomSheetOpen, setBottomSheetOpen] = useState(false);
+  const swiperRef = useRef<Swiper<any>>(null);
+  const bottomSheetRef = useRef<BottomSheet>(null);
 
   const handleSwipeLeft = () => {
     console.log('Rejected');
     resetImageIndex();
+    swiperRef.current?.swipeLeft();
   };
 
   const handleSwipeRight = () => {
     console.log('Accepted');
     resetImageIndex();
+    swiperRef.current?.swipeRight();
   };
 
   const resetImageIndex = () => {
@@ -82,64 +99,136 @@ export default function PlayScreen() {
         newIndex = prevIndex + 1;
       }
 
-      console.log(`Image tapped: ${direction}`);
-      console.log(`New image index: ${newIndex}`);
-
       return newIndex;
     });
   };
 
-  const renderProgressBar = () => {
+  const renderBottomSheetContent = () => {
+    const profile = profiles[currentProfileIndex];
     return (
-      <View style={styles.progressContainer}>
-        {profiles[currentProfileIndex].images.map((_, index) => (
-          <View key={index} style={styles.progressBar}>
-            <View
-              style={[
-                styles.activeProgress,
-                {
-                  width: index <= currentImageIndex ? '100%' : '0%',
-                  backgroundColor: index <= currentImageIndex ? 'white' : 'rgba(255, 255, 255, 0.3)',
-                },
-              ]}
-            />
+      <View style={styles.bottomSheetContainer}>
+        <View style={styles.whiteContainer}>
+          <ProfileImage
+            source={profile.images[0]}
+            style={styles.bottomSheetImage}
+            borderRadius={50}
+          />
+          <Text style={styles.bottomSheetName}>{profile.name}, {profile.age}</Text>
+          <View style={styles.verifiedContainer}>
+            <Image source={require('../../../assets/images/verified-badge.png')} style={styles.verifiedIcon} />
+            <Text style={styles.verifiedText}>Self Verified</Text>
           </View>
-        ))}
+        </View>
       </View>
     );
   };
 
+  const handleBookButtonPress = () => {
+    console.log('Book button pressed');
+    setBottomSheetOpen(true);
+    bottomSheetRef.current?.expand(); 
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <AppBar />
-      {renderProgressBar()}
-      <Swiper
-        ref={swiperRef}
-        cards={profiles}
-        renderCard={(profile) => (
-          <View style={styles.card} key={`${profile.id}-${currentImageIndex}`}>
-            {/* Ensure the Text components are used correctly */}
-            <Image source={profile.images[currentImageIndex]} style={styles.image} />
-            <TouchableOpacity style={styles.leftTapArea} onPress={() => handleImageTap('left')} />
-            <TouchableOpacity style={styles.rightTapArea} onPress={() => handleImageTap('right')} />
-            <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>
-                {profile.name}, {profile.age}
-              </Text>
-              <Text style={styles.profileDescription}>{profile.description}</Text>
+      <AppBar showRightSide={true} />
+      <View style={styles.swiperContainer}>
+        <Swiper
+          ref={swiperRef}
+          cards={profiles}
+          renderCard={(profile) => (
+            <View style={styles.card} key={`${profile.id}-${currentImageIndex}`}>
+              <Image source={profile.images[currentImageIndex]} style={styles.image} />
+              <TouchableOpacity style={styles.leftTapArea} onPress={() => handleImageTap('left')} />
+              <TouchableOpacity style={styles.rightTapArea} onPress={() => handleImageTap('right')} />
+              <TouchableOpacity 
+                style={styles.bookButton} 
+                onPress={handleBookButtonPress}
+              >
+                <Image source={require('../../../assets/images/book.png')} style={styles.bookIcon} />
+              </TouchableOpacity>
+              <View style={styles.profileInfo}>
+                <Text style={styles.profileName}>
+                  {profile.name}, {profile.age}
+                </Text>
+                <Text style={styles.profileDescription}>{profile.description}</Text>
+              </View>
             </View>
-          </View>
-        )}
-        onSwipedLeft={handleSwipeLeft}
-        onSwipedRight={handleSwipeRight}
-        onSwipedAll={() => console.log('All cards swiped')}
-        cardIndex={0}
-        stackSize={3}
-        onSwiped={(cardIndex) => {
-          setCurrentProfileIndex(cardIndex + 1);
-          resetImageIndex();
-        }}
-      />
+          )}
+          onSwipedLeft={() => {
+            setCurrentProfileIndex((prevIndex) => Math.min(prevIndex + 1, profiles.length - 1));
+          }}
+          onSwipedRight={() => {
+            setCurrentProfileIndex((prevIndex) => Math.min(prevIndex + 1, profiles.length - 1));
+          }}
+          onSwipedAll={() => {
+            console.log('All cards swiped');
+            setCurrentProfileIndex(0);
+          }}
+          cardIndex={0}
+          stackSize={3}
+          backgroundColor={'transparent'}
+          cardVerticalMargin={20}
+          animateCardOpacity
+          overlayLabels={{
+            left: {
+              title: '❌$1.00',
+              style: {
+                label: {
+                  borderColor: 'red',
+                  color: 'white',
+                  borderWidth: 1,
+                  fontSize: 16,
+                },
+                wrapper: {
+                  flexDirection: 'column',
+                  alignItems: 'flex-end',
+                  justifyContent: 'flex-start',
+                  marginTop: 20,
+                  marginLeft: -20,
+                },
+              },
+            },
+            right: {
+              title: '😘 $1.00',
+              style: {
+                label: {
+                  borderColor: 'green',
+                  color: 'white',
+                  borderWidth: 1,
+                  fontSize: 16,
+                },
+                wrapper: {
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  justifyContent: 'flex-start',
+                  marginTop: 20,
+                  marginLeft: 20,
+                },
+              },
+            },
+          }}
+        />
+      </View>
+
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.button} onPress={handleSwipeLeft}>
+          <Text style={styles.buttonText}>❌</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={handleSwipeRight}>
+          <Text style={styles.buttonText}>😘</Text>
+        </TouchableOpacity>
+      </View>
+
+      <BottomSheet
+        ref={bottomSheetRef}
+        snapPoints={['25%', '40%']}
+        index={-1}
+        onChange={(index) => setBottomSheetOpen(index >= 0)}
+        enablePanDownToClose
+      >
+        {renderBottomSheetContent()}
+      </BottomSheet>
     </SafeAreaView>
   );
 }
@@ -149,9 +238,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F4F9F5',
   },
-  card: {
+  swiperContainer: {
     flex: 1,
-    borderRadius: 8,
+  },
+  card: {
+    height: '70%',
+    borderRadius: 12,
     justifyContent: 'center',
     backgroundColor: 'white',
     overflow: 'hidden',
@@ -175,9 +267,19 @@ const styles = StyleSheet.create({
     width: '50%',
     height: '100%',
   },
+  bookButton: {
+    position: 'absolute',
+    bottom: 170, 
+    left: 20, 
+    zIndex: 10, 
+  },
+  bookIcon: {
+    width: 30,
+    height: 30,
+  },
   profileInfo: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 80,
     left: 20,
     right: 20,
   },
@@ -190,25 +292,65 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FFF',
   },
-  progressContainer: {
+  buttonContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    marginVertical: 20,
+  },
+  button: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 100,
-    width: '90%',
-    alignSelf: 'center',
-    marginVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 5, 
   },
-  progressBar: {
+  buttonText: {
+    fontSize: 24,
+    color: '#FF5A5F',
+  },
+  bottomSheetContainer: {
     flex: 1,
-    height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    marginHorizontal: 2,
-    borderRadius: 2,
-    overflow: 'hidden',
+    backgroundColor: '#E0E0E0', // Light grey background
+    borderTopLeftRadius: 20, // Rounded corners
+    borderTopRightRadius: 20, // Rounded corners
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  activeProgress: {
-    height: '100%',
+  whiteContainer: {
+    width: '90%', // Adjust size as needed
     backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    alignItems: 'center',
+  },
+  bottomSheetImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  bottomSheetName: {
+    marginTop: 10,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  verifiedContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  verifiedIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 5,
+  },
+  verifiedText: {
+    fontSize: 14,
+    color: 'red',
   },
 });
