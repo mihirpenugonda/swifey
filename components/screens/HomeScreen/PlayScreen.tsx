@@ -2,8 +2,10 @@ import React, { useState, useRef } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
 import AppBar from '../../AppBar';
+import BottomSheet from '@gorhom/bottom-sheet';
+import { Image as ProfileImage } from 'react-native';
 
-const { width, height } = Dimensions.get('window'); // Include height to use for card height
+const { width, height } = Dimensions.get('window');
 
 const profiles = [
   {
@@ -19,8 +21,8 @@ const profiles = [
   },
   {
     id: 2,
-    name: 'T',
-    age: 8,
+    name: 'AB',
+    age: 16,
     images: [
       require('../../../assets/images/profile1_2.png'),
       require('../../../assets/images/profile1_2.png'),
@@ -30,8 +32,8 @@ const profiles = [
   },
   {
     id: 3,
-    name: 'A',
-    age: 18,
+    name: 'BC',
+    age: 26,
     images: [
       require('../../../assets/images/profile1_3.png'),
       require('../../../assets/images/profile1_2.png'),
@@ -41,10 +43,10 @@ const profiles = [
   },
   {
     id: 4,
-    name: 'Bbbbb',
-    age: 18,
+    name: 'CD',
+    age: 19,
     images: [
-      require('../../../assets/images/profile1_3.png'),
+      require('../../../assets/images/profile1_1.png'),
       require('../../../assets/images/profile1_2.png'),
       require('../../../assets/images/profile1_3.png'),
     ],
@@ -52,10 +54,10 @@ const profiles = [
   },
   {
     id: 5,
-    name: 'DDDddd',
-    age: 18,
+    name: 'Test124',
+    age: 29,
     images: [
-      require('../../../assets/images/profile1_3.png'),
+      require('../../../assets/images/profile1_1.png'),
       require('../../../assets/images/profile1_2.png'),
       require('../../../assets/images/profile1_3.png'),
     ],
@@ -66,18 +68,20 @@ const profiles = [
 export default function PlayScreen() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [currentProfileIndex, setCurrentProfileIndex] = useState(0);
+  const [isBottomSheetOpen, setBottomSheetOpen] = useState(false);
   const swiperRef = useRef<Swiper<any>>(null);
+  const bottomSheetRef = useRef<BottomSheet>(null);
 
   const handleSwipeLeft = () => {
     console.log('Rejected');
     resetImageIndex();
-    swiperRef.current?.swipeLeft(); // Trigger swipe left programmatically
+    swiperRef.current?.swipeLeft();
   };
 
   const handleSwipeRight = () => {
     console.log('Accepted');
     resetImageIndex();
-    swiperRef.current?.swipeRight(); // Trigger swipe right programmatically
+    swiperRef.current?.swipeRight();
   };
 
   const resetImageIndex = () => {
@@ -95,16 +99,39 @@ export default function PlayScreen() {
         newIndex = prevIndex + 1;
       }
 
-      console.log(`Image tapped: ${direction}`);
-      console.log(`New image index: ${newIndex}`);
-
       return newIndex;
     });
   };
 
+  const renderBottomSheetContent = () => {
+    const profile = profiles[currentProfileIndex];
+    return (
+      <View style={styles.bottomSheetContainer}>
+        <View style={styles.whiteContainer}>
+          <ProfileImage
+            source={profile.images[0]}
+            style={styles.bottomSheetImage}
+            borderRadius={50}
+          />
+          <Text style={styles.bottomSheetName}>{profile.name}, {profile.age}</Text>
+          <View style={styles.verifiedContainer}>
+            <Image source={require('../../../assets/images/verified-badge.png')} style={styles.verifiedIcon} />
+            <Text style={styles.verifiedText}>Self Verified</Text>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  const handleBookButtonPress = () => {
+    console.log('Book button pressed');
+    setBottomSheetOpen(true);
+    bottomSheetRef.current?.expand(); 
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <AppBar showRightSide={true}/>
+      <AppBar showRightSide={true} />
       <View style={styles.swiperContainer}>
         <Swiper
           ref={swiperRef}
@@ -114,6 +141,12 @@ export default function PlayScreen() {
               <Image source={profile.images[currentImageIndex]} style={styles.image} />
               <TouchableOpacity style={styles.leftTapArea} onPress={() => handleImageTap('left')} />
               <TouchableOpacity style={styles.rightTapArea} onPress={() => handleImageTap('right')} />
+              <TouchableOpacity 
+                style={styles.bookButton} 
+                onPress={handleBookButtonPress}
+              >
+                <Image source={require('../../../assets/images/book.png')} style={styles.bookIcon} />
+              </TouchableOpacity>
               <View style={styles.profileInfo}>
                 <Text style={styles.profileName}>
                   {profile.name}, {profile.age}
@@ -177,7 +210,7 @@ export default function PlayScreen() {
           }}
         />
       </View>
-      
+
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.button} onPress={handleSwipeLeft}>
           <Text style={styles.buttonText}>❌</Text>
@@ -186,6 +219,16 @@ export default function PlayScreen() {
           <Text style={styles.buttonText}>😘</Text>
         </TouchableOpacity>
       </View>
+
+      <BottomSheet
+        ref={bottomSheetRef}
+        snapPoints={['25%', '40%']}
+        index={-1}
+        onChange={(index) => setBottomSheetOpen(index >= 0)}
+        enablePanDownToClose
+      >
+        {renderBottomSheetContent()}
+      </BottomSheet>
     </SafeAreaView>
   );
 }
@@ -224,6 +267,16 @@ const styles = StyleSheet.create({
     width: '50%',
     height: '100%',
   },
+  bookButton: {
+    position: 'absolute',
+    bottom: 170, 
+    left: 20, 
+    zIndex: 10, 
+  },
+  bookIcon: {
+    width: 30,
+    height: 30,
+  },
   profileInfo: {
     position: 'absolute',
     bottom: 80,
@@ -260,5 +313,44 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 24,
     color: '#FF5A5F',
+  },
+  bottomSheetContainer: {
+    flex: 1,
+    backgroundColor: '#E0E0E0', // Light grey background
+    borderTopLeftRadius: 20, // Rounded corners
+    borderTopRightRadius: 20, // Rounded corners
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  whiteContainer: {
+    width: '90%', // Adjust size as needed
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    alignItems: 'center',
+  },
+  bottomSheetImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  bottomSheetName: {
+    marginTop: 10,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  verifiedContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  verifiedIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 5,
+  },
+  verifiedText: {
+    fontSize: 14,
+    color: 'red',
   },
 });
