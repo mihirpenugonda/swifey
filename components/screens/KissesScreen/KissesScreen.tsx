@@ -63,7 +63,7 @@ export default function KissesScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#121515', 
+    backgroundColor: '#F4F9F5', 
   },
   list: {
     flex: 1,

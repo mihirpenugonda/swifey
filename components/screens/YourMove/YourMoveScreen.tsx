@@ -49,7 +49,7 @@ export default function YourMoveScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#121515', 
+    backgroundColor: '#F4F9F5', 
   },
   listContent: {
     paddingHorizontal: 12,

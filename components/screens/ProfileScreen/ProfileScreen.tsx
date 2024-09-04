@@ -1,127 +1,103 @@
-import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
-import CustomButton from '../../CustomButton';
-import AppBar from '../../AppBar';
+import React from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import AppBar from '../../../components/AppBar';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 
-export default function ProfileScreen() {
-  const [images, setImages] = useState([null, null, null, null, null, null]);
+const ProfileScreen = () => {
+  const router = useRouter();
 
-  const handleAddImage = (_index: number): void => {
+  const navigateToEditProfile = () => {
+    router.push('/EditProfileScreen');
   };
-
-  const handleRemoveImage = (index: number): void => {
-    const newImages = [...images];
-    newImages[index] = null;
-    setImages(newImages);
-  };
-
-  const renderImageSlot = ({ item, index }: { item: string | null; index: number }) => (
-    <TouchableOpacity style={styles.imageSlot} onPress={() => handleAddImage(index)}>
-      {item ? (
-        <View>
-          <Image source={{ uri: item }} style={styles.image} />
-          <TouchableOpacity style={styles.removeButton} onPress={() => handleRemoveImage(index)}>
-            <Text style={styles.removeButtonText}>X</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <Text style={styles.addImageText}>+</Text>
-      )}
-    </TouchableOpacity>
-  );
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <AppBar />
       <View style={styles.container}>
-        <Text style={styles.header}>John D, 23</Text>
-        <Text style={styles.description}>
-          If you’re an attractive woman or a man, you want to be on this app. You’ll rug a lot of people and make money.
-        </Text>
-
-        <FlatList
-          data={images}
-          renderItem={renderImageSlot}
-          keyExtractor={(item, index) => index.toString()}
-          numColumns={3}
-          scrollEnabled={false}
-          columnWrapperStyle={styles.imageRow}
-          style={styles.imageGrid}
+        <Image
+          source={{ uri: 'https://example.com/avatar.jpg' }} 
+          style={styles.avatar}
         />
-
-        <CustomButton buttonText="EDIT PROFILE" onPress={() => {}} />
+        <Text style={styles.profileName}>Abhilash, 33</Text>
+        <TouchableOpacity style={styles.buttonWrapper} onPress={navigateToEditProfile}>
+          <LinearGradient
+            colors={['#FF56F8', '#B6E300']}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={styles.gradientButton}
+          >
+            <Text style={styles.buttonText}>EDIT PROFILE</Text>
+          </LinearGradient>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
-}
+};
+
+export default ProfileScreen;
+
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#121515',
+    backgroundColor: '#F4F9F5',
   },
   container: {
     flex: 1,
-    justifyContent: 'flex-start',
     alignItems: 'center',
-    backgroundColor: '#121515',
-    padding: 16,
-  },
-  header: {
-    color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginVertical: 10,
-    textAlign: 'center',
-  },
-  description: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 20,
     paddingHorizontal: 16,
   },
-  imageGrid: {
-    width: '100%',
-    marginBottom: 0,
-  },
-  imageRow: {
-    justifyContent: 'space-between',
-    marginBottom: 10,  
-  },
-  imageSlot: {
-    width: 110,  
-    height: 130,
-    backgroundColor: '#333',
-    justifyContent: 'center',
+  avatarContainer: {
+    marginTop: 20,
+    marginBottom: 10,
     alignItems: 'center',
-    margin: 5,
-    borderRadius: 8,
+    justifyContent: 'center',
+    position: 'relative', // Allows absolute positioning of the verification button
   },
-  image: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 8,
+  avatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 2,
+    borderColor: '#FFF', 
   },
-  addImageText: {
-    fontSize: 24,
-    color: '#666',
-  },
-  removeButton: {
+  verificationButton: {
     position: 'absolute',
     bottom: 0,
-    right: 0,
-    backgroundColor: 'red',
-    borderRadius: 10,
+    right: 0, // Slightly outside the avatar's edge to overlap neatly
+    backgroundColor: 'white', // Circle background color for contrast
+    borderRadius: 15,
+    padding: 5,
+    elevation: 5, // Adds a subtle shadow effect
+  },
+  verificationIcon: {
     width: 20,
     height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
-  removeButtonText: {
-    color: '#FFFFFF',
-    fontSize: 12,
+  profileName: {
+    color: '#000',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  buttonWrapper: {
+    width: '80%',
+    borderRadius: 30,
+    overflow: 'hidden',
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+  gradientButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 30,
+  },
+  buttonText: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
-

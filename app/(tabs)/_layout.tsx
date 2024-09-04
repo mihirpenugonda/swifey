@@ -28,6 +28,7 @@ export default function AppLayout() {
         <Stack.Screen name="SignUpScreen" />
         <Stack.Screen name="LocationAccessScreen" />
         <Stack.Screen name="LoginScreen" />
+        <Stack.Screen name="EditProfileScreen" />
       </Stack>
     </GestureHandlerRootView>
   );
