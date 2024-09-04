@@ -204,7 +204,7 @@ bagContainer: {
   },
   card: {
     height: '70%',
-    borderRadius: 8,
+    borderRadius: 12,
     justifyContent: 'center',
     backgroundColor: 'white',
     overflow: 'hidden',

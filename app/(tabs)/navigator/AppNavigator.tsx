@@ -1,6 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Image, ImageSourcePropType, View, Text, ImageStyle } from 'react-native';
+import { Image, ImageSourcePropType, View, Text, ImageStyle, TextStyle } from 'react-native';
 
 import HomeScreen from '../../../components/screens/HomeScreen/PlayScreen';
 import KissesScreen from '../../../components/screens/KissesScreen/KissesScreen';
@@ -24,29 +24,22 @@ export default function AppNavigator() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: '#000000',
-          height: 70, 
+          height: 100,
         },
-        tabBarActiveTintColor: '#E54D51',
+        tabBarLabelStyle: {
+          fontSize: 14,
+          fontFamily: 'Tomorrow',
+          fontWeight: '400',
+        },
+        tabBarActiveTintColor: '#CDFF8B',
         tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.8)',
         tabBarIcon: ({ focused }) => {
           let iconSource: ImageSourcePropType;
-          let iconStyle: ImageStyle = { width: 24, height: 24 }; 
+          let iconStyle: ImageStyle = { width: 24, height: 24 };
 
           switch (route.name) {
             case 'Home':
               iconSource = HomeIcon;
-              if (focused) {
-              
-                iconStyle = {
-                  width: 50,
-                  height: 50,
-                  borderWidth: 3,
-                  borderColor: 'rgba(255, 98, 239, 0.5)', 
-                  borderRadius: 30,
-                  marginBottom: 25,
-                  backgroundColor: '#000000',
-                };
-              }
               break;
             case 'Kisses':
               iconSource = KissesIcon;
@@ -78,16 +71,26 @@ export default function AppNavigator() {
           );
         },
         tabBarLabel: ({ focused, color }) => {
-          if (route.name === 'Home') {
-            return (
-              <View style={{ alignItems: 'center' }}>
-                <Text style={{ color: focused ? '#FFF' : color, fontSize: 12, fontWeight: 'bold' }}>Play</Text>
-              </View>
-            );
-          }
-          return (
-            <Text style={{ color, fontSize: 12 }}>{route.name}</Text>
-          ); // Normal label for other tabs
+          const labelStyle: TextStyle = focused
+            ? {
+                fontFamily: 'Tomorrow',
+                fontSize: 16,
+                fontStyle: 'italic',
+                fontWeight: '700',
+                lineHeight: 17.4,
+
+                color: '#CDFF8B', 
+              }
+            : {
+                fontFamily: 'Tomorrow',
+                fontSize: 14,
+                fontWeight: '400',
+                lineHeight: 14,
+
+                color: 'rgba(255, 255, 255, 0.8)', 
+              };
+
+          return <Text style={labelStyle}>{route.name}</Text>;
         },
       })}
     >
