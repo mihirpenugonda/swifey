@@ -39,6 +39,28 @@ const profiles = [
     ],
     description: "If you're an attractive woman or a man, you want to be on this app. You'll rug a lot of people and make money.",
   },
+  {
+    id: 4,
+    name: 'Bbbbb',
+    age: 18,
+    images: [
+      require('../../../assets/images/profile1_3.png'),
+      require('../../../assets/images/profile1_2.png'),
+      require('../../../assets/images/profile1_3.png'),
+    ],
+    description: "If you're an attractive woman or a man, you want to be on this app. You'll rug a lot of people and make money.",
+  },
+  {
+    id: 5,
+    name: 'DDDddd',
+    age: 18,
+    images: [
+      require('../../../assets/images/profile1_3.png'),
+      require('../../../assets/images/profile1_2.png'),
+      require('../../../assets/images/profile1_3.png'),
+    ],
+    description: "If you're an attractive woman or a man, you want to be on this app. You'll rug a lot of people and make money.",
+  },
 ];
 
 export default function PlayScreen() {
@@ -49,11 +71,13 @@ export default function PlayScreen() {
   const handleSwipeLeft = () => {
     console.log('Rejected');
     resetImageIndex();
+    swiperRef.current?.swipeLeft(); // Trigger swipe left programmatically
   };
 
   const handleSwipeRight = () => {
     console.log('Accepted');
     resetImageIndex();
+    swiperRef.current?.swipeRight(); // Trigger swipe right programmatically
   };
 
   const resetImageIndex = () => {
@@ -80,10 +104,7 @@ export default function PlayScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-
-        <AppBar showRightSide={true}/>
-       
-      
+      <AppBar showRightSide={true}/>
       <View style={styles.swiperContainer}>
         <Swiper
           ref={swiperRef}
@@ -102,11 +123,9 @@ export default function PlayScreen() {
             </View>
           )}
           onSwipedLeft={() => {
-            handleSwipeLeft();
             setCurrentProfileIndex((prevIndex) => Math.min(prevIndex + 1, profiles.length - 1));
           }}
           onSwipedRight={() => {
-            handleSwipeRight();
             setCurrentProfileIndex((prevIndex) => Math.min(prevIndex + 1, profiles.length - 1));
           }}
           onSwipedAll={() => {
@@ -120,13 +139,13 @@ export default function PlayScreen() {
           animateCardOpacity
           overlayLabels={{
             left: {
-              title: 'NOPE',
+              title: '❌$1.00',
               style: {
                 label: {
-                  backgroundColor: 'red',
                   borderColor: 'red',
                   color: 'white',
                   borderWidth: 1,
+                  fontSize: 16,
                 },
                 wrapper: {
                   flexDirection: 'column',
@@ -138,13 +157,13 @@ export default function PlayScreen() {
               },
             },
             right: {
-              title: 'LIKE',
+              title: '😘 $1.00',
               style: {
                 label: {
-                  backgroundColor: 'green',
                   borderColor: 'green',
                   color: 'white',
                   borderWidth: 1,
+                  fontSize: 16,
                 },
                 wrapper: {
                   flexDirection: 'column',
@@ -158,6 +177,15 @@ export default function PlayScreen() {
           }}
         />
       </View>
+      
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.button} onPress={handleSwipeLeft}>
+          <Text style={styles.buttonText}>❌</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={handleSwipeRight}>
+          <Text style={styles.buttonText}>😘</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
@@ -167,38 +195,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F4F9F5',
   },
-  headerContainer: {
-    flexDirection: 'row', 
-    justifyContent: 'space-between',
-    marginTop: 20,  
-  }
-,  
-bagContainer: {
-  flexDirection: 'row', 
-  alignItems: 'center',
-  justifyContent: 'flex-end',
-  marginRight: 10, // Ensure there's space on the right side
-  paddingHorizontal: 5, // Padding to prevent text from sticking to the edges
-  backgroundColor: 'transparent', // Make sure there's no background that blends with the text
-  zIndex: 10, // Make sure container is above other elements
-}
-,
-  bagImage: {
-    width: 24, // Adjust width as needed
-    height: 24, // Adjust height as needed
-    marginRight: 8, // Space between image and text
-  },
-  usdText: {
-    color: '#000', // Ensure this is a visible color against your background
-    fontFamily: 'Tomorrow', // Make sure this font is loaded; if not, use a default font
-    fontSize: 14,
-    fontWeight: '600',
-    lineHeight: 17.4,
-    textAlign: 'left',
-    zIndex: 10, // Ensure text is above other elements
-    backgroundColor: 'transparent', // Just in case, set a background to none
-  },
-  
   swiperContainer: {
     flex: 1,
   },
@@ -230,7 +226,7 @@ bagContainer: {
   },
   profileInfo: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 80,
     left: 20,
     right: 20,
   },
@@ -242,5 +238,27 @@ bagContainer: {
   profileDescription: {
     fontSize: 14,
     color: '#FFF',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    marginVertical: 20,
+  },
+  button: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 5, 
+  },
+  buttonText: {
+    fontSize: 24,
+    color: '#FF5A5F',
   },
 });
