@@ -6,6 +6,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../../supabaseClient';
 import HeaderLogo from '../../components/HeaderLogo';
 import { router } from 'expo-router';
+import * as FileSystem from 'expo-file-system';
+import { Buffer } from 'buffer';
 
 export default function AddPhotosScreen() {
   const [images, setImages] = useState<(string | null)[]>(Array(6).fill(null));
@@ -41,9 +43,12 @@ export default function AddPhotosScreen() {
     });
   };
 
+
+
+
+  
   const handleNext = async () => {
     try {
-      // Get the current authenticated user
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) {
         throw new Error('User not logged in or error fetching user.');
@@ -56,34 +61,23 @@ export default function AddPhotosScreen() {
         if (imageUri) {
           console.log(`Processing image ${i + 1}/${images.length} with URI: ${imageUri}`);
           try {
-            // Fetch the image from the URI
-            const response = await fetch(imageUri);
-            
-            // Check if the fetch was successful
-            if (!response.ok) {
-              throw new Error(`Failed to fetch image: ${response.statusText}`);
-            }
+            // Read the file from local filesystem as base64
+            const base64Data = await FileSystem.readAsStringAsync(imageUri, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
   
-            // Convert the fetched image to a blob
-            const blob = await response.blob();
-  
-            // Check if the blob has content
-            if (!blob.size) {
-              throw new Error('The fetched blob is empty.');
-            }
+            // Convert base64 to ArrayBuffer
+            const arrayBuffer = Buffer.from(base64Data, 'base64');
   
             const fileExt = imageUri.split('.').pop();
             const fileName = `photo-${i}-${user.id}.${fileExt}`;
   
-            console.log(`Uploading image: ${fileName}, Blob size: ${blob.size}`);
+            console.log(`Uploading image: ${fileName}, ArrayBuffer size: ${arrayBuffer.byteLength}`);
   
-            // Convert blob to a file
-            const file = new File([blob], fileName, { type: blob.type });
-  
-            // Upload the image to Supabase Storage
+            // Upload the file as ArrayBuffer
             const { data: storageData, error: storageError } = await supabase.storage
-              .from('kiss-or-rug')
-              .upload(`photos/${fileName}`, file, {
+              .from('photos')
+              .upload(`${user.id}/${fileName}`, arrayBuffer, {
                 cacheControl: '3600',
                 upsert: false,
               });
@@ -93,7 +87,6 @@ export default function AddPhotosScreen() {
               throw new Error('Error uploading image to storage');
             }
   
-            // Store the uploaded image path
             if (storageData && storageData.path) {
               uploadedImagePaths.push(storageData.path);
               console.log(`Uploaded image path: ${storageData.path}`);
@@ -116,15 +109,30 @@ export default function AddPhotosScreen() {
   
       console.log('All uploaded image paths:', uploadedImagePaths);
   
-      // Update the user profile with the uploaded image paths
-      const { error: updateError } = await supabase.from('profiles').update({ photos: uploadedImagePaths }).eq('id', user.id);
+      const { data: currentProfile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('photos')
+        .eq('id', user.id)
+        .single();
+  
+      if (fetchError) {
+        throw new Error(`Error fetching current profile: ${fetchError.message}`);
+      }
+  
+      const currentPhotos = currentProfile.photos || [];
+      const updatedPhotos = [...currentPhotos, ...uploadedImagePaths];
+  
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ photos: updatedPhotos })
+        .eq('id', user.id);
   
       if (updateError) {
-        throw new Error('Error updating user profile');
+        throw new Error(`Error updating user profile: ${updateError.message}`);
       }
   
       console.log('Profile updated successfully with photos:', uploadedImagePaths);
-      router.push('/GenderSelectionScreen');
+     router.push('/GenderSelectionScreen');
     } catch (error) {
       if (error instanceof Error) {
         console.error('Error:', error.message);
@@ -135,6 +143,7 @@ export default function AddPhotosScreen() {
       }
     }
   };
+  
   
   
 

@@ -19,7 +19,7 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isCooldown, setIsCooldown] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(new Animated.Value(0)); // New animated value for keyboard height
+  const [keyboardHeight, setKeyboardHeight] = useState(new Animated.Value(0)); 
   const router = useRouter();
 
   useEffect(() => {

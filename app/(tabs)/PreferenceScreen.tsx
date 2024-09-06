@@ -1,14 +1,50 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
+import { supabase } from '../../supabaseClient';
 import HeaderLogo from '../../components/HeaderLogo';
-import { router } from 'expo-router';
 
-export default function PreferencesScreen() {
-  const [selectedPreference, setSelectedPreference] = useState<string | null>(null);
+export default function PreferenceScreen() {
+  const [selectedPreferences, setSelectedPreferences] = useState<string[]>([]);
+  const router = useRouter();
 
-  const handlePreferenceSelect = (preference: string) => {
-    setSelectedPreference(preference);
-    router.push('/LocationAccessScreen'); 
+  const preferences = ['Woman', 'Man', 'Non-binary'];
+
+  const togglePreference = (preference: string) => {
+    setSelectedPreferences(prev => 
+      prev.includes(preference)
+        ? prev.filter(p => p !== preference)
+        : [...prev, preference]
+    );
+  };
+
+  const handleNext = async () => {
+    if (selectedPreferences.length === 0) {
+      Alert.alert('Error', 'Please select at least one preference.');
+      return;
+    }
+
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User not logged in or error fetching user.');
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ gender_preference: selectedPreferences })
+        .eq('id', user.id);
+
+      if (error) {
+        throw new Error(`Error updating preferences: ${error.message}`);
+      }
+
+      console.log('Preferences updated successfully');
+      router.push('/LocationAccessScreen'); // Navigate to the next screen
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert('Error', error instanceof Error ? error.message : 'An unexpected error occurred.');
+    }
   };
 
   return (
@@ -19,43 +55,24 @@ export default function PreferencesScreen() {
 
       <Text style={styles.title}>Who can Kiss or Rug you?</Text>
 
-      <TouchableOpacity
-        style={[
-          styles.optionContainer,
-          selectedPreference === 'Only Woman' && styles.selectedOptionContainer,
-        ]}
-        onPress={() => handlePreferenceSelect('Only Woman')}
-      >
-        <Text style={styles.optionText}>Only Woman</Text>
-        <View style={selectedPreference === 'Only Woman' ? styles.selectedCircle : styles.circle}>
-          {selectedPreference === 'Only Woman' && <Text style={styles.tick}>✓</Text>}
-        </View>
-      </TouchableOpacity>
+      {preferences.map((preference) => (
+        <TouchableOpacity
+          key={preference}
+          style={[
+            styles.optionContainer,
+            selectedPreferences.includes(preference) && styles.selectedOptionContainer,
+          ]}
+          onPress={() => togglePreference(preference)}
+        >
+          <Text style={styles.optionText}>{preference}</Text>
+          <View style={selectedPreferences.includes(preference) ? styles.selectedCircle : styles.circle}>
+            {selectedPreferences.includes(preference) && <Text style={styles.tick}>✓</Text>}
+          </View>
+        </TouchableOpacity>
+      ))}
 
-      <TouchableOpacity
-        style={[
-          styles.optionContainer,
-          selectedPreference === 'Only Man' && styles.selectedOptionContainer,
-        ]}
-        onPress={() => handlePreferenceSelect('Only Man')}
-      >
-        <Text style={styles.optionText}>Only Man</Text>
-        <View style={selectedPreference === 'Only Man' ? styles.selectedCircle : styles.circle}>
-          {selectedPreference === 'Only Man' && <Text style={styles.tick}>✓</Text>}
-        </View>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[
-          styles.optionContainer,
-          selectedPreference === 'Anyone' && styles.selectedOptionContainer,
-        ]}
-        onPress={() => handlePreferenceSelect('Anyone')}
-      >
-        <Text style={styles.optionText}>Anyone</Text>
-        <View style={selectedPreference === 'Anyone' ? styles.selectedCircle : styles.circle}>
-          {selectedPreference === 'Anyone' && <Text style={styles.tick}>✓</Text>}
-        </View>
+      <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+        <Text style={styles.nextButtonText}>Next</Text>
       </TouchableOpacity>
     </View>
   );
@@ -113,6 +130,18 @@ const styles = StyleSheet.create({
   },
   tick: {
     color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  nextButton: {
+    backgroundColor: '#FF56F8',
+    borderRadius: 8,
+    padding: 15,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  nextButtonText: {
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
   },

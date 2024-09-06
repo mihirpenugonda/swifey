@@ -1,127 +1,179 @@
-import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
-import CustomButton from '../../CustomButton';
-import AppBar from '../../AppBar';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import AppBar from '../../../components/AppBar';
+import { supabase } from '../../../supabaseClient';
 
-export default function ProfileScreen() {
-  const [images, setImages] = useState([null, null, null, null, null, null]);
+interface UserProfile {
+  name: string;
+  date_of_birth: string;
+  photos: string[] | null;
+}
 
-  const handleAddImage = (_index: number): void => {
+const ProfileScreen = () => {
+  const router = useRouter();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User not logged in or error fetching user.');
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('name, date_of_birth, photos')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        throw new Error(`Error fetching profile: ${error.message}`);
+      }
+
+      setProfile(data);
+
+      // Set avatar URL from the first photo
+      if (data.photos && data.photos.length > 0) {
+        const { data: urlData } = supabase.storage
+          .from('photos')
+          .getPublicUrl(data.photos[0]);
+        setAvatarUrl(urlData.publicUrl);
+      }
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
+    }
   };
 
-  const handleRemoveImage = (index: number): void => {
-    const newImages = [...images];
-    newImages[index] = null;
-    setImages(newImages);
+  const calculateAge = (dateOfBirth: string): number => {
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDifference = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age;
   };
 
-  const renderImageSlot = ({ item, index }: { item: string | null; index: number }) => (
-    <TouchableOpacity style={styles.imageSlot} onPress={() => handleAddImage(index)}>
-      {item ? (
-        <View>
-          <Image source={{ uri: item }} style={styles.image} />
-          <TouchableOpacity style={styles.removeButton} onPress={() => handleRemoveImage(index)}>
-            <Text style={styles.removeButtonText}>X</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <Text style={styles.addImageText}>+</Text>
-      )}
-    </TouchableOpacity>
-  );
+  const navigateToEditProfile = () => {
+    router.push('/EditProfileScreen');
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <AppBar />
       <View style={styles.container}>
-        <Text style={styles.header}>John D, 23</Text>
-        <Text style={styles.description}>
-          If you’re an attractive woman or a man, you want to be on this app. You’ll rug a lot of people and make money.
-        </Text>
-
-        <FlatList
-          data={images}
-          renderItem={renderImageSlot}
-          keyExtractor={(item, index) => index.toString()}
-          numColumns={3}
-          scrollEnabled={false}
-          columnWrapperStyle={styles.imageRow}
-          style={styles.imageGrid}
-        />
-
-        <CustomButton buttonText="EDIT PROFILE" onPress={() => {}} />
+        {avatarUrl ? (
+          <Image
+            source={{ uri: avatarUrl }}
+            style={styles.avatar}
+          />
+        ) : (
+          <View style={[styles.avatar, styles.placeholderAvatar]}>
+            <Text style={styles.placeholderText}>No Image</Text>
+          </View>
+        )}
+        {profile && (
+          <Text style={styles.profileName}>
+            {profile.name}, {calculateAge(profile.date_of_birth)}
+          </Text>
+        )}
+        <TouchableOpacity style={styles.buttonWrapper} onPress={navigateToEditProfile}>
+          <LinearGradient
+            colors={['#FF56F8', '#B6E300']}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={styles.gradientButton}
+          >
+            <Text style={styles.buttonText}>EDIT PROFILE</Text>
+          </LinearGradient>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
-}
+};
+
+export default ProfileScreen;
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#121515',
+    backgroundColor: '#F4F9F5',
   },
   container: {
     flex: 1,
-    justifyContent: 'flex-start',
     alignItems: 'center',
-    backgroundColor: '#121515',
-    padding: 16,
-  },
-  header: {
-    color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginVertical: 10,
-    textAlign: 'center',
-  },
-  description: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 20,
     paddingHorizontal: 16,
   },
-  imageGrid: {
-    width: '100%',
-    marginBottom: 0,
-  },
-  imageRow: {
-    justifyContent: 'space-between',
-    marginBottom: 10,  
-  },
-  imageSlot: {
-    width: 110,  
-    height: 130,
-    backgroundColor: '#333',
-    justifyContent: 'center',
+  avatarContainer: {
+    marginTop: 20,
+    marginBottom: 10,
     alignItems: 'center',
-    margin: 5,
-    borderRadius: 8,
+    justifyContent: 'center',
+    position: 'relative', // Allows absolute positioning of the verification button
   },
-  image: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 8,
+  avatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 2,
+    borderColor: '#FFF', 
   },
-  addImageText: {
-    fontSize: 24,
-    color: '#666',
-  },
-  removeButton: {
+  verificationButton: {
     position: 'absolute',
     bottom: 0,
-    right: 0,
-    backgroundColor: 'red',
-    borderRadius: 10,
+    right: 0, // Slightly outside the avatar's edge to overlap neatly
+    backgroundColor: 'white', // Circle background color for contrast
+    borderRadius: 15,
+    padding: 5,
+    elevation: 5, // Adds a subtle shadow effect
+  },
+  verificationIcon: {
     width: 20,
     height: 20,
+  },
+  profileName: {
+    color: '#000',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  buttonWrapper: {
+    width: '80%',
+    borderRadius: 30,
+    overflow: 'hidden',
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+  gradientButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 30,
+  },
+  buttonText: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  placeholderAvatar: {
+    backgroundColor: '#CCCCCC',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  removeButtonText: {
-    color: '#FFFFFF',
-    fontSize: 12,
+  placeholderText: {
+    color: '#666666',
+    fontSize: 16,
   },
 });
-

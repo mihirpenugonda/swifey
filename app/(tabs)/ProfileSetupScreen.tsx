@@ -13,8 +13,7 @@ export default function ProfileSetupScreen() {
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [bio, setBio] = useState('');
-  const [images, setImages] = useState([null, null, null, null, null, null]); // Initialize empty slots for images
-
+  const [images, setImages] = useState([null, null, null, null, null, null]); 
   const handleAddImage = (_index: number): void => {
 
   };

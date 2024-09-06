@@ -62,7 +62,8 @@ export default function LoginScreen() {
       Alert.alert('Error', error.message);
     } else {
       Alert.alert('Success', 'You are logged in!');
-      router.push('/NameInputScreen');
+   // router.push('/NameInputScreen');
+      router.push('/navigator/AppNavigator');
     }
   };
 

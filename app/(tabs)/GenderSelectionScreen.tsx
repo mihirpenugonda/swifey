@@ -1,66 +1,61 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import { supabase } from '../../supabaseClient';
 import HeaderLogo from '../../components/HeaderLogo';
 
 export default function GenderSelectionScreen() {
   const [selectedGender, setSelectedGender] = useState<string | null>(null);
-  const router = useRouter();  // Use router for navigation
+  const router = useRouter();
 
-  const handleGenderSelect = (gender: string) => {
+  const handleGenderSelect = async (gender: string) => {
     setSelectedGender(gender);
-    router.push('/PreferenceScreen'); 
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User not logged in or error fetching user.');
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ gender })
+        .eq('id', user.id);
+
+      if (error) {
+        throw new Error(`Error updating gender: ${error.message}`);
+      }
+
+      console.log('Gender updated successfully');
+      router.push('/PreferenceScreen'); // Navigate to the next screen
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert('Error', error instanceof Error ? error.message : 'An unexpected error occurred.');
+    }
   };
 
   return (
     <View style={styles.container}>
-      {/* Header Logo at the top */}
       <View style={styles.headerLogoContainer}>
         <HeaderLogo />
       </View>
 
-      {/* Question */}
       <Text style={styles.title}>What's your gender?</Text>
 
-      {/* Gender Options */}
-      <TouchableOpacity
-        style={[
-          styles.optionContainer,
-          selectedGender === 'Woman' && styles.selectedOptionContainer,
-        ]}
-        onPress={() => handleGenderSelect('Woman')}
-      >
-        <Text style={styles.optionText}>Woman</Text>
-        <View style={selectedGender === 'Woman' ? styles.selectedCircle : styles.circle}>
-          {selectedGender === 'Woman' && <Text style={styles.tick}>✓</Text>}
-        </View>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[
-          styles.optionContainer,
-          selectedGender === 'Man' && styles.selectedOptionContainer,
-        ]}
-        onPress={() => handleGenderSelect('Man')}
-      >
-        <Text style={styles.optionText}>Man</Text>
-        <View style={selectedGender === 'Man' ? styles.selectedCircle : styles.circle}>
-          {selectedGender === 'Man' && <Text style={styles.tick}>✓</Text>}
-        </View>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[
-          styles.optionContainer,
-          selectedGender === 'Non-binary' && styles.selectedOptionContainer,
-        ]}
-        onPress={() => handleGenderSelect('Non-binary')}
-      >
-        <Text style={styles.optionText}>Non-binary</Text>
-        <View style={selectedGender === 'Non-binary' ? styles.selectedCircle : styles.circle}>
-          {selectedGender === 'Non-binary' && <Text style={styles.tick}>✓</Text>}
-        </View>
-      </TouchableOpacity>
+      {['Woman', 'Man', 'Non-binary'].map((gender) => (
+        <TouchableOpacity
+          key={gender}
+          style={[
+            styles.optionContainer,
+            selectedGender === gender && styles.selectedOptionContainer,
+          ]}
+          onPress={() => handleGenderSelect(gender)}
+        >
+          <Text style={styles.optionText}>{gender}</Text>
+          <View style={selectedGender === gender ? styles.selectedCircle : styles.circle}>
+            {selectedGender === gender && <Text style={styles.tick}>✓</Text>}
+          </View>
+        </TouchableOpacity>
+      ))}
     </View>
   );
 }
