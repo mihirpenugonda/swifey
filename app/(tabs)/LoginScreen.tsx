@@ -64,9 +64,11 @@ export default function LoginScreen() {
       Alert.alert('Error', error.message);
     } else if (data.session) {
       const jwtToken = data.session.access_token;
+      const userId = data.user.id;
   
       await AsyncStorage.setItem('jwtToken', jwtToken);
-      console.log('JWT Token stored:', jwtToken);
+      await AsyncStorage.setItem('userId', userId);
+      console.log('JWT Token and User ID stored:', jwtToken, userId);
   
       Alert.alert('Success', 'You are logged in!');
       router.push('/navigator/AppNavigator');
