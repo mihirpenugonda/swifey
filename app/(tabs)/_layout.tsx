@@ -22,7 +22,6 @@ export default function AppLayout() {
         <Stack.Screen name="NameInputScreen" />
         <Stack.Screen name="BirthdayInputScreen" />
         <Stack.Screen name="AddPhotosScreen" />
-        <Stack.Screen name="ProfileSetupScreen" />
         <Stack.Screen name="PreferenceScreen" />
         <Stack.Screen name="GenderSelectionScreen" />
         <Stack.Screen name="SignUpScreen" />

@@ -1,33 +1,206 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, FlatList, ScrollView} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, FlatList, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { supabase } from '../../supabaseClient';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import { Buffer } from 'buffer';
 
 export default function EditProfileScreen() {
   const router = useRouter();
 
-  const [name, setName] = useState('Abhilash');
-  const [age, setAge] = useState('33');
-  const [bio, setBio] = useState("If you’re an attractive woman or a man, you want to be on this app. You’ll rug a lot of people and make money.");
-  const [images, setImages] = useState([null, null, null, null, null, null]);
+  const [name, setName] = useState('');
+  const [age, setAge] = useState('');
+  const [bio, setBio] = useState('');
+  const [images, setImages] = useState<(string | null)[]>([null, null, null, null, null, null]);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleAddImage = (_index: number): void => {
-    // Add image logic
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User not logged in or error fetching user.');
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('name, date_of_birth, bio, photos')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        throw new Error(`Error fetching profile: ${error.message}`);
+      }
+
+      setName(data.name || '');
+      setBio(data.bio || '');
+      
+      // Calculate age from date_of_birth
+      if (data.date_of_birth) {
+        const birthDate = new Date(data.date_of_birth);
+        const today = new Date();
+        let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+          calculatedAge--;
+        }
+        setAge(calculatedAge.toString());
+      }
+
+      // Set images, ensuring we always have 6 slots
+      const fetchedImages = data.photos || [];
+      const imageUrls = await Promise.all(fetchedImages.map(async (path: string) => {
+        if (path) {
+          const { data } = supabase.storage.from('photos').getPublicUrl(path);
+          return data.publicUrl;
+        }
+        return null;
+      }));
+      setImages([...imageUrls, ...Array(6 - imageUrls.length).fill(null)]);
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert('Error', 'Failed to load profile data. Please try again.');
+    }
   };
 
-  const handleRemoveImage = (index: number): void => {
+  const handleAddImage = async (index: number) => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
+  
+      if (!result.canceled && result.assets[0].uri) {
+        const newImages = [...images];
+        newImages[index] = result.assets[0].uri;
+        setImages(newImages);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to pick image. Please try again.');
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
     const newImages = [...images];
     newImages[index] = null;
     setImages(newImages);
   };
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User not logged in or error fetching user.');
+      }
+  
+      // Convert age to date_of_birth
+      const currentDate = new Date();
+      const birthYear = currentDate.getFullYear() - parseInt(age);
+      const dateOfBirth = new Date(birthYear, currentDate.getMonth(), currentDate.getDate()).toISOString().split('T')[0];
+  
+      // Fetch current profile to compare photos
+      const { data: currentProfile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('photos')
+        .eq('id', user.id)
+        .single();
+  
+      if (fetchError) throw fetchError;
+  
+      const currentPhotos = currentProfile.photos || [];
+      const newPhotos = images.filter(Boolean) as string[];
+  
+      // Photos to delete (files that exist in currentPhotos but not in newPhotos)
+      const photosToDelete = currentPhotos.filter((photo: string) => !newPhotos.includes(photo));
+  
+      // Photos to add (files that exist in newPhotos but not in currentPhotos)
+      const photosToAdd = newPhotos.filter(photo => !currentPhotos.includes(photo));
+  
+      // Delete removed photos from storage
+      for (const photo of photosToDelete) {
+        const { error: deleteError } = await supabase.storage
+          .from('photos')
+          .remove([photo]);
+        if (deleteError) throw deleteError;
+      }
+  
+      // Add new photos to storage
+      const addedPhotos = await Promise.all(photosToAdd.map(async (photo, index) => {
+        if (photo.startsWith('file://') || photo.startsWith('content://')) {
+          // Read file as base64
+          const base64Data = await FileSystem.readAsStringAsync(photo, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
 
+          // Convert base64 to ArrayBuffer
+          const arrayBuffer = Buffer.from(base64Data, 'base64');
+          const fileExt = photo.split('.').pop();
+          const fileName = `${Date.now()}_${index}.${fileExt}`;
+          const filePath = `${user.id}/${fileName}`;
+  
+          const { data, error: uploadError } = await supabase.storage
+            .from('photos')
+            .upload(filePath, arrayBuffer, {
+              contentType: `image/${fileExt}`,
+              cacheControl: '3600',
+            });
+  
+          if (uploadError) throw uploadError;
+  
+          return filePath;
+        } else {
+          // If it's an existing URL, just return the path
+          return photo.split('/').slice(-2).join('/');
+        }
+      }));
+  
+      // Combine existing photos (that weren't deleted) with newly added photos
+      const updatedPhotos = [
+        ...currentPhotos.filter((photo: any) => !photosToDelete.includes(photo)),
+        ...addedPhotos
+      ];
+  
+      // Update profile
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name,
+          date_of_birth: dateOfBirth,
+          bio,
+          photos: updatedPhotos,
+        })
+        .eq('id', user.id);
+  
+      if (error) throw error;
+  
+      Alert.alert('Success', 'Profile updated successfully');
+      router.back();
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      Alert.alert('Error', 'Failed to save profile. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
   const renderImageSlot = ({ item, index }: { item: string | null; index: number }) => (
     <TouchableOpacity style={styles.imageSlot} onPress={() => handleAddImage(index)}>
       {item ? (
-        <View>
+        <View style={styles.imageContainer}>
           <Image source={{ uri: item }} style={styles.image} />
-          <TouchableOpacity style={styles.removeButton} onPress={() => handleRemoveImage(index)}>
+          <TouchableOpacity 
+            style={styles.removeButton} 
+            onPress={() => handleRemoveImage(index)}
+          >
             <Text style={styles.removeButtonText}>X</Text>
           </TouchableOpacity>
         </View>
@@ -39,7 +212,6 @@ export default function EditProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Custom AppBar */}
       <View style={styles.appBar}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Text style={styles.backButtonText}>{"<"}</Text>
@@ -47,63 +219,66 @@ export default function EditProfileScreen() {
         <Text style={styles.appBarTitle}>Edit Profile</Text>
       </View>
       <ScrollView>
-      <View style={styles.container}>
-      <Text style={styles.subTitle}>Name</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Name"
-          value={name}
-          onChangeText={setName}
-        />
-         <Text style={styles.subTitle}>Age</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Age"
-          keyboardType="numeric"
-          value={age}
-          onChangeText={setAge}
-        />
-         <Text style={styles.subTitle}>Bio</Text>
-        <TextInput
-          style={[styles.input, styles.bioInput]}
-          placeholder="Bio"
-          value={bio}
-          onChangeText={setBio}
-          multiline
-        />
+        <View style={styles.container}>
+          <Text style={styles.subTitle}>Name</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Name"
+            value={name}
+            onChangeText={setName}
+          />
+          <Text style={styles.subTitle}>Age</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Age"
+            keyboardType="numeric"
+            value={age}
+            onChangeText={setAge}
+          />
+          <Text style={styles.subTitle}>Bio</Text>
+          <TextInput
+            style={[styles.input, styles.bioInput]}
+            placeholder="Bio"
+            value={bio}
+            onChangeText={setBio}
+            multiline
+          />
 
-        <Text style={styles.subTitle}>Profile Images</Text>
-        <FlatList
-          data={images}
-          renderItem={renderImageSlot}
-          keyExtractor={(item, index) => index.toString()}
-          numColumns={3}
-          scrollEnabled={false}
-          columnWrapperStyle={styles.imageRow}
-          style={styles.imageGrid}
-        />
+          <Text style={styles.subTitle}>Profile Images</Text>
+          <FlatList
+            data={images}
+            renderItem={renderImageSlot}
+            keyExtractor={(item, index) => index.toString()}
+            numColumns={3}
+            scrollEnabled={false}
+            columnWrapperStyle={styles.imageRow}
+            style={styles.imageGrid}
+          />
 
-        {/* Save Button with Gradient */}
-        <TouchableOpacity style={styles.buttonWrapper} onPress={() => router.back()}>
-          <LinearGradient
-            colors={['#FF56F8', '#B6E300']}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={styles.gradientButton}
-          >
-            <Text style={styles.buttonText}>SAVE</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-
-        <View style={styles.logoutContainer}>
-          <TouchableOpacity style={[styles.logoutButton, styles.gradientBorder]}>
-            <Text style={styles.logoutButtonText}>LOGOUT</Text>
+          <TouchableOpacity style={styles.buttonWrapper} onPress={handleSave} disabled={isSaving}>
+            <LinearGradient
+              colors={['#FF56F8', '#B6E300']}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.gradientButton}
+            >
+              {isSaving ? (
+                <ActivityIndicator color="#000000" />
+              ) : (
+                <Text style={styles.buttonText}>SAVE</Text>
+              )}
+            </LinearGradient>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.deleteButton}>
-            <Text style={styles.deleteButtonText}>DELETE MY ACCOUNT</Text>
-          </TouchableOpacity>
+
+          <View style={styles.logoutContainer}>
+            <TouchableOpacity style={[styles.logoutButton, styles.gradientBorder]}>
+              <Text style={styles.logoutButtonText}>LOGOUT</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.deleteButton}>
+              <Text style={styles.deleteButtonText}>DELETE MY ACCOUNT</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -175,13 +350,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   imageSlot: {
-    width: 100,
-    height: 100,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    width: '30%', 
+    aspectRatio: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     margin: 5,
     borderRadius: 8,
+  },
+  imageContainer: {
+    width: '100%',
+    height: '100%',
+    position: 'relative',
   },
   image: {
     width: '100%',
@@ -194,18 +374,19 @@ const styles = StyleSheet.create({
   },
   removeButton: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: 'red',
-    borderRadius: 10,
-    width: 20,
-    height: 20,
+    bottom: -5,
+    right: -5,
+    backgroundColor: '#868686',
+    borderRadius: 50,
+    width: 28,
+    height: 28,
     justifyContent: 'center',
     alignItems: 'center',
   },
   removeButtonText: {
     color: '#FFFFFF',
     fontSize: 12,
+    fontWeight: 'bold',
   },
   buttonWrapper: {
     width: '100%',

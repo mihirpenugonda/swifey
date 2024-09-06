@@ -55,27 +55,28 @@ export default function NameInputScreen() {
 
     setLoading(true);
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-    if (userError || !user) {
-      setLoading(false);
-      Alert.alert('Error', 'No user logged in or error fetching user.');
-      return;
-    }
+      if (userError) throw userError;
 
-    const { error } = await supabase.from('profiles').upsert({
-      id: user.id, 
-      email: user.email, 
-      name,
-    });
+      if (!user) {
+        throw new Error('No user logged in');
+      }
 
-    setLoading(false);
+      const { error } = await supabase
+        .from('profiles')
+        .update({ name })
+        .eq('id', user.id);
 
-    if (error) {
-      Alert.alert('Error', error.message);
-    } else {
+      if (error) throw error;
+
       Alert.alert('Success', 'Name has been saved.');
       router.push('/BirthdayInputScreen');
+    } catch (error) {
+      Alert.alert('Error', error instanceof Error ? error.message : 'An unknown error occurred');
+    } finally {
+      setLoading(false);
     }
   };
 

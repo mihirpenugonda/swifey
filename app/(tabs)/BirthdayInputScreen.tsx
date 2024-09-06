@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity,Alert } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { LinearGradient } from 'expo-linear-gradient';
 import HeaderLogo from '../../components/HeaderLogo';
 import { useRouter } from 'expo-router';
+import { supabase } from '../../supabaseClient';
 
 export default function BirthdayInputScreen() {
   const router = useRouter();
@@ -25,9 +26,21 @@ export default function BirthdayInputScreen() {
     return Math.abs(ageDt.getUTCFullYear() - 1970);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (date) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('User not found');
+        const { error } = await supabase
+          .from('profiles')
+          .update({ date_of_birth: date.toISOString() })
+          .eq('id', user.id);
+  
+        if (error) throw error;
       router.push('/AddPhotosScreen');
+      } catch (error) {
+        Alert.alert('Error', error instanceof Error ? error.message : 'An unknown error occurred');
+      }
     } else {
       setShowPicker(true);
     }

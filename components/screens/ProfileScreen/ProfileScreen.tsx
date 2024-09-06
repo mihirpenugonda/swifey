@@ -1,25 +1,93 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import AppBar from '../../../components/AppBar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import AppBar from '../../../components/AppBar';
+import { supabase } from '../../../supabaseClient';
+
+interface UserProfile {
+  name: string;
+  date_of_birth: string;
+  photos: string[] | null;
+}
 
 const ProfileScreen = () => {
   const router = useRouter();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User not logged in or error fetching user.');
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('name, date_of_birth, photos')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        throw new Error(`Error fetching profile: ${error.message}`);
+      }
+
+      setProfile(data);
+
+      // Set avatar URL from the first photo
+      if (data.photos && data.photos.length > 0) {
+        const { data: urlData } = supabase.storage
+          .from('photos')
+          .getPublicUrl(data.photos[0]);
+        setAvatarUrl(urlData.publicUrl);
+      }
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
+    }
+  };
+
+  const calculateAge = (dateOfBirth: string): number => {
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDifference = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age;
+  };
 
   const navigateToEditProfile = () => {
     router.push('/EditProfileScreen');
   };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <AppBar />
       <View style={styles.container}>
-        <Image
-          source={{ uri: 'https://example.com/avatar.jpg' }} 
-          style={styles.avatar}
-        />
-        <Text style={styles.profileName}>Abhilash, 33</Text>
+        {avatarUrl ? (
+          <Image
+            source={{ uri: avatarUrl }}
+            style={styles.avatar}
+          />
+        ) : (
+          <View style={[styles.avatar, styles.placeholderAvatar]}>
+            <Text style={styles.placeholderText}>No Image</Text>
+          </View>
+        )}
+        {profile && (
+          <Text style={styles.profileName}>
+            {profile.name}, {calculateAge(profile.date_of_birth)}
+          </Text>
+        )}
         <TouchableOpacity style={styles.buttonWrapper} onPress={navigateToEditProfile}>
           <LinearGradient
             colors={['#FF56F8', '#B6E300']}
@@ -36,7 +104,6 @@ const ProfileScreen = () => {
 };
 
 export default ProfileScreen;
-
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -99,5 +166,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  placeholderAvatar: {
+    backgroundColor: '#CCCCCC',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderText: {
+    color: '#666666',
+    fontSize: 16,
   },
 });
