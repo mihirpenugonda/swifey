@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   name: {
-    color: '#FFFFFF',
+    color: '#000',
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 4,

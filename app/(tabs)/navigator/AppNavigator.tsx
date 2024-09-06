@@ -95,7 +95,7 @@ export default function AppNavigator() {
       })}
     >
       <Tab.Screen name="Kisses" component={KissesScreen} options={{ tabBarLabel: 'Kisses' }} />
-      <Tab.Screen name="YourMove" component={YourMoveScreen} options={{ tabBarLabel: 'Your Move' }} />
+      <Tab.Screen name="YourMove" component={YourMoveScreen} options={{ tabBarLabel: 'Your Turn' }} />
       <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Play' }} />
       <Tab.Screen name="Bag" component={BagScreen} options={{ tabBarLabel: 'Bag' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />

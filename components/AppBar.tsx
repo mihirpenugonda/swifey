@@ -14,7 +14,7 @@ const AppBar: React.FC<AppBarProps> = ({ showRightSide = true }) => {
         <Text style={styles.logoText}>KISS or RUG</Text>
       </View>
 
-      {showRightSide && (  // Conditionally render the right side
+      {showRightSide && ( 
         <View style={styles.bagContainer}>
           <Image
             source={require('../assets/images/bag.png')}
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   usdText: {
     color: '#000',
     fontSize: 14,
-    fontFamily: 'Tomorrow', // Ensure this font is available
+    fontFamily: 'Tomorrow',
     fontWeight: '600',
     lineHeight: 17.4,
     textAlign: 'left',

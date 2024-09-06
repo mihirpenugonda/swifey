@@ -27,17 +27,17 @@ export default function EditProfileScreen() {
       if (userError || !user) {
         throw new Error('User not logged in or error fetching user.');
       }
-
+  
       const { data, error } = await supabase
         .from('profiles')
         .select('name, date_of_birth, bio, photos')
         .eq('id', user.id)
         .single();
-
+  
       if (error) {
         throw new Error(`Error fetching profile: ${error.message}`);
       }
-
+  
       setName(data.name || '');
       setBio(data.bio || '');
       
@@ -52,23 +52,24 @@ export default function EditProfileScreen() {
         }
         setAge(calculatedAge.toString());
       }
-
+  
       // Set images, ensuring we always have 6 slots
       const fetchedImages = data.photos || [];
-      const imageUrls = await Promise.all(fetchedImages.map(async (path: string) => {
-        if (path) {
-          const { data } = supabase.storage.from('photos').getPublicUrl(path);
-          return data.publicUrl;
+      const imageUrls = fetchedImages.map((path: string) => {
+        if (path.startsWith('https://')) {
+          return path; // Use full URL if it already exists
         }
-        return null;
-      }));
+        // Otherwise, construct the full URL for the relative path
+        return `https://exftzdxtyfbiwlpmecmd.supabase.co/storage/v1/object/public/photos/${path}`;
+      });
+  
       setImages([...imageUrls, ...Array(6 - imageUrls.length).fill(null)]);
     } catch (error) {
       console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
       Alert.alert('Error', 'Failed to load profile data. Please try again.');
     }
   };
-
+  
   const handleAddImage = async (index: number) => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -140,7 +141,7 @@ export default function EditProfileScreen() {
           const base64Data = await FileSystem.readAsStringAsync(photo, {
             encoding: FileSystem.EncodingType.Base64,
           });
-
+  
           // Convert base64 to ArrayBuffer
           const arrayBuffer = Buffer.from(base64Data, 'base64');
           const fileExt = photo.split('.').pop();
@@ -191,6 +192,7 @@ export default function EditProfileScreen() {
       setIsSaving(false);
     }
   };
+  
   
   const renderImageSlot = ({ item, index }: { item: string | null; index: number }) => (
     <TouchableOpacity style={styles.imageSlot} onPress={() => handleAddImage(index)}>

@@ -1,76 +1,47 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions, ActivityIndicator } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
 import AppBar from '../../AppBar';
 import BottomSheet from '@gorhom/bottom-sheet';
-import { Image as ProfileImage } from 'react-native';
+import { fetchProfiles } from '../../../services/apiService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
-const profiles = [
-  {
-    id: 1,
-    name: 'TattooGirl',
-    age: 28,
-    images: [
-      require('../../../assets/images/profile1_1.png'),
-      require('../../../assets/images/profile1_2.png'),
-      require('../../../assets/images/profile1_3.png'),
-    ],
-    description: "If you're an attractive woman or a man, you want to be on this app. You'll rug a lot of people and make money.",
-  },
-  {
-    id: 2,
-    name: 'AB',
-    age: 16,
-    images: [
-      require('../../../assets/images/profile1_2.png'),
-      require('../../../assets/images/profile1_2.png'),
-      require('../../../assets/images/profile1_3.png'),
-    ],
-    description: "If you're an attractive woman or a man, you want to be on this app. You'll rug a lot of people and make money.",
-  },
-  {
-    id: 3,
-    name: 'BC',
-    age: 26,
-    images: [
-      require('../../../assets/images/profile1_3.png'),
-      require('../../../assets/images/profile1_2.png'),
-      require('../../../assets/images/profile1_3.png'),
-    ],
-    description: "If you're an attractive woman or a man, you want to be on this app. You'll rug a lot of people and make money.",
-  },
-  {
-    id: 4,
-    name: 'CD',
-    age: 19,
-    images: [
-      require('../../../assets/images/profile1_1.png'),
-      require('../../../assets/images/profile1_2.png'),
-      require('../../../assets/images/profile1_3.png'),
-    ],
-    description: "If you're an attractive woman or a man, you want to be on this app. You'll rug a lot of people and make money.",
-  },
-  {
-    id: 5,
-    name: 'Test124',
-    age: 29,
-    images: [
-      require('../../../assets/images/profile1_1.png'),
-      require('../../../assets/images/profile1_2.png'),
-      require('../../../assets/images/profile1_3.png'),
-    ],
-    description: "If you're an attractive woman or a man, you want to be on this app. You'll rug a lot of people and make money.",
-  },
-];
-
 export default function PlayScreen() {
+  const [profiles, setProfiles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [currentProfileIndex, setCurrentProfileIndex] = useState(0);
   const [isBottomSheetOpen, setBottomSheetOpen] = useState(false);
   const swiperRef = useRef<Swiper<any>>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
+
+  const loadProfiles = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const fetchedProfiles = await fetchProfiles(20, 0); // Fetch 20 profiles
+      console.log('Fetched profiles:', fetchedProfiles);
+      if (Array.isArray(fetchedProfiles.profiles)) {
+        setProfiles(fetchedProfiles.profiles);
+      } else {
+        console.error('Unexpected response format:', fetchedProfiles);
+        setError('Unexpected response format from server');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      console.error('Error fetching profiles:', errorMessage);
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProfiles();
+  }, []);
 
   const handleSwipeLeft = () => {
     console.log('Rejected');
@@ -88,9 +59,23 @@ export default function PlayScreen() {
     setCurrentImageIndex(0);
   };
 
+  const calculateAge = (dateOfBirth: string): number => {
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDifference = today.getMonth() - birthDate.getMonth();
+  
+    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+  
+    return age;
+  };
+  
+
   const handleImageTap = (direction: string) => {
     setCurrentImageIndex((prevIndex) => {
-      const imagesLength = profiles[currentProfileIndex].images.length;
+      const imagesLength = profiles[currentProfileIndex]?.photos?.length || 0;
       let newIndex = prevIndex;
 
       if (direction === 'left' && prevIndex > 0) {
@@ -105,18 +90,22 @@ export default function PlayScreen() {
 
   const renderBottomSheetContent = () => {
     const profile = profiles[currentProfileIndex];
+    if (!profile) return null;
+
     return (
       <View style={styles.bottomSheetContainer}>
         <View style={styles.whiteContainer}>
-          <ProfileImage
-            source={profile.images[0]}
+          <Image
+            source={{ uri: profile?.photos?.[0] || '' }}
             style={styles.bottomSheetImage}
             borderRadius={50}
           />
-          <Text style={styles.bottomSheetName}>{profile.name}, {profile.age}</Text>
+          <Text style={styles.bottomSheetName}>
+          {profile?.name || 'Unknown'}, {profile?.date_of_birth ? calculateAge(profile.date_of_birth) : 'N/A'}
+            </Text>
           <View style={styles.verifiedContainer}>
             <Image source={require('../../../assets/images/verified-badge.png')} style={styles.verifiedIcon} />
-            <Text style={styles.verifiedText}>Self Verified</Text>
+            <Text style={styles.verifiedText}>{profile?.is_verified ? 'Verified' : 'Not Verified'}</Text>
           </View>
         </View>
       </View>
@@ -126,89 +115,106 @@ export default function PlayScreen() {
   const handleBookButtonPress = () => {
     console.log('Book button pressed');
     setBottomSheetOpen(true);
-    bottomSheetRef.current?.expand(); 
+    bottomSheetRef.current?.expand();
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </SafeAreaView>
+    );
+  }
+
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <AppBar showRightSide={true} />
       <View style={styles.swiperContainer}>
-        <Swiper
-          ref={swiperRef}
-          cards={profiles}
-          renderCard={(profile) => (
-            <View style={styles.card} key={`${profile.id}-${currentImageIndex}`}>
-              <Image source={profile.images[currentImageIndex]} style={styles.image} />
-              <TouchableOpacity style={styles.leftTapArea} onPress={() => handleImageTap('left')} />
-              <TouchableOpacity style={styles.rightTapArea} onPress={() => handleImageTap('right')} />
-              <TouchableOpacity 
-                style={styles.bookButton} 
-                onPress={handleBookButtonPress}
-              >
-                <Image source={require('../../../assets/images/book.png')} style={styles.bookIcon} />
-              </TouchableOpacity>
-              <View style={styles.profileInfo}>
-                <Text style={styles.profileName}>
-                  {profile.name}, {profile.age}
-                </Text>
-                <Text style={styles.profileDescription}>{profile.description}</Text>
+        {Array.isArray(profiles) && profiles.length > 0 ? (
+          <Swiper
+            ref={swiperRef}
+            cards={profiles}
+            renderCard={(profile) => (
+              <View style={styles.card} key={`${profile.id}-${currentImageIndex}`}>
+                <Image 
+                  source={{ uri: profile?.photos?.[currentImageIndex] || '' }} 
+                  style={styles.image} 
+                />
+                <TouchableOpacity style={styles.leftTapArea} onPress={() => handleImageTap('left')} />
+                <TouchableOpacity style={styles.rightTapArea} onPress={() => handleImageTap('right')} />
+                <TouchableOpacity style={styles.bookButton} onPress={handleBookButtonPress}>
+                  <Image source={require('../../../assets/images/book.png')} style={styles.bookIcon} />
+                </TouchableOpacity>
+                <View style={styles.profileInfo}>
+                  <Text style={styles.profileName}>
+                  {profile?.name || 'Unknown'}, {profile?.date_of_birth ? calculateAge(profile.date_of_birth) : 'N/A'}
+                  </Text>
+                  <Text style={styles.profileDescription}>
+                    {profile?.bio || ''}
+                  </Text>
+                </View>
               </View>
-            </View>
-          )}
-          onSwipedLeft={() => {
-            setCurrentProfileIndex((prevIndex) => Math.min(prevIndex + 1, profiles.length - 1));
-          }}
-          onSwipedRight={() => {
-            setCurrentProfileIndex((prevIndex) => Math.min(prevIndex + 1, profiles.length - 1));
-          }}
-          onSwipedAll={() => {
-            console.log('All cards swiped');
-            setCurrentProfileIndex(0);
-          }}
-          cardIndex={0}
-          stackSize={3}
-          backgroundColor={'transparent'}
-          cardVerticalMargin={20}
-          animateCardOpacity
-          overlayLabels={{
-            left: {
-              title: '❌$1.00',
-              style: {
-                label: {
-                  borderColor: 'red',
-                  color: 'white',
-                  borderWidth: 1,
-                  fontSize: 16,
-                },
-                wrapper: {
-                  flexDirection: 'column',
-                  alignItems: 'flex-end',
-                  justifyContent: 'flex-start',
-                  marginTop: 20,
-                  marginLeft: -20,
-                },
-              },
-            },
-            right: {
-              title: '😘 $1.00',
-              style: {
-                label: {
-                  borderColor: 'green',
-                  color: 'white',
-                  borderWidth: 1,
-                  fontSize: 16,
-                },
-                wrapper: {
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  justifyContent: 'flex-start',
-                  marginTop: 20,
-                  marginLeft: 20,
+            )}
+            onSwipedLeft={() => {
+              setCurrentProfileIndex((prevIndex) => Math.min(prevIndex + 1, profiles.length - 1));
+            }}
+            onSwipedRight={() => {
+              setCurrentProfileIndex((prevIndex) => Math.min(prevIndex + 1, profiles.length - 1));
+            }}
+            onSwipedAll={() => {
+              console.log('All cards swiped');
+              setCurrentProfileIndex(0);
+            }}
+            cardIndex={0}
+            stackSize={3}
+            backgroundColor={'transparent'}
+            cardVerticalMargin={20}
+            animateCardOpacity
+            overlayLabels={{
+              left: {
+                title: '❌$1.00',
+                style: {
+                  label: {
+                    borderColor: 'red',
+                    color: 'white',
+                    borderWidth: 1,
+                    fontSize: 16,
+                  },
+                  wrapper: {
+                    flexDirection: 'column',
+                    alignItems: 'flex-end',
+                    justifyContent: 'flex-start',
+                    marginTop: 20,
+                    marginLeft: -20,
+                  },
                 },
               },
-            },
-          }}
-        />
+              right: {
+                title: '😘 $1.00',
+                style: {
+                  label: {
+                    borderColor: 'green',
+                    color: 'white',
+                    borderWidth: 1,
+                    fontSize: 16,
+                  },
+                  wrapper: {
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    justifyContent: 'flex-start',
+                    marginTop: 20,
+                    marginLeft: 20,
+                  },
+                },
+              },
+            }}
+          />
+        ) : (
+          <View style={styles.noProfilesContainer}>
+            <Text style={styles.noProfilesText}>No profiles available</Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.buttonContainer}>
@@ -243,9 +249,9 @@ const styles = StyleSheet.create({
   },
   card: {
     height: '70%',
-    borderRadius: 12,
+    borderRadius: 8,
     justifyContent: 'center',
-    backgroundColor: 'white',
+    backgroundColor: '#F4F9F5',
     overflow: 'hidden',
   },
   image: {
@@ -269,7 +275,7 @@ const styles = StyleSheet.create({
   },
   bookButton: {
     position: 'absolute',
-    bottom: 170, 
+    bottom: 150, 
     left: 20, 
     zIndex: 10, 
   },
@@ -295,7 +301,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-evenly',
-    marginVertical: 20,
+    marginVertical: 10,
   },
   button: {
     width: 60,
@@ -316,14 +322,14 @@ const styles = StyleSheet.create({
   },
   bottomSheetContainer: {
     flex: 1,
-    backgroundColor: '#E0E0E0', // Light grey background
-    borderTopLeftRadius: 20, // Rounded corners
-    borderTopRightRadius: 20, // Rounded corners
+    backgroundColor: '#E0E0E0',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
   whiteContainer: {
-    width: '90%', // Adjust size as needed
+    width: '90%',
     backgroundColor: 'white',
     borderRadius: 20,
     padding: 20,
@@ -352,5 +358,14 @@ const styles = StyleSheet.create({
   verifiedText: {
     fontSize: 14,
     color: 'red',
+  },
+  noProfilesContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noProfilesText: {
+    fontSize: 16,
+    color: '#666',
   },
 });
