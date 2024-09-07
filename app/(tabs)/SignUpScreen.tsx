@@ -9,14 +9,16 @@ import {
   Keyboard,
   Animated,
   TouchableWithoutFeedback,
+  TouchableOpacity,
+  SafeAreaView
 } from 'react-native';
 import { supabase } from '../../supabaseClient';
 import { useRouter } from 'expo-router';
 import HeaderLogo from '@/components/HeaderLogo';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function SignUpScreen() {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isCooldown, setIsCooldown] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(new Animated.Value(0)); 
@@ -56,9 +58,11 @@ export default function SignUpScreen() {
 
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signInWithOtp({
       email,
-      password,
+      options: {
+        shouldCreateUser: true, 
+      },
     });
 
     setLoading(false);
@@ -68,54 +72,76 @@ export default function SignUpScreen() {
     } else {
       Alert.alert(
         'Check your email',
-        'A verification code has been sent to your email address. Please enter the code to verify your account.'
+        'An OTP has been sent to your email address. Please check your inbox to verify your account.'
       );
       setIsCooldown(true);
-      setTimeout(() => setIsCooldown(false), 300000); // 5-minute cooldown
-      router.push('/NameInputScreen');
+      setTimeout(() => setIsCooldown(false), 300000); 
+      router.push('/VerificationScreen'); 
     }
   };
 
   return (
+    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.container}>
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <Animated.View style={[styles.container, { paddingBottom: keyboardHeight }]}>
-        <HeaderLogo />
-        <Text style={styles.title}>What's your email address?</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter your email"
-          placeholderTextColor="#666"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Enter your password"
-          placeholderTextColor="#666"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-        <Button
-          title={loading ? 'Loading...' : 'Sign Up'}
-          onPress={handleSignUp}
-          disabled={loading || isCooldown}
-        />
+      <Animated.View style={[styles.innerContainer, { paddingBottom: keyboardHeight }]}>
+        {/* Wrap the logo in a container and position it at the top */}
+        <View style={styles.headerContainer}>
+          <HeaderLogo />
+        </View>
+
+        {/* Rest of the content */}
+        <View style={styles.content}>
+          <Text style={styles.title}>What's your email address?</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your email"
+            placeholderTextColor="#666"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
+          />
+         
+           <TouchableOpacity style={styles.buttonWrapper} onPress={handleSignUp}>
+          <LinearGradient
+            colors={['#FF56F8', '#B6E300']}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={styles.gradientButton}
+          >
+             <Text style={styles.buttonText}>NEXT</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+        </View>
       </Animated.View>
     </TouchableWithoutFeedback>
+    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#121515',
+  },
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#121515',
+  },
+  innerContainer: {
+    flex: 1,
     paddingHorizontal: 20,
-    paddingVertical: 40,
+    paddingVertical: 20,
+  },
+  headerContainer: {
+    width: '100%',
+    marginBottom: 20,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
   title: {
     color: '#FFFFFF',
@@ -134,4 +160,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 20,
   },
+  buttonWrapper: {
+    width: '100%',
+  },
+  gradientButton: {
+    paddingVertical: 15,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#000000',
+    fontSize: 16,
+    fontWeight: '500',
+  },
 });
+

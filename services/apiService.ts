@@ -25,14 +25,20 @@ const getJwtToken = async () => {
       body: JSON.stringify({ limit, offset }),
     });
   
+    // Check response status
     if (!response.ok) {
       const errorMessage = await response.text();  // Get the error message from the server
       console.error('Error response:', errorMessage);
       throw new Error(`Failed to fetch profiles: ${response.statusText}`);
     }
   
-    return response.json();
+    const data = await response.json();
+    console.log('Fetched profiles data:', data); // Log the actual response
+  
+    // Ensure that data is in the expected format (an array of profiles)
+    return data.profiles || data; // Adjust based on response structure
   };
+  
 
   export const fetchUserWallet = async (user_id: any) => {
     const jwtToken = await getJwtToken();
@@ -155,4 +161,27 @@ export const fetchMyTurnProfiles = async (limit: number, offset: number) => {
   
     return response.json();
   };
+  
+  export const sendSwipe = async (userId: string, decision: 'kiss' | 'rug') => {
+    const jwtToken = await getJwtToken(); // Ensure you're getting the JWT token
+    const response = await fetch(`${API_URL}/send-swipe`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${jwtToken}`,
+      },
+      body: JSON.stringify({
+        user_id: userId, // Use user_id instead of swipe_id
+        decision,        // The decision ('kiss' or 'rug')
+      }),
+    });
+  
+    if (!response.ok) {
+      const errorMessage = await response.text();
+      throw new Error(`Failed to send swipe: ${errorMessage}`);
+    }
+  
+    return response.json();
+  };
+  
   

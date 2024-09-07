@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Image, View, Text, FlatList, StyleSheet, SafeAreaView, ListRenderItem, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { Image, View, Text, FlatList, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import AppBar from '../../AppBar';
 import { fetchMatches } from '../../../services/apiService'; // Import the fetchMatches function
+import { useIsFocused } from '@react-navigation/native';
 
 interface MatchItem {
   match_id: string;
@@ -16,7 +17,8 @@ interface MatchItem {
 export default function KissesScreen() {
   const [matches, setMatches] = useState<MatchItem[]>([]);
   const [loading, setLoading] = useState(true);
-   const router = useRouter();
+  const router = useRouter();
+  const isFocused = useIsFocused(); // Hook to check if the screen is focused
 
   useEffect(() => {
     const loadMatches = async () => {
@@ -30,8 +32,10 @@ export default function KissesScreen() {
       }
     };
 
-    loadMatches();
-  }, []);
+    if (isFocused) {
+      loadMatches(); // Load matches only when the screen is focused
+    }
+  }, [isFocused]); // Effect runs whenever the screen is focused
 
   const handleMatchPress = (match: MatchItem) => {
     router.push({
@@ -55,11 +59,20 @@ export default function KissesScreen() {
       </View>
       <View style={styles.messageContent}>
         <Text style={styles.name}>{item.name}</Text>
-        <Text style={styles.message}>{item.bio || 'No bio available'}</Text>
       </View>
     </TouchableOpacity>
   );
 
+  const renderEmptyState = () => (
+    <View style={styles.emptyStateContainer}>
+      <Image
+        source={require('../../../assets/images/your-move-placeholder.png')} // Placeholder image path
+        style={styles.placeholderImage}
+      />
+      <Text style={styles.emptyStateText}>You don't have any kisses yet!</Text>
+      <Text style={styles.subText}>Swipe people to get more kisses.</Text>
+    </View>
+  );
 
   if (loading) {
     return (
@@ -72,12 +85,16 @@ export default function KissesScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <AppBar />
-      <FlatList
-        data={matches}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.match_id}
-        style={styles.list}
-      />
+      {matches.length === 0 ? (
+        renderEmptyState()
+      ) : (
+        <FlatList
+          data={matches}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.match_id}
+          style={styles.list}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -125,8 +142,28 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 4,
   },
-  message: {
-    color: '#AAAAAA',
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  placeholderImage: {
+    width: 120,
+    height: 140,
+    marginBottom: 20,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 10,
+    color: '#000',
+  },
+  subText: {
     fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 30,
+    color: '#666',
   },
 });

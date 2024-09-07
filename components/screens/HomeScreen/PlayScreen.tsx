@@ -3,8 +3,8 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, SafeAreaView, Dimensio
 import Swiper from 'react-native-deck-swiper';
 import AppBar from '../../AppBar';
 import BottomSheet from '@gorhom/bottom-sheet';
-import { fetchProfiles } from '../../../services/apiService';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { fetchMatches, fetchProfiles, sendSwipe } from '../../../services/apiService'; // Update import
+import eventEmitter from '@/services/eventEmitter';
 
 const { width, height } = Dimensions.get('window');
 
@@ -17,20 +17,24 @@ export default function PlayScreen() {
   const [isBottomSheetOpen, setBottomSheetOpen] = useState(false);
   const swiperRef = useRef<Swiper<any>>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
+  const [allSwiped, setAllSwiped] = useState(false);
+
 
   const loadProfiles = async () => {
     try {
       setLoading(true);
       setError(null);
+
       const fetchedProfiles = await fetchProfiles(20, 0); // Fetch 20 profiles
       console.log('Fetched profiles:', fetchedProfiles);
-      if (Array.isArray(fetchedProfiles)) {
-        setProfiles(fetchedProfiles); // Directly use the array as fetchedProfiles
+
+      if (Array.isArray(fetchedProfiles) && fetchedProfiles.length > 0) {
+        setProfiles(fetchedProfiles); // Save profiles to the state
       } else {
-        console.error('Unexpected response format:', fetchedProfiles);
-        setError('Unexpected response format from server');
+        console.error('No profiles found or invalid response format:', fetchedProfiles);
+        setError('No profiles found or invalid response format');
+        setProfiles([]); // Clear any previously set profiles
       }
-      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       console.error('Error fetching profiles:', errorMessage);
@@ -44,16 +48,94 @@ export default function PlayScreen() {
     loadProfiles();
   }, []);
 
-  const handleSwipeLeft = () => {
-    console.log('Rejected');
-    resetImageIndex();
-    swiperRef.current?.swipeLeft();
-  };
+  useEffect(() => {
+    if (profiles.length > 0 && currentProfileIndex < profiles.length) {
+      console.log('Profile updated to:', profiles[currentProfileIndex]?.id);
+    }
+  }, [currentProfileIndex, profiles]);
 
-  const handleSwipeRight = () => {
-    console.log('Accepted');
-    resetImageIndex();
+// Handle swipe left (Rug)
+const handleSwipeLeft = async () => {
+  try {
+    const currentProfile = profiles[currentProfileIndex];
+    console.log('Current Profile on Rug Swipe:', currentProfile);
+
+    if (!currentProfile?.id) {  
+      console.error('Profile ID is missing');
+      return;
+    }
+
+    const response = await sendSwipe(currentProfile?.id, 'rug');
+    
+    if (response?.message === 'You have already swiped on this profile') {
+      console.log(`You have already swiped on this profile. Past decision: ${response.past_decision}`);
+      swiperRef.current?.swipeLeft();
+      return;
+    }
+
+    console.log('Swipe response:', response);
+    processSwipeResponse(response);
+    swiperRef.current?.swipeLeft();
+
+    setCurrentProfileIndex((prevIndex) => {
+      const nextIndex = prevIndex + 1;
+      return nextIndex >= profiles.length ? 0 : nextIndex; // Wrap around if at the end
+    });
+  } catch (error) {
+    console.error('Error sending rug swipe:', error);
+  }
+};
+
+
+
+const handleSwipeRight = async () => {
+  try {
+    const currentProfile = profiles[currentProfileIndex];
+    console.log('Current Profile on Kiss Swipe:', currentProfile);
+
+    if (!currentProfile?.id) {  
+      console.error('Profile ID is missing');
+      return;
+    }
+
+    const response = await sendSwipe(currentProfile?.id, 'kiss');
+    
+    if (response?.message === 'You have already swiped on this profile') {
+      console.log(`You have already swiped on this profile. Past decision: ${response.past_decision}`);
+      swiperRef.current?.swipeRight();
+      return;
+    }
+
+    console.log('Swipe response:', response);
+    processSwipeResponse(response);
+    
+    // Emit an event for updating matches
+    eventEmitter.emit('matchMade');  // Emit event
+    
     swiperRef.current?.swipeRight();
+
+    setCurrentProfileIndex((prevIndex) => {
+      const nextIndex = prevIndex + 1;
+      return nextIndex >= profiles.length ? 0 : nextIndex; // Wrap around if at the end
+    });
+  } catch (error) {
+    console.error('Error sending kiss swipe:', error);
+  }
+};
+
+  
+  const processSwipeResponse = (response: { decision: string; match_id: any; }) => {
+    if (response.decision === 'match') {
+      console.log('It’s a match! Match ID:', response.match_id);
+    } else if (response.decision === 'pending') {
+      console.log('Swipe is pending');
+    } else if (response.decision === 'rugged') {
+      console.log('Rugged!');
+    } else if (response.decision === 'profit') {
+      console.log('Profit earned!');
+    } else if (response.decision === 'mutual_rug') {
+      console.log('Mutual rug!');
+    }
   };
 
   const resetImageIndex = () => {
@@ -65,14 +147,13 @@ export default function PlayScreen() {
     const birthDate = new Date(dateOfBirth);
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDifference = today.getMonth() - birthDate.getMonth();
-  
+
     if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
       age--;
     }
-  
+
     return age;
   };
-  
 
   const handleImageTap = (direction: string) => {
     setCurrentImageIndex((prevIndex) => {
@@ -82,11 +163,17 @@ export default function PlayScreen() {
       if (direction === 'left' && prevIndex > 0) {
         newIndex = prevIndex - 1;
       } else if (direction === 'right' && prevIndex < imagesLength - 1) {
-        newIndex = prevIndex + 1;
+        newIndex = newIndex + 1;
       }
 
       return newIndex;
     });
+  };
+
+  const handleBookButtonPress = () => {
+    console.log('Book button pressed');
+    setBottomSheetOpen(true);
+    bottomSheetRef.current?.expand();
   };
 
   const renderBottomSheetContent = () => {
@@ -96,14 +183,8 @@ export default function PlayScreen() {
     return (
       <View style={styles.bottomSheetContainer}>
         <View style={styles.whiteContainer}>
-          <Image
-            source={{ uri: profile?.photos?.[0] || '' }}
-            style={styles.bottomSheetImage}
-            borderRadius={50}
-          />
-          <Text style={styles.bottomSheetName}>
-          {profile?.name || 'Unknown'}, {profile?.date_of_birth ? calculateAge(profile.date_of_birth) : 'N/A'}
-            </Text>
+          <Image source={{ uri: profile?.photos?.[0] || '' }} style={styles.bottomSheetImage} borderRadius={50} />
+          <Text style={styles.bottomSheetName}>{profile?.name || 'Unknown'}, {profile?.date_of_birth ? calculateAge(profile.date_of_birth) : 'N/A'}</Text>
           <View style={styles.verifiedContainer}>
             <Image source={require('../../../assets/images/verified-badge.png')} style={styles.verifiedIcon} />
             <Text style={styles.verifiedText}>{profile?.is_verified ? 'Verified' : 'Not Verified'}</Text>
@@ -111,12 +192,6 @@ export default function PlayScreen() {
         </View>
       </View>
     );
-  };
-
-  const handleBookButtonPress = () => {
-    console.log('Book button pressed');
-    setBottomSheetOpen(true);
-    bottomSheetRef.current?.expand();
   };
 
   if (loading) {
@@ -127,94 +202,51 @@ export default function PlayScreen() {
     );
   }
 
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <AppBar showRightSide={true} />
       <View style={styles.swiperContainer}>
-        {Array.isArray(profiles) && profiles.length > 0 ? (
-          <Swiper
-            ref={swiperRef}
-            cards={profiles}
-            renderCard={(profile) => (
-              <View style={styles.card} key={`${profile.id}-${currentImageIndex}`}>
-                <Image 
-                  source={{ uri: profile?.photos?.[currentImageIndex] || '' }} 
-                  style={styles.image} 
-                />
-                <TouchableOpacity style={styles.leftTapArea} onPress={() => handleImageTap('left')} />
-                <TouchableOpacity style={styles.rightTapArea} onPress={() => handleImageTap('right')} />
-                <TouchableOpacity style={styles.bookButton} onPress={handleBookButtonPress}>
-                  <Image source={require('../../../assets/images/book.png')} style={styles.bookIcon} />
-                </TouchableOpacity>
-                <View style={styles.profileInfo}>
-                  <Text style={styles.profileName}>
-                  {profile?.name || 'Unknown'}, {profile?.date_of_birth ? calculateAge(profile.date_of_birth) : 'N/A'}
-                  </Text>
-                  <Text style={styles.profileDescription}>
-                    {profile?.bio || ''}
-                  </Text>
-                </View>
-              </View>
-            )}
-            onSwipedLeft={() => {
-              setCurrentProfileIndex((prevIndex) => Math.min(prevIndex + 1, profiles.length - 1));
-            }}
-            onSwipedRight={() => {
-              setCurrentProfileIndex((prevIndex) => Math.min(prevIndex + 1, profiles.length - 1));
-            }}
-            onSwipedAll={() => {
-              console.log('All cards swiped');
-              setCurrentProfileIndex(0);
-            }}
-            cardIndex={0}
-            stackSize={3}
-            backgroundColor={'transparent'}
-            cardVerticalMargin={20}
-            animateCardOpacity
-            overlayLabels={{
-              left: {
-                title: '❌$1.00',
-                style: {
-                  label: {
-                    borderColor: 'red',
-                    color: 'white',
-                    borderWidth: 1,
-                    fontSize: 16,
-                  },
-                  wrapper: {
-                    flexDirection: 'column',
-                    alignItems: 'flex-end',
-                    justifyContent: 'flex-start',
-                    marginTop: 20,
-                    marginLeft: -20,
-                  },
-                },
-              },
-              right: {
-                title: '😘 $1.00',
-                style: {
-                  label: {
-                    borderColor: 'green',
-                    color: 'white',
-                    borderWidth: 1,
-                    fontSize: 16,
-                  },
-                  wrapper: {
-                    flexDirection: 'column',
-                    alignItems: 'flex-start',
-                    justifyContent: 'flex-start',
-                    marginTop: 20,
-                    marginLeft: 20,
-                  },
-                },
-              },
-            }}
-          />
-        ) : (
+        {allSwiped ? (
           <View style={styles.noProfilesContainer}>
-            <Text style={styles.noProfilesText}>No profiles available</Text>
+            <Text style={styles.noProfilesText}>No profiles left to be swiped</Text>
           </View>
+        ) : (
+          Array.isArray(profiles) && profiles.length > 0 ? (
+            <Swiper
+              ref={swiperRef}
+              cards={profiles}
+              renderCard={(profile) => (
+                <View style={styles.card} key={`${profile.id}-${currentImageIndex}`}>
+                  <Image source={{ uri: profile?.photos?.[currentImageIndex] || '' }} style={styles.image} />
+                  <TouchableOpacity style={styles.leftTapArea} onPress={() => handleImageTap('left')} />
+                  <TouchableOpacity style={styles.rightTapArea} onPress={() => handleImageTap('right')} />
+                  <TouchableOpacity style={styles.bookButton} onPress={handleBookButtonPress}>
+                    <Image source={require('../../../assets/images/book.png')} style={styles.bookIcon} />
+                  </TouchableOpacity>
+                  <View style={styles.profileInfo}>
+                    <Text style={styles.profileName}>{profile?.name || 'Unknown'}, {profile?.date_of_birth ? calculateAge(profile.date_of_birth) : 'N/A'}</Text>
+                    <Text style={styles.profileDescription}>{profile?.bio || ''}</Text>
+                  </View>
+                </View>
+              )}
+              onSwipedLeft={handleSwipeLeft}
+              onSwipedRight={handleSwipeRight}
+              onSwipedAll={() => {
+                console.log('All cards swiped');
+                setAllSwiped(true);
+                setCurrentProfileIndex(0);
+              }}
+              cardIndex={0}
+              stackSize={3}
+              backgroundColor={'transparent'}
+              cardVerticalMargin={20}
+              animateCardOpacity
+            />
+          ) : (
+            <View style={styles.noProfilesContainer}>
+              <Text style={styles.noProfilesText}>No profiles available</Text>
+            </View>
+          )
         )}
       </View>
 
@@ -276,9 +308,9 @@ const styles = StyleSheet.create({
   },
   bookButton: {
     position: 'absolute',
-    bottom: 150, 
-    left: 20, 
-    zIndex: 10, 
+    bottom: 150,
+    left: 20,
+    zIndex: 10,
   },
   bookIcon: {
     width: 30,
@@ -315,7 +347,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.3,
     shadowRadius: 2,
-    elevation: 5, 
+    elevation: 5,
   },
   buttonText: {
     fontSize: 24,
