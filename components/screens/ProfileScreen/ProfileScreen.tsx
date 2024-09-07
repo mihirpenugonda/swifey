@@ -27,31 +27,40 @@ const ProfileScreen = () => {
       if (userError || !user) {
         throw new Error('User not logged in or error fetching user.');
       }
-
+  
       const { data, error } = await supabase
         .from('profiles')
         .select('name, date_of_birth, photos')
         .eq('id', user.id)
         .single();
-
+  
       if (error) {
         throw new Error(`Error fetching profile: ${error.message}`);
       }
-
+  
       setProfile(data);
-
-      // Set avatar URL from the first photo
+  
+      // Ensure that the photos array exists and has elements
       if (data.photos && data.photos.length > 0) {
-        const { data: urlData } = supabase.storage
-          .from('photos')
-          .getPublicUrl(data.photos[0]);
-        setAvatarUrl(urlData.publicUrl);
+        let avatarPath = data.photos[0]; // Get the first photo path
+        
+        // Ensure avatarPath is relative and not already a full URL
+        if (avatarPath.startsWith('https://')) {
+          // If it's already a full URL, use it as-is
+          setAvatarUrl(avatarPath);
+        } else {
+          // Otherwise, construct the correct full URL
+          const fullUrl = `https://exftzdxtyfbiwlpmecmd.supabase.co/storage/v1/object/public/photos/${avatarPath}`;
+          console.log('Correct Avatar URL:', fullUrl); // Log the correct public URL for debugging
+          setAvatarUrl(fullUrl);
+        }
       }
     } catch (error) {
       console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
     }
   };
-
+  
+  
   const calculateAge = (dateOfBirth: string): number => {
     const today = new Date();
     const birthDate = new Date(dateOfBirth);
@@ -148,6 +157,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
+    marginTop: 12
   },
   buttonWrapper: {
     width: '80%',
@@ -162,9 +172,9 @@ const styles = StyleSheet.create({
     borderRadius: 30,
   },
   buttonText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
+    color: '#000',
+    fontSize: 14,
+    fontWeight: '500',
     textAlign: 'center',
   },
   placeholderAvatar: {

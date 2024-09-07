@@ -14,6 +14,8 @@ import { supabase } from '../../supabaseClient';
 import { useRouter } from 'expo-router';
 import HeaderLogo from '@/components/HeaderLogo';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -50,22 +52,29 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     setLoading(true);
-
-    const { error } = await supabase.auth.signInWithPassword({
+  
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-
+  
     setLoading(false);
-
+  
     if (error) {
       Alert.alert('Error', error.message);
-    } else {
+    } else if (data.session) {
+      const jwtToken = data.session.access_token;
+      const userId = data.user.id;
+  
+      await AsyncStorage.setItem('jwtToken', jwtToken);
+      await AsyncStorage.setItem('userId', userId);
+      console.log('JWT Token and User ID stored:', jwtToken, userId);
+  
       Alert.alert('Success', 'You are logged in!');
-   // router.push('/NameInputScreen');
       router.push('/navigator/AppNavigator');
     }
   };
+  
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>

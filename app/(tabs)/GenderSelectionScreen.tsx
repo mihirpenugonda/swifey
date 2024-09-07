@@ -41,7 +41,7 @@ export default function GenderSelectionScreen() {
 
       <Text style={styles.title}>What's your gender?</Text>
 
-      {['Woman', 'Man', 'Non-binary'].map((gender) => (
+      {['woman', 'man', 'non-binary'].map((gender) => (
         <TouchableOpacity
           key={gender}
           style={[

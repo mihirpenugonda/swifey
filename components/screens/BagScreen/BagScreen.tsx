@@ -1,34 +1,74 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import AppBar from '../../AppBar';
+import AppBar from '../../../components/AppBar';
+import { fetchUserWallet } from '../../../services/apiService'; // Assuming you have an API service
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage to get the user ID
 
 export default function BagScreen() {
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [walletAddress, setWalletAddress] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadWalletData = async () => {
+      try {
+        // Retrieve the user_id from AsyncStorage
+        const userId = await AsyncStorage.getItem('userId');
+        if (!userId) throw new Error('User ID not found');
+
+        // Fetch wallet data using the user_id
+        const walletData = await fetchUserWallet(userId);
+        setWalletBalance(walletData.balance);
+        setWalletAddress(walletData.wallet_address);
+      } catch (error) {
+        console.error('Failed to fetch wallet data', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadWalletData();
+  }, []);
+
+  const formatWalletAddress = (address: string) => {
+    if (address.length > 10) {
+      return `${address.substring(0, 4)}...${address.substring(address.length - 4)}`;
+    }
+    return address;
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <AppBar />
-      <LinearGradient
-        colors={['#F4F9F5', '#EDDCCC']}
-        style={styles.container}
-      >
+      <LinearGradient colors={['#F4F9F5', '#EDDCCC']} style={styles.container}>
         <View style={styles.balanceContainer}>
           <View style={styles.row}>
             <Text style={styles.label}>Total Balance</Text>
-            <Text style={styles.balance}>$0</Text>
+            <Text style={styles.balance}>
+              ${typeof walletBalance === 'number' ? walletBalance.toFixed(2) : '0.00'} USD
+            </Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Wallet Address</Text>
-            <Text style={styles.walletAddress}>-</Text>
+            <Text style={styles.walletAddress}>
+              {walletAddress ? formatWalletAddress(walletAddress) : '-'}
+            </Text>
           </View>
         </View>
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.addButton}>
-            <LinearGradient
-              colors={['#FF56F8', '#B6E300']}
-              style={styles.gradientButton}
-            >
+            <LinearGradient colors={['#FF56F8', '#B6E300']} style={styles.gradientButton}>
               <Text style={styles.addButtonText}>ADD CASH</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -64,7 +104,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    // Removed backgroundColor here because it's defined in the LinearGradient
   },
   balanceContainer: {
     marginBottom: 20,
