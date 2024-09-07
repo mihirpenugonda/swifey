@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Image, View, Text, FlatList, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import AppBar from '../../AppBar';
-import { fetchMatches } from '../../../services/apiService'; // Import the fetchMatches function
+import { fetchMatches } from '../../../services/apiService';
 import { useIsFocused } from '@react-navigation/native';
 
 interface MatchItem {
@@ -18,12 +18,12 @@ export default function KissesScreen() {
   const [matches, setMatches] = useState<MatchItem[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const isFocused = useIsFocused(); // Hook to check if the screen is focused
+  const isFocused = useIsFocused();
 
   useEffect(() => {
     const loadMatches = async () => {
       try {
-        const fetchedMatches = await fetchMatches(20, 0); // Fetch 20 matches starting from offset 0
+        const fetchedMatches = await fetchMatches(20, 0);
         setMatches(fetchedMatches);
       } catch (error) {
         console.error('Error loading matches:', error);
@@ -33,9 +33,9 @@ export default function KissesScreen() {
     };
 
     if (isFocused) {
-      loadMatches(); // Load matches only when the screen is focused
+      loadMatches();
     }
-  }, [isFocused]); // Effect runs whenever the screen is focused
+  }, [isFocused]);
 
   const handleMatchPress = (match: MatchItem) => {
     router.push({
@@ -66,7 +66,7 @@ export default function KissesScreen() {
   const renderEmptyState = () => (
     <View style={styles.emptyStateContainer}>
       <Image
-        source={require('../../../assets/images/your-move-placeholder.png')} // Placeholder image path
+        source={require('../../../assets/images/your-move-placeholder.png')}
         style={styles.placeholderImage}
       />
       <Text style={styles.emptyStateText}>You don't have any kisses yet!</Text>

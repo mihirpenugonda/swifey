@@ -40,7 +40,7 @@ export default function PreferenceScreen() {
       }
 
       console.log('Preferences updated successfully');
-      router.push('/LocationAccessScreen'); // Navigate to the next screen
+      router.push('/LocationAccessScreen'); 
     } catch (error) {
       console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
       Alert.alert('Error', error instanceof Error ? error.message : 'An unexpected error occurred.');

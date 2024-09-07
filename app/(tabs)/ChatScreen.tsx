@@ -20,7 +20,7 @@ export default function ChatScreen() {
       if (error || !user) {
         console.error('Error fetching user:', error);
       } else {
-        setUserId(user.id); // Store the current user's profile ID
+        setUserId(user.id);
         loadConversation(user.id);
       }
     };
@@ -35,12 +35,10 @@ export default function ChatScreen() {
         console.log("Fetched conversation response:", fetchedConversation);
   
         if (fetchedConversation && Array.isArray(fetchedConversation.messages) && fetchedConversation.messages.length > 0) {
-          // Sort messages by created_at in ascending order
           const sortedMessages = fetchedConversation.messages.sort(
             (a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
           );
   
-          // Map the sorted messages to fit the structure of your chat
           const updatedMessages = sortedMessages.map((msg: any) => ({
             id: msg.id,
             text: msg.message_content,
@@ -63,10 +61,10 @@ export default function ChatScreen() {
   
 
   const handleSendMessage = async () => {
-    if (message.trim() === '') return; // Avoid sending empty messages
+    if (message.trim() === '') return;
   
     const newMessage = {
-      id: Date.now().toString(), // Temporary ID for the message
+      id: Date.now().toString(),
       text: message,
       sender: 'self',
     };
@@ -74,14 +72,10 @@ export default function ChatScreen() {
     try {
       const validMatchId = Array.isArray(matchId) ? matchId[0] : matchId;
       
-      // Send message to the server
       const response = await sendMessageToServer(validMatchId, message);
   
       if (response.success) {
-        // Add the new message to the messages array (append at the bottom)
         setMessages((prevMessages) => [...prevMessages, newMessage]);
-  
-        // Clear the input field
         setMessage('');
       } else {
         console.error('Failed to send message');

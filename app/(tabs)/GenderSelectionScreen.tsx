@@ -26,7 +26,7 @@ export default function GenderSelectionScreen() {
       }
 
       console.log('Gender updated successfully');
-      router.push('/PreferenceScreen'); // Navigate to the next screen
+      router.push('/PreferenceScreen');
     } catch (error) {
       console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
       Alert.alert('Error', error instanceof Error ? error.message : 'An unexpected error occurred.');
@@ -106,12 +106,12 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#FF56F8',  // Pink background for the selected state
+    backgroundColor: '#FF56F8',  
     alignItems: 'center',
     justifyContent: 'center',
   },
   tick: {
-    color: '#fff', // White tick mark
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },

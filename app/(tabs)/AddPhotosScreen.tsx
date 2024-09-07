@@ -43,10 +43,6 @@ export default function AddPhotosScreen() {
     });
   };
 
-
-
-
-  
   const handleNext = async () => {
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -61,12 +57,10 @@ export default function AddPhotosScreen() {
         if (imageUri) {
           console.log(`Processing image ${i + 1}/${images.length} with URI: ${imageUri}`);
           try {
-            // Read the file from local filesystem as base64
             const base64Data = await FileSystem.readAsStringAsync(imageUri, {
               encoding: FileSystem.EncodingType.Base64,
             });
   
-            // Convert base64 to ArrayBuffer
             const arrayBuffer = Buffer.from(base64Data, 'base64');
   
             const fileExt = imageUri.split('.').pop();
@@ -74,7 +68,6 @@ export default function AddPhotosScreen() {
   
             console.log(`Uploading image: ${fileName}, ArrayBuffer size: ${arrayBuffer.byteLength}`);
   
-            // Upload the file as ArrayBuffer
             const { data: storageData, error: storageError } = await supabase.storage
               .from('photos')
               .upload(`${user.id}/${fileName}`, arrayBuffer, {
@@ -144,9 +137,6 @@ export default function AddPhotosScreen() {
     }
   };
   
-  
-  
-
   const renderImageSlot = ({ item, index }: { item: string | null; index: number }) => (
     <View style={styles.imageSlotContainer}>
       <TouchableOpacity style={styles.imageSlot} onPress={() => handleAddImage(index)}>

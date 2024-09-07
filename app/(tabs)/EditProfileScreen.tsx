@@ -41,7 +41,6 @@ export default function EditProfileScreen() {
       setName(data.name || '');
       setBio(data.bio || '');
       
-      // Calculate age from date_of_birth
       if (data.date_of_birth) {
         const birthDate = new Date(data.date_of_birth);
         const today = new Date();
@@ -53,13 +52,12 @@ export default function EditProfileScreen() {
         setAge(calculatedAge.toString());
       }
   
-      // Set images, ensuring we always have 6 slots
       const fetchedImages = data.photos || [];
       const imageUrls = fetchedImages.map((path: string) => {
         if (path.startsWith('https://')) {
-          return path; // Use full URL if it already exists
+          return path; 
         }
-        // Otherwise, construct the full URL for the relative path
+
         return `https://exftzdxtyfbiwlpmecmd.supabase.co/storage/v1/object/public/photos/${path}`;
       });
   
@@ -103,12 +101,12 @@ export default function EditProfileScreen() {
         throw new Error('User not logged in or error fetching user.');
       }
   
-      // Convert age to date_of_birth
+
       const currentDate = new Date();
       const birthYear = currentDate.getFullYear() - parseInt(age);
       const dateOfBirth = new Date(birthYear, currentDate.getMonth(), currentDate.getDate()).toISOString().split('T')[0];
   
-      // Fetch current profile to compare photos
+
       const { data: currentProfile, error: fetchError } = await supabase
         .from('profiles')
         .select('photos')
@@ -120,13 +118,13 @@ export default function EditProfileScreen() {
       const currentPhotos = currentProfile.photos || [];
       const newPhotos = images.filter(Boolean) as string[];
   
-      // Photos to delete (files that exist in currentPhotos but not in newPhotos)
+
       const photosToDelete = currentPhotos.filter((photo: string) => !newPhotos.includes(photo));
   
-      // Photos to add (files that exist in newPhotos but not in currentPhotos)
+
       const photosToAdd = newPhotos.filter(photo => !currentPhotos.includes(photo));
   
-      // Delete removed photos from storage
+
       for (const photo of photosToDelete) {
         const { error: deleteError } = await supabase.storage
           .from('photos')
@@ -134,15 +132,15 @@ export default function EditProfileScreen() {
         if (deleteError) throw deleteError;
       }
   
-      // Add new photos to storage
+
       const addedPhotos = await Promise.all(photosToAdd.map(async (photo, index) => {
         if (photo.startsWith('file://') || photo.startsWith('content://')) {
-          // Read file as base64
+
           const base64Data = await FileSystem.readAsStringAsync(photo, {
             encoding: FileSystem.EncodingType.Base64,
           });
   
-          // Convert base64 to ArrayBuffer
+
           const arrayBuffer = Buffer.from(base64Data, 'base64');
           const fileExt = photo.split('.').pop();
           const fileName = `${Date.now()}_${index}.${fileExt}`;
@@ -159,18 +157,18 @@ export default function EditProfileScreen() {
   
           return filePath;
         } else {
-          // If it's an existing URL, just return the path
+
           return photo.split('/').slice(-2).join('/');
         }
       }));
   
-      // Combine existing photos (that weren't deleted) with newly added photos
+
       const updatedPhotos = [
         ...currentPhotos.filter((photo: any) => !photosToDelete.includes(photo)),
         ...addedPhotos
       ];
   
-      // Update profile
+
       const { error } = await supabase
         .from('profiles')
         .update({

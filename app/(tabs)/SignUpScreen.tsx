@@ -85,12 +85,12 @@ export default function SignUpScreen() {
     <View style={styles.container}>
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <Animated.View style={[styles.innerContainer, { paddingBottom: keyboardHeight }]}>
-        {/* Wrap the logo in a container and position it at the top */}
+
         <View style={styles.headerContainer}>
           <HeaderLogo />
         </View>
 
-        {/* Rest of the content */}
+
         <View style={styles.content}>
           <Text style={styles.title}>What's your email address?</Text>
           <TextInput

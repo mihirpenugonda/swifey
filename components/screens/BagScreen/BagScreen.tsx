@@ -3,8 +3,8 @@ import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import AppBar from '../../../components/AppBar';
-import { fetchUserWallet } from '../../../services/apiService'; // Assuming you have an API service
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage to get the user ID
+import { fetchUserWallet } from '../../../services/apiService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function BagScreen() {
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
@@ -14,11 +14,9 @@ export default function BagScreen() {
   useEffect(() => {
     const loadWalletData = async () => {
       try {
-        // Retrieve the user_id from AsyncStorage
         const userId = await AsyncStorage.getItem('userId');
         if (!userId) throw new Error('User ID not found');
 
-        // Fetch wallet data using the user_id
         const walletData = await fetchUserWallet(userId);
         setWalletBalance(walletData.balance);
         setWalletAddress(walletData.wallet_address);

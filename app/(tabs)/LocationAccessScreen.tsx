@@ -23,10 +23,8 @@ export default function LocationAccessScreen() {
         let locationData = await Location.getCurrentPositionAsync({});
         setLocation(locationData);
 
-        // Store location in Supabase
         await storeLocation(locationData);
 
-        // Navigate to the next screen
         router.push('/navigator/AppNavigator');
       } catch (error) {
         console.error('Error:', error instanceof Error ? error.message : 'Unknown error');

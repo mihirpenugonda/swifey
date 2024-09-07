@@ -3,7 +3,7 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, SafeAreaView, Dimensio
 import Swiper from 'react-native-deck-swiper';
 import AppBar from '../../AppBar';
 import BottomSheet from '@gorhom/bottom-sheet';
-import { fetchMatches, fetchProfiles, sendSwipe } from '../../../services/apiService'; // Update import
+import { fetchMatches, fetchProfiles, sendSwipe } from '../../../services/apiService';
 import eventEmitter from '@/services/eventEmitter';
 
 const { width, height } = Dimensions.get('window');
@@ -19,21 +19,20 @@ export default function PlayScreen() {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [allSwiped, setAllSwiped] = useState(false);
 
-
   const loadProfiles = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const fetchedProfiles = await fetchProfiles(20, 0); // Fetch 20 profiles
+      const fetchedProfiles = await fetchProfiles(20, 0);
       console.log('Fetched profiles:', fetchedProfiles);
 
       if (Array.isArray(fetchedProfiles) && fetchedProfiles.length > 0) {
-        setProfiles(fetchedProfiles); // Save profiles to the state
+        setProfiles(fetchedProfiles);
       } else {
         console.error('No profiles found or invalid response format:', fetchedProfiles);
         setError('No profiles found or invalid response format');
-        setProfiles([]); // Clear any previously set profiles
+        setProfiles([]);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -54,7 +53,6 @@ export default function PlayScreen() {
     }
   }, [currentProfileIndex, profiles]);
 
-// Handle swipe left (Rug)
 const handleSwipeLeft = async () => {
   try {
     const currentProfile = profiles[currentProfileIndex];
@@ -79,14 +77,12 @@ const handleSwipeLeft = async () => {
 
     setCurrentProfileIndex((prevIndex) => {
       const nextIndex = prevIndex + 1;
-      return nextIndex >= profiles.length ? 0 : nextIndex; // Wrap around if at the end
+      return nextIndex >= profiles.length ? 0 : nextIndex;
     });
   } catch (error) {
     console.error('Error sending rug swipe:', error);
   }
 };
-
-
 
 const handleSwipeRight = async () => {
   try {
@@ -109,24 +105,22 @@ const handleSwipeRight = async () => {
     console.log('Swipe response:', response);
     processSwipeResponse(response);
     
-    // Emit an event for updating matches
-    eventEmitter.emit('matchMade');  // Emit event
+    eventEmitter.emit('matchMade');
     
     swiperRef.current?.swipeRight();
 
     setCurrentProfileIndex((prevIndex) => {
       const nextIndex = prevIndex + 1;
-      return nextIndex >= profiles.length ? 0 : nextIndex; // Wrap around if at the end
+      return nextIndex >= profiles.length ? 0 : nextIndex;
     });
   } catch (error) {
     console.error('Error sending kiss swipe:', error);
   }
 };
 
-  
   const processSwipeResponse = (response: { decision: string; match_id: any; }) => {
     if (response.decision === 'match') {
-      console.log('It’s a match! Match ID:', response.match_id);
+      console.log("It's a match! Match ID", response.match_id);
     } else if (response.decision === 'pending') {
       console.log('Swipe is pending');
     } else if (response.decision === 'rugged') {
@@ -401,4 +395,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
-});
+}); 

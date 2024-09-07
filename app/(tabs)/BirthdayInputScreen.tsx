@@ -53,7 +53,6 @@ export default function BirthdayInputScreen() {
       <View style={styles.contentContainer}>
         <Text style={styles.title}>When's your Birthday?</Text>
 
-        {/* Date Selection Input */}
         <TouchableOpacity 
           style={[styles.input, styles.buttonWidth]}
           onPress={() => setShowPicker(true)}
@@ -63,7 +62,6 @@ export default function BirthdayInputScreen() {
           </Text>
         </TouchableOpacity>
 
-        {/* Confirm Button */}
         <TouchableOpacity onPress={handleConfirm} style={styles.buttonWrapper}>
           <LinearGradient
             colors={['#FF56F8', '#B6E300']}
@@ -81,7 +79,6 @@ export default function BirthdayInputScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Date Picker */}
       {showPicker && (
         <View style={styles.datePickerOverlay}>
           <View style={styles.datePickerContainer}>

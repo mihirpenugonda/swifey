@@ -40,18 +40,14 @@ const ProfileScreen = () => {
   
       setProfile(data);
   
-      // Ensure that the photos array exists and has elements
       if (data.photos && data.photos.length > 0) {
-        let avatarPath = data.photos[0]; // Get the first photo path
+        let avatarPath = data.photos[0];
         
-        // Ensure avatarPath is relative and not already a full URL
         if (avatarPath.startsWith('https://')) {
-          // If it's already a full URL, use it as-is
           setAvatarUrl(avatarPath);
         } else {
-          // Otherwise, construct the correct full URL
           const fullUrl = `https://exftzdxtyfbiwlpmecmd.supabase.co/storage/v1/object/public/photos/${avatarPath}`;
-          console.log('Correct Avatar URL:', fullUrl); // Log the correct public URL for debugging
+          console.log('Correct Avatar URL:', fullUrl);
           setAvatarUrl(fullUrl);
         }
       }
@@ -59,7 +55,6 @@ const ProfileScreen = () => {
       console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
     }
   };
-  
   
   const calculateAge = (dateOfBirth: string): number => {
     const today = new Date();
@@ -129,7 +124,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative', // Allows absolute positioning of the verification button
+    position: 'relative',
   },
   avatar: {
     width: 120,
@@ -141,11 +136,11 @@ const styles = StyleSheet.create({
   verificationButton: {
     position: 'absolute',
     bottom: 0,
-    right: 0, // Slightly outside the avatar's edge to overlap neatly
-    backgroundColor: 'white', // Circle background color for contrast
+    right: 0,
+    backgroundColor: 'white',
     borderRadius: 15,
     padding: 5,
-    elevation: 5, // Adds a subtle shadow effect
+    elevation: 5,
   },
   verificationIcon: {
     width: 20,

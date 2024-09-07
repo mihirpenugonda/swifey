@@ -19,7 +19,6 @@ const HomeScreen: React.FC = () => {
         <SvgLogo width={100} height={100} style={styles.logo} />
       </View>
 
-      {/* Centered content */}
       <View style={styles.contentContainer}>
         <Text style={styles.title}>
           We’re{'\n'}invite only
@@ -37,7 +36,6 @@ const HomeScreen: React.FC = () => {
           <Text style={styles.handshakeButtonText}>DO AN IRL HANDSHAKE</Text>
         </TouchableOpacity>
 
-        {/* Login Button */}
         <TouchableOpacity style={styles.loginButton} onPress={handleLoginPress}>
           <Text style={styles.loginButtonText}>LOG IN</Text>
         </TouchableOpacity>
@@ -111,12 +109,12 @@ const styles = StyleSheet.create({
   },
   loginButton: {
     width: '100%',
-    backgroundColor: '#333',  // Different color for Login button
+    backgroundColor: '#333',  
     paddingVertical: 15,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20,  // Adds some space between the handshake button and the login button
+    marginTop: 20,  
   },
   loginButtonText: {
     color: '#fff',

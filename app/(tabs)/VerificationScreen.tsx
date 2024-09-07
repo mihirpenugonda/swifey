@@ -8,8 +8,8 @@ export default function VerificationScreen() {
   const router = useRouter();
   const { width } = Dimensions.get('window');
   const boxSize = width * 0.12;
-  const [otp, setOtp] = useState<string[]>(Array(6).fill('')); // State to manage OTP input
-  const inputRefs = useRef<TextInput[]>([]); // Ref to hold references to TextInput components
+  const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
+  const inputRefs = useRef<TextInput[]>([]);
 
   const handleOtpChange = (text: string, index: number) => {
     if (text.length > 0) {
@@ -17,32 +17,30 @@ export default function VerificationScreen() {
       updatedOtp[index] = text;
       setOtp(updatedOtp);
 
-      // Move focus to the next input box if there is one
       if (index < otp.length - 1) {
         inputRefs.current[index + 1]?.focus();
       }
 
-      // If all OTP inputs are filled, attempt verification
       if (updatedOtp.every(value => value.trim().length > 0)) {
-        verifyOtp(updatedOtp.join('')); // Join OTP array to form a single string
+        verifyOtp(updatedOtp.join(''));
       }
     }
   };
 
   const verifyOtp = async (otpCode: string) => {
-    const email = 'user-email@example.com'; // Retrieve this from the user's input or global state
+    const email = 'user-email@example.com';
     try {
       const { error } = await supabase.auth.verifyOtp({
-        email: email,  // Use the user's email
+        email: email,
         token: otpCode,
-        type: 'signup'  // Specify the OTP type as 'signup'
+        type: 'signup'
       });
 
       if (error) {
         Alert.alert('Verification Failed', error.message);
       } else {
         Alert.alert('Success', 'Your email has been verified. Welcome to KissOrRug!');
-        router.push('/NameInputScreen');  // Navigate to the next screen after verification
+        router.push('/NameInputScreen');
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -61,19 +59,16 @@ export default function VerificationScreen() {
 
   return (
     <View style={styles.container}>
-      {/* HeaderLogo at the top */}
       <HeaderLogo />
 
-      {/* Centered Content */}
       <View style={styles.contentContainer}>
         <Text style={styles.title}>VERIFY YOUR EMAIL</Text>
 
-        {/* OTP input boxes */}
         <View style={styles.boxContainer}>
           {otp.map((value, index) => (
             <TextInput
               key={index}
-              ref={(ref) => inputRefs.current[index] = ref!} // Assign ref to each TextInput
+              ref={(ref) => inputRefs.current[index] = ref!}
               style={[styles.inputBox, { width: boxSize, height: boxSize }]}
               keyboardType="numeric"
               maxLength={1}
