@@ -114,6 +114,7 @@ const handleSwipeRight = async () => {
       console.log('Swipe is pending');
     } else if (response.decision === 'rugged') {
       console.log('Rugged!');
+      
     } else if (response.decision === 'profit') {
       console.log('Profit earned!');
     } else if (response.decision === 'mutual_rug') {

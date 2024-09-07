@@ -28,7 +28,7 @@ export default function AppNavigator() {
         },
         tabBarLabelStyle: {
           fontSize: 14,
-          fontFamily: 'Tomorrow',
+          fontFamily: 'Tomorrow_400Regular',
           fontWeight: '400',
         },
         tabBarActiveTintColor: '#CDFF8B',
@@ -73,7 +73,7 @@ export default function AppNavigator() {
         tabBarLabel: ({ focused, color }) => {
           const labelStyle: TextStyle = focused
             ? {
-                fontFamily: 'Tomorrow',
+                fontFamily: 'Tomorrow_400Regular',
                 fontSize: 16,
                 fontStyle: 'italic',
                 fontWeight: '700',
@@ -82,7 +82,7 @@ export default function AppNavigator() {
                 color: '#CDFF8B', 
               }
             : {
-                fontFamily: 'Tomorrow',
+                fontFamily: 'Tomorrow_400Regular',
                 fontSize: 14,
                 fontWeight: '400',
                 lineHeight: 14,

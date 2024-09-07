@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   orText: {
-    fontFamily: 'WorkSans_700Bold_Italic',
+    fontFamily: 'WorkSans_700Bold',
     fontSize: 16,
     fontStyle: 'italic',
     fontWeight: '700',

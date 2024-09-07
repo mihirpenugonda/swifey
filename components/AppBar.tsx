@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   logoText: {
     color: '#000',
     fontSize: 18.65,
-    fontFamily: 'Impact',
+    fontFamily: 'Tomorrow_700Regular',
     fontWeight: '400',
     lineHeight: 27.97,
     letterSpacing: -0.02 * 18.65,
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
   usdText: {
     color: '#000',
     fontSize: 14,
-    fontFamily: 'Tomorrow',
+    fontFamily: 'Tomorrow_700Bold',
     fontWeight: '600',
     lineHeight: 17.4,
     textAlign: 'left',

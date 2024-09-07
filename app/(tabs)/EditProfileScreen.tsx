@@ -7,6 +7,7 @@ import { supabase } from '../../supabaseClient';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { Buffer } from 'buffer';
+const [loading, setLoading] = useState(false);
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -210,6 +211,61 @@ export default function EditProfileScreen() {
     </TouchableOpacity>
   );
 
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        throw new Error(error.message);
+      }
+      Alert.alert('Logged out', 'You have been successfully logged out.');
+      router.replace('/LoginScreen'); 
+    } catch (error) {
+      console.error('Error logging out:', error);
+      Alert.alert('Error', 'Failed to log out. Please try again.');
+    }
+  };
+
+  // const handleDeleteAccount = async () => {
+  //   Alert.alert(
+  //     "Confirm Account Deletion",
+  //     "Are you sure you want to delete your account? This action cannot be undone.",
+  //     [
+  //       {
+  //         text: "Cancel",
+  //         style: "cancel",
+  //       },
+  //       {
+  //         text: "Delete",
+  //         style: "destructive",
+  //         onPress: async () => {
+  //           try {
+  //             setLoading(true);
+  //             const { data: { user }, error: userError } = await supabase.auth.getUser();
+  //             if (userError || !user) {
+  //               throw new Error('User not logged in or error fetching user.');
+  //             }
+
+  //             // Delete user account using the admin API
+  //             const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
+
+  //             if (deleteError) {
+  //               throw new Error(deleteError.message);
+  //             }
+
+  //             Alert.alert('Account Deleted', 'Your account has been deleted.');
+  //             router.replace('/SignUpScreen'); 
+  //           } catch (error) {
+  //             console.error('Error deleting account:', error);
+  //             Alert.alert('Error', 'Failed to delete account. Please try again.');
+  //           } finally {
+  //             setLoading(false);
+  //           }
+  //         },
+  //       },
+  //     ]
+  //   );
+  // };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.appBar}>
@@ -271,11 +327,11 @@ export default function EditProfileScreen() {
           </TouchableOpacity>
 
           <View style={styles.logoutContainer}>
-            <TouchableOpacity style={[styles.logoutButton, styles.gradientBorder]}>
+            <TouchableOpacity style={[styles.logoutButton, styles.gradientBorder]} onPress={handleLogout}>
               <Text style={styles.logoutButtonText}>LOGOUT</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.deleteButton}>
-              <Text style={styles.deleteButtonText}>DELETE MY ACCOUNT</Text>
+            <TouchableOpacity style={styles.deleteButton} onPress={handleLogout} disabled={loading}>
+              <Text style={styles.deleteButtonText}>{loading ? 'Deleting...' : 'DELETE MY ACCOUNT'}</Text>
             </TouchableOpacity>
           </View>
         </View>

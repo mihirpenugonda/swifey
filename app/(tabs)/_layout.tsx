@@ -1,12 +1,12 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { useFonts, WorkSans_700Bold_Italic } from '@expo-google-fonts/work-sans';
+import { useFonts, WorkSans_700Bold } from '@expo-google-fonts/work-sans';
 import { ActivityIndicator } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function AppLayout() {
   const [fontsLoaded] = useFonts({
-    WorkSans_700Bold_Italic,
+    WorkSans_700Bold
   });
 
   if (!fontsLoaded) {
