@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import AppBar from '../../AppBar';
+import AppBar from '../../../components/AppBar';
 import { fetchUserWallet } from '../../../services/apiService'; // Assuming you have an API service
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage to get the user ID
 

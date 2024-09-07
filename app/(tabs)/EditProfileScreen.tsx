@@ -215,8 +215,8 @@ export default function EditProfileScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.appBar}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>{"<"}</Text>
+      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Image source={require('../../assets/images/back-icon.png')} style={styles.backIcon} />
         </TouchableOpacity>
         <Text style={styles.appBarTitle}>Edit Profile</Text>
       </View>
@@ -421,6 +421,10 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     alignItems: 'center',
     marginRight: 5,
+  },  backIcon: {
+    width: 24,
+    height: 24,
+    tintColor: '#000',
   },
   deleteButton: {
     flex: 1,

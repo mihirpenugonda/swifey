@@ -58,4 +58,76 @@ const getJwtToken = async () => {
     return response.json();
   };
   
-  
+  export const fetchMatches = async (limit : number, offset: number) => {
+    const jwtToken = await getJwtToken();
+
+    if (!jwtToken) {
+        throw new Error('No JWT token found');
+    }
+
+    const response = await fetch(`${API_URL}/fetch-matches`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${jwtToken}`,
+        },
+        body: JSON.stringify({ limit, offset }),
+    });
+
+    if (!response.ok) {
+        const errorMessage = await response.text();
+        console.error('Error fetching matches:', errorMessage);
+        throw new Error(`Failed to fetch matches: ${response.statusText}`);
+    }
+
+    return response.json();
+};
+
+
+
+// Send a message
+export const sendMessageToServer = async (matchId: string, messageContent: string) => {
+  const jwtToken = await getJwtToken();
+  const response = await fetch(`${API_URL}/send-message`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    body: JSON.stringify({
+      match_id: matchId,
+      message_content: messageContent,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorMessage = await response.text();
+    throw new Error(`Failed to send message: ${errorMessage}`);
+  }
+
+  return response.json();
+};
+
+// Fetch conversation
+export const fetchConversation = async (matchId: string, limit: number, offset: number) => {
+  const jwtToken = await getJwtToken();
+  const response = await fetch(`${API_URL}/fetch-conversation`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    body: JSON.stringify({
+      match_id: matchId,
+      limit,
+      offset,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorMessage = await response.text();
+    throw new Error(`Failed to fetch conversation: ${errorMessage}`);
+  }
+
+  return response.json();
+};
