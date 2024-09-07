@@ -131,3 +131,28 @@ export const fetchConversation = async (matchId: string, limit: number, offset: 
 
   return response.json();
 };
+
+export const fetchMyTurnProfiles = async (limit: number, offset: number) => {
+    const jwtToken = await getJwtToken();
+  
+    if (!jwtToken) {
+      throw new Error('No JWT token found');
+    }
+  
+    const response = await fetch(`${API_URL}/browse-my-turn-profiles`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${jwtToken}`,
+      },
+      body: JSON.stringify({ limit, offset }),
+    });
+  
+    if (!response.ok) {
+      const errorMessage = await response.text();
+      throw new Error(`Failed to fetch profiles: ${response.statusText} - ${errorMessage}`);
+    }
+  
+    return response.json();
+  };
+  

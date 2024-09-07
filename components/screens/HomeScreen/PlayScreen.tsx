@@ -24,12 +24,13 @@ export default function PlayScreen() {
       setError(null);
       const fetchedProfiles = await fetchProfiles(20, 0); // Fetch 20 profiles
       console.log('Fetched profiles:', fetchedProfiles);
-      if (Array.isArray(fetchedProfiles.profiles)) {
-        setProfiles(fetchedProfiles.profiles);
+      if (Array.isArray(fetchedProfiles)) {
+        setProfiles(fetchedProfiles); // Directly use the array as fetchedProfiles
       } else {
         console.error('Unexpected response format:', fetchedProfiles);
         setError('Unexpected response format from server');
       }
+      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       console.error('Error fetching profiles:', errorMessage);
