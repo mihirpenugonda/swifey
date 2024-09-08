@@ -1,12 +1,14 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TextInput, Dimensions, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Dimensions, Alert, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import HeaderLogo from '../../components/HeaderLogo'; 
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '../../supabaseClient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function VerificationScreen() { 
   const router = useRouter();
   const { width } = Dimensions.get('window');
+  const { email } = useLocalSearchParams(); 
   const boxSize = width * 0.12;
   const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
   const inputRefs = useRef<TextInput[]>([]);
@@ -21,6 +23,7 @@ export default function VerificationScreen() {
         inputRefs.current[index + 1]?.focus();
       }
 
+ 
       if (updatedOtp.every(value => value.trim().length > 0)) {
         verifyOtp(updatedOtp.join(''));
       }
@@ -28,62 +31,80 @@ export default function VerificationScreen() {
   };
 
   const verifyOtp = async (otpCode: string) => {
-    const email = 'user-email@example.com';
     try {
-      const { error } = await supabase.auth.verifyOtp({
-        email: email,
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: email as string, 
         token: otpCode,
-        type: 'signup'
+        type: 'signup',
       });
 
       if (error) {
         Alert.alert('Verification Failed', error.message);
-      } else {
-        Alert.alert('Success', 'Your email has been verified. Welcome to KissOrRug!');
-        router.push('/NameInputScreen');
+        resetOtpFields(); 
+      } else if (data.session) {
+      
+        const jwtToken = data.session.access_token;
+        const userId = data.user?.id;
+
+        if (jwtToken && userId) {
+          await AsyncStorage.setItem('jwtToken', jwtToken);
+          await AsyncStorage.setItem('userId', userId);
+          console.log('JWT Token and User ID stored:', jwtToken, userId);
+          
+          Alert.alert('Success', 'Your email has been verified. Welcome to KissOrRug!');
+          router.push('/NameInputScreen');
+        } else {
+          Alert.alert('Error', 'Could not retrieve session information');
+        }
       }
     } catch (error) {
-      if (error instanceof Error) {
-        Alert.alert('Error', error.message);
-      } else {
-        Alert.alert('Error', 'An unexpected error occurred');
-      }
+      Alert.alert('Error', 'An unexpected error occurred');
     }
+  };
+
+  const resetOtpFields = () => {
+    setOtp(Array(6).fill(''));
+    inputRefs.current[0]?.focus(); 
   };
 
   const handleBackspace = (index: number) => {
     if (index > 0) {
+      const updatedOtp = [...otp];
+      updatedOtp[index - 1] = ''; 
+      setOtp(updatedOtp);
       inputRefs.current[index - 1]?.focus();
     }
   };
 
   return (
-    <View style={styles.container}>
-      <HeaderLogo />
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.container}>
+        <HeaderLogo />
 
-      <View style={styles.contentContainer}>
-        <Text style={styles.title}>VERIFY YOUR EMAIL</Text>
+        <View style={styles.contentContainer}>
+          <Text style={styles.title}>VERIFY YOUR EMAIL</Text>
 
-        <View style={styles.boxContainer}>
-          {otp.map((value, index) => (
-            <TextInput
-              key={index}
-              ref={(ref) => inputRefs.current[index] = ref!}
-              style={[styles.inputBox, { width: boxSize, height: boxSize }]}
-              keyboardType="numeric"
-              maxLength={1}
-              value={value}
-              onChangeText={text => handleOtpChange(text, index)}
-              onKeyPress={({ nativeEvent }) => {
-                if (nativeEvent.key === 'Backspace' && value === '') {
-                  handleBackspace(index);
-                }
-              }}
-            />
-          ))}
+          <View style={styles.boxContainer}>
+            {otp.map((value, index) => (
+              <TextInput
+                key={index}
+                ref={(ref) => inputRefs.current[index] = ref!}
+                style={[styles.inputBox, { width: boxSize, height: boxSize }]}
+                keyboardType="numeric"
+                maxLength={1}
+                value={value}
+                onChangeText={text => handleOtpChange(text, index)}
+                onKeyPress={({ nativeEvent }) => {
+                  if (nativeEvent.key === 'Backspace' && value === '') {
+                    handleBackspace(index);
+                  }
+                }}
+              />
+            ))}
+          </View>
         </View>
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 }
 

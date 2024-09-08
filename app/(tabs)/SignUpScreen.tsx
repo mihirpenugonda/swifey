@@ -58,10 +58,10 @@ export default function SignUpScreen() {
 
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
+    const { data, error } = await supabase.auth.signInWithOtp({
+      email: email,
       options: {
-        shouldCreateUser: true, 
+        shouldCreateUser: true,  
       },
     });
 
@@ -74,9 +74,29 @@ export default function SignUpScreen() {
         'Check your email',
         'An OTP has been sent to your email address. Please check your inbox to verify your account.'
       );
+      const staticPassword = "111111"; 
+
+      const { data: user, error: userError } = await supabase.auth.getUser();
+  
+      if (userError || !user) {
+        Alert.alert('Error', 'Failed to fetch user after OTP verification');
+      } else {
+        const { error: passwordError } = await supabase.auth.updateUser({
+          password: staticPassword,  
+        });
+  
+        if (passwordError) {
+          Alert.alert('Error', passwordError.message);
+        } else {
+          Alert.alert('Success', 'Your account has been created with a static password.');
+        }
+      }
       setIsCooldown(true);
       setTimeout(() => setIsCooldown(false), 300000); 
-      router.push('/VerificationScreen'); 
+      router.push({
+        pathname: '/VerificationScreen',
+        params: { email }, 
+      });
     }
   };
 

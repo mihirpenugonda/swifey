@@ -4,11 +4,11 @@
     "slug": "kissOrRug",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/splashIcon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/splash.png",
+      "image": "./assets/images/splashIcon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,7 +17,8 @@
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to allow you to upload photos.",
         "NSLocationWhenInUseUsageDescription": "This app needs access to your location to match you with other users nearby."
-      }
+      },
+      "bundleIdentifier": "com.kissOrRug.kissOrRug"
     },
     "android": {
       "adaptiveIcon": {
@@ -28,7 +29,8 @@
         "READ_EXTERNAL_STORAGE",
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
-      ]
+      ],
+      "package": "com.kissOrRug.kissOrRug"
     },
     "web": {
       "bundler": "metro",
@@ -41,6 +43,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "ff2c6826-2f62-49bf-9e71-9aa5937b4173"
+      }
     }
   }
 }

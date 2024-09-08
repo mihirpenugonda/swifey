@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, Alert } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
@@ -11,6 +11,7 @@ import { Buffer } from 'buffer';
 
 export default function AddPhotosScreen() {
   const [images, setImages] = useState<(string | null)[]>(Array(6).fill(null));
+  const [isUploading, setIsUploading] = useState(false); // New loading state
 
   const handleAddImage = async (index: number): Promise<void> => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -44,6 +45,7 @@ export default function AddPhotosScreen() {
   };
 
   const handleNext = async () => {
+    setIsUploading(true);  // Start loader
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) {
@@ -55,52 +57,33 @@ export default function AddPhotosScreen() {
       for (let i = 0; i < images.length; i++) {
         const imageUri = images[i];
         if (imageUri) {
-          console.log(`Processing image ${i + 1}/${images.length} with URI: ${imageUri}`);
-          try {
-            const base64Data = await FileSystem.readAsStringAsync(imageUri, {
-              encoding: FileSystem.EncodingType.Base64,
+          const base64Data = await FileSystem.readAsStringAsync(imageUri, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+  
+          const arrayBuffer = Buffer.from(base64Data, 'base64');
+  
+          const fileExt = imageUri.split('.').pop();
+          const fileName = `photo-${i}-${user.id}.${fileExt}`;
+  
+          const { data: storageData, error: storageError } = await supabase.storage
+            .from('photos')
+            .upload(`${user.id}/${fileName}`, arrayBuffer, {
+              cacheControl: '3600',
+              upsert: false,
             });
   
-            const arrayBuffer = Buffer.from(base64Data, 'base64');
-  
-            const fileExt = imageUri.split('.').pop();
-            const fileName = `photo-${i}-${user.id}.${fileExt}`;
-  
-            console.log(`Uploading image: ${fileName}, ArrayBuffer size: ${arrayBuffer.byteLength}`);
-  
-            const { data: storageData, error: storageError } = await supabase.storage
-              .from('photos')
-              .upload(`${user.id}/${fileName}`, arrayBuffer, {
-                cacheControl: '3600',
-                upsert: false,
-              });
-  
-            if (storageError) {
-              console.error('Storage Error:', JSON.stringify(storageError));
-              throw new Error('Error uploading image to storage');
-            }
-  
-            if (storageData && storageData.path) {
-              uploadedImagePaths.push(storageData.path);
-              console.log(`Uploaded image path: ${storageData.path}`);
-            } else {
-              throw new Error('Storage data is missing the path.');
-            }
-          } catch (error) {
-            if (error instanceof Error) {
-              console.error('Upload Error:', error.message);
-              Alert.alert('Upload Error', error.message);
-            } else {
-              console.error('Unexpected upload error:', error);
-              Alert.alert('Upload Error', 'An unexpected error occurred.');
-            }
+          if (storageError) {
+            throw new Error('Error uploading image to storage');
           }
-        } else {
-          console.log(`Skipping empty image slot ${i + 1}`);
+  
+          if (storageData && storageData.path) {
+            uploadedImagePaths.push(storageData.path);
+          } else {
+            throw new Error('Storage data is missing the path.');
+          }
         }
       }
-  
-      console.log('All uploaded image paths:', uploadedImagePaths);
   
       const { data: currentProfile, error: fetchError } = await supabase
         .from('profiles')
@@ -124,19 +107,14 @@ export default function AddPhotosScreen() {
         throw new Error(`Error updating user profile: ${updateError.message}`);
       }
   
-      console.log('Profile updated successfully with photos:', uploadedImagePaths);
-     router.push('/GenderSelectionScreen');
+      router.push('/GenderSelectionScreen');
     } catch (error) {
-      if (error instanceof Error) {
-        console.error('Error:', error.message);
-        Alert.alert('Error', error.message);
-      } else {
-        console.error('Unexpected error:', error);
-        Alert.alert('Error', 'An unexpected error occurred.');
-      }
+      Alert.alert('Error', error instanceof Error ? error.message : 'An unexpected error occurred.');
+    } finally {
+      setIsUploading(false);  // Stop loader
     }
   };
-  
+
   const renderImageSlot = ({ item, index }: { item: string | null; index: number }) => (
     <View style={styles.imageSlotContainer}>
       <TouchableOpacity style={styles.imageSlot} onPress={() => handleAddImage(index)}>
@@ -176,14 +154,18 @@ export default function AddPhotosScreen() {
           style={styles.imageGrid}
         />
 
-        <TouchableOpacity style={styles.buttonWrapper} onPress={handleNext}>
+        <TouchableOpacity style={styles.buttonWrapper} onPress={handleNext} disabled={isUploading}>
           <LinearGradient
             colors={['#FF56F8', '#B6E300']}
             start={{ x: 0, y: 0.5 }}
             end={{ x: 1, y: 0.5 }}
             style={styles.gradientButton}
           >
-            <Text style={styles.buttonText}>NEXT</Text>
+            {isUploading ? (
+              <ActivityIndicator size="small" color="#000" />
+            ) : (
+              <Text style={styles.buttonText}>NEXT</Text>
+            )}
           </LinearGradient>
         </TouchableOpacity>
       </View>
