@@ -85,17 +85,13 @@ export default function SignUpScreen() {
           password: staticPassword,  
         });
   
-        if (passwordError) {
-          Alert.alert('Error', passwordError.message);
-        } else {
-          Alert.alert('Success', 'Your account has been created with a static password.');
-        }
+       
       }
       setIsCooldown(true);
       setTimeout(() => setIsCooldown(false), 300000); 
       router.push({
         pathname: '/VerificationScreen',
-        params: { email }, 
+        params: { email, signup: 'true' },
       });
     }
   };

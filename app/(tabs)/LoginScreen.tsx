@@ -53,25 +53,20 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     setLoading(true);
   
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithOtp({
       email,
-      password,
     });
   
     setLoading(false);
   
     if (error) {
       Alert.alert('Error', error.message);
-    } else if (data.session) {
-      const jwtToken = data.session.access_token;
-      const userId = data.user.id;
-  
-      await AsyncStorage.setItem('jwtToken', jwtToken);
-      await AsyncStorage.setItem('userId', userId);
-      console.log('JWT Token and User ID stored:', jwtToken, userId);
-  
-      Alert.alert('Success', 'You are logged in!');
-      router.push('/navigator/AppNavigator');
+    } else {
+     
+      router.push({
+        pathname: '/VerificationScreen',
+        params: { email, login: 'true' }, 
+      });
     }
   };
   

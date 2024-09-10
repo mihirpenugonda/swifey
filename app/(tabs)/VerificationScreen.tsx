@@ -8,7 +8,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function VerificationScreen() { 
   const router = useRouter();
   const { width } = Dimensions.get('window');
-  const { email } = useLocalSearchParams(); 
+  const { email, login, signup } = useLocalSearchParams(); 
+  const isSignup = signup === 'true';
+  const isLogin = login === 'true'; 
   const boxSize = width * 0.12;
   const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
   const inputRefs = useRef<TextInput[]>([]);
@@ -35,32 +37,35 @@ export default function VerificationScreen() {
       const { data, error } = await supabase.auth.verifyOtp({
         email: email as string, 
         token: otpCode,
-        type: 'signup',
+        type: 'email',  
       });
-
+  
       if (error) {
         Alert.alert('Verification Failed', error.message);
         resetOtpFields(); 
       } else if (data.session) {
-      
         const jwtToken = data.session.access_token;
         const userId = data.user?.id;
-
+  
         if (jwtToken && userId) {
           await AsyncStorage.setItem('jwtToken', jwtToken);
           await AsyncStorage.setItem('userId', userId);
           console.log('JWT Token and User ID stored:', jwtToken, userId);
           
-          Alert.alert('Success', 'Your email has been verified. Welcome to KissOrRug!');
-          router.push('/NameInputScreen');
+          Alert.alert('Success', 'Your email has been verified!');
+          
+          Alert.alert('Success', isSignup ? 'Your email has been verified. Welcome to KissOrRug!' : 'Logged in successfully!');
+          router.push(isSignup ? '/NameInputScreen' : '/navigator/AppNavigator');  
         } else {
           Alert.alert('Error', 'Could not retrieve session information');
         }
+      
       }
     } catch (error) {
       Alert.alert('Error', 'An unexpected error occurred');
     }
   };
+  
 
   const resetOtpFields = () => {
     setOtp(Array(6).fill(''));
