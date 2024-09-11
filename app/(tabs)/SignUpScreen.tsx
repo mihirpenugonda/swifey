@@ -74,19 +74,19 @@ export default function SignUpScreen() {
         'Check your email',
         'An OTP has been sent to your email address. Please check your inbox to verify your account.'
       );
-      const staticPassword = "111111"; 
+      // const staticPassword = "111111"; 
 
-      const { data: user, error: userError } = await supabase.auth.getUser();
+      // const { data: user, error: userError } = await supabase.auth.getUser();
   
-      if (userError || !user) {
-        Alert.alert('Error', 'Failed to fetch user after OTP verification');
-      } else {
-        const { error: passwordError } = await supabase.auth.updateUser({
-          password: staticPassword,  
-        });
+      // if (userError || !user) {
+      //   Alert.alert('Error', 'Failed to fetch user after OTP verification');
+      // } else {
+      //   const { error: passwordError } = await supabase.auth.updateUser({
+      //     password: staticPassword,  
+      //   });
   
        
-      }
+    //  }
       setIsCooldown(true);
       setTimeout(() => setIsCooldown(false), 300000); 
       router.push({

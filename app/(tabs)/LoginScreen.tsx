@@ -86,14 +86,14 @@ export default function LoginScreen() {
             value={email}
             onChangeText={setEmail}
           />
-          <TextInput
+          {/* <TextInput
             style={styles.input}
             placeholder="Enter your password"
             placeholderTextColor="#666"
             secureTextEntry
             value={password}
             onChangeText={setPassword}
-          />
+          /> */}
           <TouchableOpacity
             style={styles.buttonWrapper}
             onPress={handleLogin}

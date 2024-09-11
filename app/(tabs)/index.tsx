@@ -32,8 +32,12 @@ const HomeScreen: React.FC = () => {
 
         <Text style={styles.orText}>OR</Text>
 
-        <TouchableOpacity style={styles.handshakeButton} onPress={handleHandshakePress}>
+        {/* <TouchableOpacity style={styles.handshakeButton} onPress={handleHandshakePress}>
           <Text style={styles.handshakeButtonText}>DO AN IRL HANDSHAKE</Text>
+        </TouchableOpacity> */}
+
+        <TouchableOpacity style={styles.handshakeButton} onPress={handleHandshakePress}>
+          <Text style={styles.handshakeButtonText}>SIGN UP</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.loginButton} onPress={handleLoginPress}>
