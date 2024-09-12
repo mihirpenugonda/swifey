@@ -196,8 +196,6 @@ export default function DynamicallySelectedPicker<ItemT extends ListItem>({
             flex: 1,
             backgroundColor: "#FFFFFF",
             borderRadius: 8,
-            borderWidth: 1,
-            borderColor: "#313131",
           }}
         />
       </View>
