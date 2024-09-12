@@ -68,7 +68,7 @@ const OnboardingScreen: React.FC = () => {
               value: item.value,
               label: item.label,
             }))}
-            width={screenWidth - 40}
+            width={screenWidth}
             height={pickerHeight}
             onScroll={(selected) => {
               const index = selected.index;
@@ -128,6 +128,7 @@ const styles = StyleSheet.create({
   pickerContainer: {
     flex: 1,
     height: "auto",
+    marginHorizontal: -20,
   },
   nextButtonContainer: {
     width: "100%",

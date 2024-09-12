@@ -19,6 +19,10 @@ const HomeScreen: React.FC = () => {
     router.push("/LoginScreen");
   };
 
+  useEffect(() => {
+    router.push("/OnboardingScreen");
+  }, []);
+
   return (
     <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
       <View style={styles.logoContainer}>
