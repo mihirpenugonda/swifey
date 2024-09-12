@@ -38,16 +38,14 @@ export default function DynamicallySelectedPicker<ItemT extends ListItem>({
   selectedItemBorderColor = "#313131",
   renderGradientOverlay = false,
   topGradientColors = [
-    "rgba(49, 49, 49, 0.1)",
-    "rgba(49, 49, 49, 0.06)",
-    "rgba(49, 49, 49, 0.03)",
-    "rgba(49, 49, 49, 0.0)",
+    "rgba(255, 255, 255, 0.4)",
+    "rgba(255, 255, 255, 0.0)",
   ],
   bottomGradientColors = [
-    "rgba(49, 49, 49, 0.0)",
-    "rgba(49, 49, 49, 0.03)",
-    "rgba(49, 49, 49, 0.06)",
-    "rgba(49, 49, 49, 0.1)",
+    "rgba(182, 227, 0, 0.0)",
+    "rgba(182, 227, 0, 0.03)",
+    "rgba(182, 227, 0, 0.06)",
+    "rgba(182, 227, 0, 0.1)",
   ],
 }: PickerProps<ItemT>) {
   // work out the size of each 'slice' so it fits in the size of the view
@@ -176,6 +174,7 @@ export default function DynamicallySelectedPicker<ItemT extends ListItem>({
           {
             top: 0,
             height: gradientSize,
+            zIndex: 100,
           },
         ]}
         pointerEvents="none"
@@ -187,24 +186,21 @@ export default function DynamicallySelectedPicker<ItemT extends ListItem>({
           {
             top: gradientSize,
             height: itemSize,
+            paddingHorizontal: 16,
+          },
+        ]}
+        pointerEvents="none"
+      >
+        <View
+          style={{
+            flex: 1,
             backgroundColor: "#FFFFFF",
             borderRadius: 8,
-          },
-        ]}
-        pointerEvents="none"
-      />
-
-      <LinearGradient
-        colors={bottomGradientColors}
-        style={[
-          styles.gradientVerticalWrapper,
-          {
-            bottom: 0,
-            height: gradientSize,
-          },
-        ]}
-        pointerEvents="none"
-      />
+            borderWidth: 1,
+            borderColor: "#313131",
+          }}
+        />
+      </View>
 
       <ScrollView
         ref={scrollViewRef}
