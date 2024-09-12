@@ -25,7 +25,7 @@ export default function LocationAccessScreen() {
 
         await storeLocation(locationData);
 
-        router.push('/navigator/AppNavigator');
+        router.push('/OnboardingScreen');
       } catch (error) {
         console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
         Alert.alert('Error', 'Failed to get location. Please try again.');
