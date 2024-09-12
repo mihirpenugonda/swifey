@@ -26,9 +26,9 @@ const OnboardingScreen: React.FC = () => {
   };
 
   const selectedMap = [
-    { value: 0, label: "😘 KISS, 😘 KISS", id: "kisskiss", image: KissKiss },
-    { value: 1, label: "❌ Rug, 😘 KiSS", id: "rugkiss", image: RugKiss },
-    { value: 2, label: "😘 KiSS, ❌ Rug", id: "kissrug", image: KissRug },
+    { value: 0, label: "😘 Kiss, 😘 Kiss", id: "kisskiss", image: KissKiss },
+    { value: 1, label: "❌ Rug, 😘 Kiss", id: "rugkiss", image: RugKiss },
+    { value: 2, label: "😘 Kiss, ❌ Rug", id: "kissrug", image: KissRug },
     { value: 3, label: "❌ Rug, ❌ Rug", id: "rugrug", image: RugRug },
   ];
 
@@ -92,7 +92,7 @@ const OnboardingScreen: React.FC = () => {
             end={{ x: 1, y: 0 }}
             style={styles.nextButton}
           >
-            <Text style={styles.nextButtonText}>NEXT {">"}</Text>
+            <Text style={styles.nextButtonText}>NEXT</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>
