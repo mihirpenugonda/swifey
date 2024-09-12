@@ -75,12 +75,12 @@ export default function BagScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.swipesBoxContainer}>
+        {/* <View style={styles.swipesBoxContainer}>
           <View style={styles.swipesBox}>
             <Text style={styles.swipesLabel}>Total Swipes Remaining</Text>
             <Text style={styles.swipesValue}>0</Text>
           </View>
-        </View>
+        </View> */}
 
         <View style={styles.activitiesContainer}>
           <Text style={styles.activitiesTitle}>Activity</Text>
