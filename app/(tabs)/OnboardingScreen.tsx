@@ -78,6 +78,7 @@ const OnboardingScreen: React.FC = () => {
                 );
               }
             }}
+            fontSize={16}
           />
         </View>
 
