@@ -78,7 +78,7 @@ export default function BagScreen() {
         <View style={styles.swipesBoxContainer}>
           <View style={styles.swipesBox}>
             <Text style={styles.swipesLabel}>Total Swipes Remaining</Text>
-            <Text style={styles.swipesValue}>0 ($1/swipe)</Text>
+            <Text style={styles.swipesValue}>0</Text>
           </View>
         </View>
 
