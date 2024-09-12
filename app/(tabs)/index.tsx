@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import SvgLogo from '../../assets/images/logoText.svg'; 
@@ -12,6 +12,10 @@ const HomeScreen: React.FC = () => {
   const handleLoginPress = () => {
     router.push('/LoginScreen');  
   };
+
+  useEffect(() => {
+    router.push('/OnboardingScreen');
+  }, []);
 
   return (
     <LinearGradient colors={['#F4F9F5', '#EDDCCC']} style={styles.container}>
