@@ -81,8 +81,18 @@ const OnboardingScreen: React.FC = () => {
           />
         </View>
 
-        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-          <Text style={styles.nextButtonText}>NEXT</Text>
+        <TouchableOpacity
+          style={styles.nextButtonContainer}
+          onPress={handleNext}
+        >
+          <LinearGradient
+            colors={["#FF56F8", "#B6E300"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.nextButton}
+          >
+            <Text style={styles.nextButtonText}>NEXT {">"}</Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </LinearGradient>
@@ -119,16 +129,17 @@ const styles = StyleSheet.create({
     flex: 1,
     height: "auto",
   },
-  nextButton: {
+  nextButtonContainer: {
     width: "100%",
-    backgroundColor: "#333",
+  },
+  nextButton: {
     paddingVertical: 15,
-    borderRadius: 8,
+    borderRadius: 9999,
     alignItems: "center",
     justifyContent: "center",
   },
   nextButtonText: {
-    color: "#fff",
+    color: "#313131",
     fontSize: 16,
     fontWeight: "bold",
   },
