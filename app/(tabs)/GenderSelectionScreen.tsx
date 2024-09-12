@@ -26,7 +26,7 @@ export default function GenderSelectionScreen() {
       }
 
       console.log('Gender updated successfully');
-      router.push('/PreferenceScreen');
+      router.push('/CryptonounScreen');
     } catch (error) {
       console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
       Alert.alert('Error', error instanceof Error ? error.message : 'An unexpected error occurred.');
