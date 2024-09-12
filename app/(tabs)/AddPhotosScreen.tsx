@@ -11,7 +11,7 @@ import { Buffer } from 'buffer';
 
 export default function AddPhotosScreen() {
   const [images, setImages] = useState<(string | null)[]>(Array(6).fill(null));
-  const [isUploading, setIsUploading] = useState(false); // New loading state
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleAddImage = async (index: number): Promise<void> => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();

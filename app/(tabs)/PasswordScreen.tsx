@@ -11,15 +11,16 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 import { supabase } from '../../supabaseClient';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import HeaderLogo from '@/components/HeaderLogo';
 import { LinearGradient } from 'expo-linear-gradient';
 
-export default function LoginScreen() {
-  const [email, setEmail] = useState('');
+export default function PasswordScreen() {
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(new Animated.Value(0));
   const router = useRouter();
+  const { email } = useLocalSearchParams();
 
   useEffect(() => {
     const keyboardWillShow = (event: { duration: any; endCoordinates: { height: any; }; }) => {
@@ -47,33 +48,28 @@ export default function LoginScreen() {
     };
   }, []);
 
-  const handleEmailSubmit = () => {
-    if (email === 'kissorrug+1@gmail.com') {
-      router.push({
-        pathname: '/PasswordScreen',
-        params: { email },
-      });
-    } else {
-      handleOtpLogin();
-    }
-  };
-
-  const handleOtpLogin = async () => {
+  const handlePasswordSubmit = async () => {
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signInWithOtp({
-      email,
-    });
-
-    setLoading(false);
-
-    if (error) {
-      Alert.alert('Error', error.message);
-    } else {
-      router.push({
-        pathname: '/VerificationScreen',
-        params: { email, login: 'true' },
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email as string,
+        password,
       });
+
+      if (error) {
+        Alert.alert('Error', error.message);
+      } else {
+        router.push('/NameInputScreen');
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        Alert.alert('Error', error.message);
+      } else {
+        Alert.alert('Error', 'An unexpected error occurred');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -82,19 +78,18 @@ export default function LoginScreen() {
       <Animated.View style={[styles.container, { paddingBottom: keyboardHeight }]}>
         <HeaderLogo />
         <View style={styles.contentContainer}>
-          <Text style={styles.title}>What's your email address?</Text>
+          <Text style={styles.title}>Enter your password</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter your email"
+            placeholder="Enter your password"
             placeholderTextColor="#666"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
           />
           <TouchableOpacity
             style={styles.buttonWrapper}
-            onPress={handleEmailSubmit}
+            onPress={handlePasswordSubmit}
             disabled={loading}
           >
             <LinearGradient
@@ -104,7 +99,7 @@ export default function LoginScreen() {
               style={styles.gradientButton}
             >
               <Text style={styles.buttonText}>
-                {loading ? 'Loading...' : 'Next'}
+                {loading ? 'Loading...' : 'Submit'}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
