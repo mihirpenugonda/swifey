@@ -8,7 +8,7 @@ export default function PreferenceScreen() {
   const [selectedPreferences, setSelectedPreferences] = useState<string[]>([]);
   const router = useRouter();
 
-  const preferences = ['Woman', 'Man', 'Non-binary'];
+  const preferences = ['woman', 'man', 'non-binary'];
 
   const togglePreference = (preference: string) => {
     setSelectedPreferences(prev => 
