@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,158 +6,123 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  Keyboard,
-  Animated,
-  TouchableWithoutFeedback,
-} from 'react-native';
-import { supabase } from '../../supabaseClient';
-import { useRouter } from 'expo-router';
-import HeaderLogo from '@/components/HeaderLogo';
-import { LinearGradient } from 'expo-linear-gradient';
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { inputStyle } from "@/helpers/styles";
 
-export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(new Animated.Value(0));
-  const router = useRouter();
+import Logo from "../../assets/images/newLogo.svg";
+import { validateInviteCode } from "@/services/apiService";
+import { router } from "expo-router";
 
-  useEffect(() => {
-    const keyboardWillShow = (event: { duration: any; endCoordinates: { height: any; }; }) => {
-      Animated.timing(keyboardHeight, {
-        duration: event.duration || 300,
-        toValue: event.endCoordinates.height,
-        useNativeDriver: false,
-      }).start();
-    };
+const LoginScreen: React.FC = () => {
+  const [inviteCode, setInviteCode] = useState("");
 
-    const keyboardWillHide = (event: { duration: any; }) => {
-      Animated.timing(keyboardHeight, {
-        duration: event.duration || 300,
-        toValue: 0,
-        useNativeDriver: false,
-      }).start();
-    };
-
-    const showSubscription = Keyboard.addListener('keyboardWillShow', keyboardWillShow);
-    const hideSubscription = Keyboard.addListener('keyboardWillHide', keyboardWillHide);
-
-    return () => {
-      showSubscription.remove();
-      hideSubscription.remove();
-    };
-  }, []);
-
-  const handleEmailSubmit = () => {
-    if (email === 'kissorrug+1@gmail.com') {
-      router.push({
-        pathname: '/PasswordScreen',
-        params: { email },
-      });
-    } else {
-      handleOtpLogin();
+  const validate = async (code: string) => {
+    try {
+      const response = await validateInviteCode(code);
+      if (response.isValid) {
+        router.push("/EmailScreen");
+      } else {
+        Alert.alert(
+          "Invalid Code",
+          "The invite code you entered is not valid. Please try again."
+        );
+      }
+    } catch (error) {
+      console.error("Error validating invite code:", error);
+      Alert.alert("Error", "Failed to validate invite code. Please try again.");
     }
   };
 
-  const handleOtpLogin = async () => {
-    setLoading(true);
-
-    const { data, error } = await supabase.auth.signInWithOtp({
-      email,
-    });
-
-    setLoading(false);
-
-    if (error) {
-      Alert.alert('Error', error.message);
+  const handleInviteCodeSubmit = (code: string) => {
+    if (code && code.length === 6) {
+      validate(code);
     } else {
-      router.push({
-        pathname: '/VerificationScreen',
-        params: { email, login: 'true' },
-      });
+      Alert.alert("Error", "Enter a valid code.");
+    }
+  };
+
+  const handleInviteCodeChange = (text: string) => {
+    const upperText = text.toUpperCase().slice(0, 6);
+    setInviteCode(upperText);
+    if (upperText.length === 6) {
+      handleInviteCodeSubmit(upperText);
     }
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <Animated.View style={[styles.container, { paddingBottom: keyboardHeight }]}>
-        <HeaderLogo />
-        <View style={styles.contentContainer}>
-          <Text style={styles.title}>What's your email address?</Text>
+    <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
+      <View style={styles.logoContainer}>
+        <Logo />
+      </View>
+
+      <View style={styles.contentContainer}>
+        <Text style={styles.title}>We're{"\n"}invite only</Text>
+        <View style={{ gap: 10 }}>
           <TextInput
-            style={styles.input}
-            placeholder="Enter your email"
-            placeholderTextColor="#666"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
+            value={inviteCode}
+            placeholder="ENTER INVITE CODE"
+            style={inputStyle}
+            placeholderTextColor="#888"
+            maxLength={6}
+            onChangeText={handleInviteCodeChange}
+            autoCapitalize="characters"
           />
-          <TouchableOpacity
-            style={styles.buttonWrapper}
-            onPress={handleEmailSubmit}
-            disabled={loading}
-          >
+
+          <TouchableOpacity onPress={() => handleInviteCodeSubmit(inviteCode)}>
             <LinearGradient
-              colors={['#FF56F8', '#B6E300']}
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 1, y: 0.5 }}
-              style={styles.gradientButton}
+              colors={["#FF56F8", "#B6E300"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.inviteButton}
             >
-              <Text style={styles.buttonText}>
-                {loading ? 'Loading...' : 'Next'}
-              </Text>
+              <Text style={styles.inviteButtonText}>SUBMIT</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
-      </Animated.View>
-    </TouchableWithoutFeedback>
+      </View>
+    </LinearGradient>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121515',
-    paddingHorizontal: 20,
-    justifyContent: 'flex-start',
-    paddingVertical: 40,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  logoContainer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignItems: "center",
   },
   contentContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-    width: '100%',
+    justifyContent: "flex-end",
   },
   title: {
-    color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 48,
+    fontWeight: "700",
     marginBottom: 20,
-    textAlign: 'left',
+    textAlign: "left",
+    fontFamily: "WorkSans_700Bold",
+    marginHorizontal: 20,
   },
-  input: {
-    width: '100%',
-    height: 50,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    color: '#FFFFFF',
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  buttonWrapper: {
-    width: '100%',
-    marginTop: 20,
-  },
-  gradientButton: {
+  inviteButton: {
     paddingVertical: 15,
     borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 20,
   },
-  buttonText: {
-    color: '#000000',
-    fontSize: 16,
-    fontWeight: '500',
+  inviteButtonText: {
+    color: "#313131",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
+
+export default LoginScreen;
