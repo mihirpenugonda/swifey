@@ -235,99 +235,104 @@ export default function PlayScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <>
       <AppBar showRightSide={true} />
-      <View style={styles.swiperContainer}>
-        {allSwiped ? (
-          <View style={styles.noProfilesContainer}>
-            <Text style={styles.noProfilesText}>
-              No profiles left to be swiped
-            </Text>
-          </View>
-        ) : Array.isArray(profiles) && profiles.length > 0 ? (
-          <Swiper
-            ref={swiperRef}
-            cards={profiles}
-            renderCard={(profile) => (
-              <View
-                style={styles.card}
-                key={`${profile.id}-${currentImageIndex}`}
-              >
-                <Image
-                  source={{ uri: profile?.photos?.[currentImageIndex] || "" }}
-                  style={styles.image}
-                />
-                <TouchableOpacity
-                  style={styles.leftTapArea}
-                  onPress={() => handleImageTap("left")}
-                />
-                <TouchableOpacity
-                  style={styles.rightTapArea}
-                  onPress={() => handleImageTap("right")}
-                />
-                <TouchableOpacity
-                  style={styles.bookButton}
-                  onPress={handleBookButtonPress}
+
+      <View style={{ flex: 1, marginBottom: 25 }}>
+        <View style={styles.swiperContainer}>
+          {allSwiped ? (
+            <View style={styles.noProfilesContainer}>
+              <Text style={styles.noProfilesText}>
+                No profiles left to be swiped
+              </Text>
+            </View>
+          ) : Array.isArray(profiles) && profiles.length > 0 ? (
+            <Swiper
+              ref={swiperRef}
+              cards={profiles}
+              renderCard={(profile) => (
+                <View
+                  style={styles.card}
+                  key={`${profile.id}-${currentImageIndex}`}
                 >
                   <Image
-                    source={require("../../../assets/images/book.png")}
-                    style={styles.bookIcon}
+                    source={{ uri: profile?.photos?.[currentImageIndex] || "" }}
+                    style={styles.image}
                   />
-                </TouchableOpacity>
-                <View style={styles.profileInfo}>
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <Text style={styles.profileName}>
-                      {profile?.name || "Unknown"},{" "}
-                      {profile?.date_of_birth
-                        ? calculateAge(profile.date_of_birth)
-                        : "N/A"}
+                  <TouchableOpacity
+                    style={styles.leftTapArea}
+                    onPress={() => handleImageTap("left")}
+                  />
+                  <TouchableOpacity
+                    style={styles.rightTapArea}
+                    onPress={() => handleImageTap("right")}
+                  />
+                  <TouchableOpacity
+                    style={styles.bookButton}
+                    onPress={handleBookButtonPress}
+                  >
+                    <Image
+                      source={require("../../../assets/images/book.png")}
+                      style={styles.bookIcon}
+                    />
+                  </TouchableOpacity>
+                  <View style={styles.profileInfo}>
+                    <View
+                      style={{ flexDirection: "row", alignItems: "center" }}
+                    >
+                      <Text style={styles.profileName}>
+                        {profile?.name || "Unknown"},{" "}
+                        {profile?.date_of_birth
+                          ? calculateAge(profile.date_of_birth)
+                          : "N/A"}
+                      </Text>
+                      <View style={styles.countContainer}>
+                        <NumOfKiss width={20} height={20} />
+                        <Text style={styles.countText}>
+                          {profile?.num_of_kisses || 0}
+                        </Text>
+                      </View>
+                      <View style={styles.countContainer}>
+                        <NumOfRug width={20} height={20} />
+                        <Text style={styles.countText}>
+                          {profile?.num_of_rugs || 0}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={styles.profileDescription}>
+                      {profile?.bio || ""}
                     </Text>
-                    <View style={styles.countContainer}>
-                      <NumOfKiss width={20} height={20} />
-                      <Text style={styles.countText}>
-                        {profile?.num_of_kisses || 0}
-                      </Text>
-                    </View>
-                    <View style={styles.countContainer}>
-                      <NumOfRug width={20} height={20} />
-                      <Text style={styles.countText}>
-                        {profile?.num_of_rugs || 0}
-                      </Text>
-                    </View>
                   </View>
-                  <Text style={styles.profileDescription}>
-                    {profile?.bio || ""}
-                  </Text>
                 </View>
-              </View>
-            )}
-            onSwipedLeft={handleSwipeLeft}
-            onSwipedRight={handleSwipeRight}
-            onSwipedAll={() => {
-              console.log("All cards swiped");
-              setAllSwiped(true);
-              setCurrentProfileIndex(0);
-            }}
-            cardIndex={0}
-            stackSize={3}
-            backgroundColor={"transparent"}
-            cardVerticalMargin={20}
-            animateCardOpacity
-          />
-        ) : (
-          <View style={styles.noProfilesContainer}>
-            <Text style={styles.noProfilesText}>No profiles available</Text>
-          </View>
-        )}
-      </View>
+              )}
+              onSwipedLeft={handleSwipeLeft}
+              onSwipedRight={handleSwipeRight}
+              onSwipedAll={() => {
+                console.log("All cards swiped");
+                setAllSwiped(true);
+                setCurrentProfileIndex(0);
+              }}
+              cardIndex={0}
+              stackSize={3}
+              backgroundColor={"transparent"}
+              cardVerticalMargin={20}
+              animateCardOpacity
+            />
+          ) : (
+            <View style={styles.noProfilesContainer}>
+              <Text style={styles.noProfilesText}>No profiles available</Text>
+            </View>
+          )}
+        </View>
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={handleSwipeLeft}>
-          <Text style={styles.buttonText}>❌</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handleSwipeRight}>
-          <Text style={styles.buttonText}>😘</Text>
-        </TouchableOpacity>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.button} onPress={handleSwipeLeft}>
+            <Text style={styles.buttonText}>❌</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={handleSwipeRight}>
+            <Text style={styles.buttonText}>😘</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <BottomSheet
@@ -339,7 +344,7 @@ export default function PlayScreen() {
       >
         {renderBottomSheetContent()}
       </BottomSheet>
-    </SafeAreaView>
+    </>
   );
 }
 
@@ -350,6 +355,7 @@ const styles = StyleSheet.create({
   },
   swiperContainer: {
     flex: 1,
+    marginBottom: 25,
   },
   card: {
     height: "70%",
@@ -405,7 +411,6 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-evenly",
-    marginVertical: 10,
   },
   button: {
     width: 60,
@@ -479,7 +484,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 4,
     borderRadius: 9999,
-    gap: 2
+    gap: 2,
   },
   countText: {
     marginLeft: 5,

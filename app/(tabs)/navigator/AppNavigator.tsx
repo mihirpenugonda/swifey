@@ -24,7 +24,7 @@ export default function AppNavigator() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: '#000000',
-          height: 100,
+          height: 90,
         },
         tabBarLabelStyle: {
           fontSize: 14,

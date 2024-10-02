@@ -4,7 +4,7 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, useRouter, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
@@ -22,6 +22,8 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const pathname = usePathname();
+
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     WorkSans_700Bold,
@@ -39,9 +41,12 @@ export default function RootLayout() {
     return null;
   }
 
+  const isAppNavigator = pathname === "/navigator/AppNavigator";
+  const gradientColors = isAppNavigator ? ["#313131"] : ["#F4F9F5", "#EDDCCC"];
+
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={{ flex: 1 }}>
+      <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
         <SafeAreaView style={{ flex: 1 }}>
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

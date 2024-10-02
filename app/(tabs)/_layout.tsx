@@ -24,12 +24,11 @@ export default function AppLayout() {
         <Stack.Screen name="AddPhotosScreen" />
         <Stack.Screen name="PreferenceScreen" />
         <Stack.Screen name="GenderSelectionScreen" />
-        <Stack.Screen name="SignUpScreen" />
+        <Stack.Screen name="EmailScreen" />
         <Stack.Screen name="LocationAccessScreen" />
         <Stack.Screen name="LoginScreen" />
         <Stack.Screen name="EditProfileScreen" />
         <Stack.Screen name="ChatScreen"/>
-        <Stack.Screen name="PasswordScreen" />
         <Stack.Screen name="OnboardingScreen" />
         <Stack.Screen name="CryptonounScreen" />
       </Stack>

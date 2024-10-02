@@ -46,6 +46,8 @@ export const fetchUserWallet = async (user_id: any) => {
     throw new Error("No JWT token found");
   }
 
+
+  console.log(jwtToken, "jwtToken")
   const response = await fetch(`${API_URL}/fetch-user-wallet`, {
     method: "POST",
     headers: {
