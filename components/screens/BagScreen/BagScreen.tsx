@@ -45,9 +45,7 @@ export default function BagScreen() {
 
           <Text style={styles.playsText}>Total Plays Remaining</Text>
 
-          <Text style={styles.playsCount}>
-            {walletBalance} Swipes
-          </Text>
+          <Text style={styles.playsCount}>{walletBalance} Swipes</Text>
 
           <LinearGradient
             colors={["#FF56F8", "#B6E300"]}
@@ -58,7 +56,7 @@ export default function BagScreen() {
             <TouchableOpacity
               style={styles.buyPlaysButtonTouchable}
               onPress={() => {
-                showModal(<BuyPlaysModal numOfPlays={walletBalance ?? 0} />);
+                showModal(<BuyPlaysModal />);
               }}
             >
               <Text style={styles.buyPlaysButtonText}>BUY PLAYS</Text>

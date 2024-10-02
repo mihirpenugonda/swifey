@@ -19,7 +19,6 @@ import {
 } from "react-native-iap";
 import { validateIAPPurchase } from "@/services/apiService";
 import { useMainContext } from "@/helpers/context/mainContext";
-import { getIosModule } from "react-native-iap/lib/typescript/src/internal";
 
 const productId = "kisstest123";
 
@@ -41,9 +40,9 @@ const products = [
   },
 ];
 
-export default function BuyPlaysModal({ numOfPlays }: { numOfPlays: number }) {
+export default function BuyPlaysModal() {
   const { hideModal } = useBottomModal();
-  const { refreshBalance } = useMainContext();
+  const { walletBalance, refreshBalance } = useMainContext();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingIndex, setProcessingIndex] = useState<number | null>(null);
@@ -169,7 +168,7 @@ export default function BuyPlaysModal({ numOfPlays }: { numOfPlays: number }) {
           </TouchableOpacity>
         </View>
 
-        <Text style={{ marginBottom: 10 }}>Total Plays: {numOfPlays}</Text>
+        <Text style={{ marginBottom: 10 }}>Total Plays: {walletBalance}</Text>
 
         <View
           style={{
