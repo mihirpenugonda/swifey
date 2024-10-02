@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,10 +7,13 @@ import {
   StyleSheet,
   Alert,
   Keyboard,
-  Animated,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { inputStyle } from "@/helpers/styles";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import Logo from "../../assets/images/newLogo.svg";
 import { supabase } from "../../supabaseClient";
@@ -18,45 +21,8 @@ import { useRouter } from "expo-router";
 
 const EmailScreen: React.FC = () => {
   const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
   const [isCooldown, setIsCooldown] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(new Animated.Value(0));
   const router = useRouter();
-
-  useEffect(() => {
-    const keyboardWillShow = (event: {
-      duration: number;
-      endCoordinates: { height: number };
-    }) => {
-      Animated.timing(keyboardHeight, {
-        duration: event.duration || 300,
-        toValue: event.endCoordinates.height,
-        useNativeDriver: false,
-      }).start();
-    };
-
-    const keyboardWillHide = (event: { duration: number }) => {
-      Animated.timing(keyboardHeight, {
-        duration: event.duration || 300,
-        toValue: 0,
-        useNativeDriver: false,
-      }).start();
-    };
-
-    const showSubscription = Keyboard.addListener(
-      "keyboardWillShow",
-      keyboardWillShow
-    );
-    const hideSubscription = Keyboard.addListener(
-      "keyboardWillHide",
-      keyboardWillHide
-    );
-
-    return () => {
-      showSubscription.remove();
-      hideSubscription.remove();
-    };
-  }, []);
 
   const handleSignUp = async () => {
     if (isCooldown) {
@@ -67,16 +33,12 @@ const EmailScreen: React.FC = () => {
       return;
     }
 
-    setLoading(true);
-
     const { data, error } = await supabase.auth.signInWithOtp({
       email: email,
       options: {
         shouldCreateUser: true,
       },
     });
-
-    setLoading(false);
 
     if (error) {
       Alert.alert("Error", error.message);
@@ -95,42 +57,60 @@ const EmailScreen: React.FC = () => {
   };
 
   return (
-    <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
-      <View style={styles.logoContainer}>
-        <Logo />
-      </View>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+    >
+      <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.mainContainer}>
+              <View style={styles.logoContainer}>
+                <Logo />
+              </View>
 
-      <View style={styles.contentContainer}>
-        <Text style={styles.title}>What's your email address?</Text>
-        <View style={{ gap: 10 }}>
-          <TextInput
-            value={email}
-            placeholder="Enter your email"
-            style={inputStyle}
-            placeholderTextColor="#666"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            onChangeText={setEmail}
-          />
+              <View style={styles.contentContainer}>
+                <Text style={styles.title}>What's your email address?</Text>
+                <View style={{ gap: 10 }}>
+                  <TextInput
+                    value={email}
+                    placeholder="Enter your email"
+                    style={inputStyle}
+                    placeholderTextColor="#666"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    onChangeText={setEmail}
+                  />
 
-          <TouchableOpacity onPress={handleSignUp}>
-            <LinearGradient
-              colors={["#FF56F8", "#B6E300"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.inviteButton}
-            >
-              <Text style={styles.inviteButtonText}>NEXT</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </LinearGradient>
+                  <TouchableOpacity onPress={handleSignUp}>
+                    <LinearGradient
+                      colors={["#FF56F8", "#B6E300"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.inviteButton}
+                    >
+                      <Text style={styles.inviteButtonText}>NEXT</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </SafeAreaView>
+      </LinearGradient>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  mainContainer: {
     flex: 1,
   },
   logoContainer: {

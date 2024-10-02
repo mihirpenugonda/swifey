@@ -22,7 +22,7 @@ const OnboardingScreen: React.FC = () => {
   const [selected, setSelected] = useState("kisskiss");
 
   const handleNext = () => {
-    router.push("/navigator/AppNavigator");
+    router.push("/main/mainScreen");
   };
 
   const selectedMap = [

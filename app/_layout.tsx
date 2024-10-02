@@ -41,18 +41,15 @@ export default function RootLayout() {
     return null;
   }
 
-  const isAppNavigator = pathname === "/navigator/AppNavigator";
-  const gradientColors = isAppNavigator ? ["#313131"] : ["#F4F9F5", "#EDDCCC"];
+  const gradientColors = ["#F4F9F5", "#EDDCCC"];
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
-        <SafeAreaView style={{ flex: 1 }}>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-        </SafeAreaView>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" />
+        </Stack>
       </LinearGradient>
     </ThemeProvider>
   );

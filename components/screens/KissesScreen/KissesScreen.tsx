@@ -84,7 +84,6 @@ export default function KissesScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <AppBar />
       {matches.length === 0 ? (
         renderEmptyState()
       ) : (

@@ -1,8 +1,23 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, FlatList, StyleSheet, SafeAreaView, Image, TouchableOpacity, Modal, Alert, Dimensions } from 'react-native';
-import AppBar from '../../AppBar';
-import { fetchMatches, fetchMyTurnProfiles, sendSwipe } from '../../../services/apiService';
-import eventEmitter from '@/services/eventEmitter';
+import React, { useEffect, useState, useRef } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  SafeAreaView,
+  Image,
+  TouchableOpacity,
+  Modal,
+  Alert,
+  Dimensions,
+} from "react-native";
+import AppBar from "../../AppBar";
+import {
+  fetchMatches,
+  fetchMyTurnProfiles,
+  sendSwipe,
+} from "../../../services/apiService";
+import eventEmitter from "@/services/eventEmitter";
 
 interface MoveItem {
   id: string;
@@ -17,7 +32,7 @@ export default function YourMoveScreen() {
   const [selectedProfile, setSelectedProfile] = useState<MoveItem | null>(null);
   const [currentProfileIndex, setCurrentProfileIndex] = useState(0);
   const swiperRef = useRef(null);
-  const screenHeight = Dimensions.get('window').height;
+  const screenHeight = Dimensions.get("window").height;
 
   useEffect(() => {
     loadProfiles();
@@ -34,7 +49,7 @@ export default function YourMoveScreen() {
       }));
       setData(formattedProfiles);
     } catch (error) {
-      console.error('Error fetching profiles:', error);
+      console.error("Error fetching profiles:", error);
     } finally {
       setLoading(false);
     }
@@ -50,80 +65,93 @@ export default function YourMoveScreen() {
     setSelectedProfile(null);
   };
 
-const handleSwipeLeft = async () => {
-  try {
-    const currentProfile = selectedProfile;
-    console.log('Current Profile on Rug Swipe:', currentProfile);
+  const handleSwipeLeft = async () => {
+    try {
+      const currentProfile = selectedProfile;
+      console.log("Current Profile on Rug Swipe:", currentProfile);
 
-    if (!currentProfile?.id) {  
-      console.error('Profile ID is missing');
-      return;
+      if (!currentProfile?.id) {
+        console.error("Profile ID is missing");
+        return;
+      }
+
+      const response = await sendSwipe(currentProfile?.id, "rug");
+
+      if (response?.message === "You have already swiped on this profile") {
+        console.log(
+          `You have already swiped on this profile. Past decision: ${response.past_decision}`
+        );
+        return;
+      }
+
+      console.log("Swipe response:", response);
+      processSwipeResponse(response);
+
+      setData((prevData) =>
+        prevData.filter((profile) => profile.id !== currentProfile.id)
+      );
+
+      closeProfileModal();
+    } catch (error) {
+      console.error("Error sending rug swipe:", error);
     }
+  };
 
-    const response = await sendSwipe(currentProfile?.id, 'rug');
-    
-    if (response?.message === 'You have already swiped on this profile') {
-      console.log(`You have already swiped on this profile. Past decision: ${response.past_decision}`);
-      return;
+  const handleSwipeRight = async () => {
+    try {
+      const currentProfile = selectedProfile;
+      console.log("Current Profile on Kiss Swipe:", currentProfile);
+
+      if (!currentProfile?.id) {
+        console.error("Profile ID is missing");
+        return;
+      }
+
+      const response = await sendSwipe(currentProfile?.id, "kiss");
+
+      if (response?.message === "You have already swiped on this profile") {
+        console.log(
+          `You have already swiped on this profile. Past decision: ${response.past_decision}`
+        );
+        return;
+      }
+
+      console.log("Swipe response:", response);
+      processSwipeResponse(response);
+
+      eventEmitter.emit("matchMade");
+      setData((prevData) =>
+        prevData.filter((profile) => profile.id !== currentProfile.id)
+      );
+
+      closeProfileModal();
+    } catch (error) {
+      console.error("Error sending kiss swipe:", error);
     }
+  };
 
-    console.log('Swipe response:', response);
-    processSwipeResponse(response);
-
-    setData((prevData) => prevData.filter((profile) => profile.id !== currentProfile.id));
-
-    closeProfileModal();
-  } catch (error) {
-    console.error('Error sending rug swipe:', error);
-  }
-};
-
-const handleSwipeRight = async () => {
-  try {
-    const currentProfile = selectedProfile;
-    console.log('Current Profile on Kiss Swipe:', currentProfile);
-
-    if (!currentProfile?.id) {  
-      console.error('Profile ID is missing');
-      return;
-    }
-
-    const response = await sendSwipe(currentProfile?.id, 'kiss');
-    
-    if (response?.message === 'You have already swiped on this profile') {
-      console.log(`You have already swiped on this profile. Past decision: ${response.past_decision}`);
-      return;
-    }
-
-    console.log('Swipe response:', response);
-    processSwipeResponse(response);
-    
-    eventEmitter.emit('matchMade');
-    setData((prevData) => prevData.filter((profile) => profile.id !== currentProfile.id));
-
-    closeProfileModal();
-  } catch (error) {
-    console.error('Error sending kiss swipe:', error);
-  }
-};
-
-  const processSwipeResponse = (response: { decision: string; match_id: any; }) => {
-    if (response.decision === 'match') {
+  const processSwipeResponse = (response: {
+    decision: string;
+    match_id: any;
+  }) => {
+    if (response.decision === "match") {
       console.log("It's a match! Match ID:", response.match_id);
-    } else if (response.decision === 'pending') {
-      console.log('Swipe is pending');
-    } else if (response.decision === 'rugged') {
-      console.log('Rugged!');
-      
-    } else if (response.decision === 'profit') {
-      console.log('Profit earned!');
-    } else if (response.decision === 'mutual_rug') {
-      console.log('Mutual rug!');
+    } else if (response.decision === "pending") {
+      console.log("Swipe is pending");
+    } else if (response.decision === "rugged") {
+      console.log("Rugged!");
+    } else if (response.decision === "profit") {
+      console.log("Profit earned!");
+    } else if (response.decision === "mutual_rug") {
+      console.log("Mutual rug!");
     }
   };
 
   const renderItem = ({ item }: { item: MoveItem }) => (
-    <TouchableOpacity style={styles.moveItem} onPress={() => openProfileModal(item)}>
+    <TouchableOpacity
+      style={styles.moveItem}
+      onPress={() => openProfileModal(item)}
+    >
       <View style={styles.imageContainer}>
         {item.imageUri ? (
           <Image source={{ uri: item.imageUri }} style={styles.image} />
@@ -138,7 +166,7 @@ const handleSwipeRight = async () => {
   const renderEmptyState = () => (
     <View style={styles.emptyStateContainer}>
       <Image
-        source={require('../../../assets/images/your-move-placeholder.png')}
+        source={require("../../../assets/images/your-move-placeholder.png")}
         style={styles.placeholderImage}
       />
       <Text style={styles.mainText}>
@@ -147,22 +175,24 @@ const handleSwipeRight = async () => {
       <Text style={styles.subText}>
         Keep your profile presentable for higher matches!
       </Text>
-  
+
       <View style={styles.dosDontsContainer}>
         <View style={styles.dosContainer}>
           <View style={styles.headerContainer}>
             <Text style={styles.dosTitle}>DOs</Text>
-            
           </View>
-          <Text style={styles.dosText}>1. Use recent, high-quality photos.</Text>
-          <Text style={styles.dosText}>2. Be genuine and authentic in your bio.</Text>
+          <Text style={styles.dosText}>
+            1. Use recent, high-quality photos.
+          </Text>
+          <Text style={styles.dosText}>
+            2. Be genuine and authentic in your bio.
+          </Text>
           <Text style={styles.dosText}>3. Keep it positive and engaging.</Text>
         </View>
-  
+
         <View style={styles.dontsContainer}>
           <View style={styles.headerContainer}>
             <Text style={styles.dontsTitle}>DON'Ts</Text>
-            
           </View>
           <Text style={styles.dontsText}>
             1. Don't use outdated or heavily edited photos.
@@ -175,14 +205,11 @@ const handleSwipeRight = async () => {
           </Text>
         </View>
       </View>
-  
     </View>
   );
-  
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <AppBar />
       <Text style={styles.header}>Your Turn</Text>
       {loading ? (
         <Text>Loading...</Text>
@@ -200,9 +227,16 @@ const handleSwipeRight = async () => {
       )}
 
       {selectedProfile && (
-        <Modal visible={isModalVisible} animationType="slide" transparent={true}>
+        <Modal
+          visible={isModalVisible}
+          animationType="slide"
+          transparent={true}
+        >
           <View style={styles.modalContainer}>
-            <TouchableOpacity style={styles.closeButton} onPress={closeProfileModal}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={closeProfileModal}
+            >
               <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
             <View style={styles.modalContent}>
@@ -213,10 +247,16 @@ const handleSwipeRight = async () => {
               <Text style={styles.modalName}>{selectedProfile.name}</Text>
 
               <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.rugButton} onPress={handleSwipeLeft}>
+                <TouchableOpacity
+                  style={styles.rugButton}
+                  onPress={handleSwipeLeft}
+                >
                   <Text style={styles.buttonText}>❌ Rug</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.kissButton} onPress={handleSwipeRight}>
+                <TouchableOpacity
+                  style={styles.kissButton}
+                  onPress={handleSwipeRight}
+                >
                   <Text style={styles.buttonText}>😘 Kiss</Text>
                 </TouchableOpacity>
               </View>
@@ -231,13 +271,13 @@ const handleSwipeRight = async () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F4F9F5',
+    backgroundColor: "#F4F9F5",
   },
   header: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#E9000C',
-    textAlign: 'left',
+    fontWeight: "bold",
+    color: "#E9000C",
+    textAlign: "left",
     marginVertical: 10,
     marginHorizontal: 16,
   },
@@ -246,44 +286,44 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   row: {
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
     paddingBottom: 20,
   },
   moveItem: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 20,
     marginHorizontal: 3,
   },
   imageContainer: {
-    width: '100%',
+    width: "100%",
     aspectRatio: 1,
-    backgroundColor: '#808080',
+    backgroundColor: "#808080",
     borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 8,
   },
   image: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     borderRadius: 8,
   },
   imagePlaceholder: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#808080',
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#808080",
     borderRadius: 8,
   },
   name: {
-    color: '#000',
+    color: "#000",
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
   },
   emptyStateContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 20,
   },
   placeholderImage: {
@@ -293,136 +333,136 @@ const styles = StyleSheet.create({
   },
   mainText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 10,
-    color: '#000',
+    color: "#000",
   },
   subText: {
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 30,
-    color: '#666',
+    color: "#666",
   },
   modalContainer: {
     flex: 1,
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   closeButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 50,
     right: 20,
     zIndex: 1,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     padding: 10,
     borderRadius: 20,
   },
   closeButtonText: {
-    color: '#000',
+    color: "#000",
   },
   modalContent: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalImage: {
-    width: '80%',
+    width: "80%",
     borderRadius: 10,
     marginBottom: 20,
   },
   modalName: {
     fontSize: 24,
-    color: '#FFF',
-    fontWeight: 'bold',
+    color: "#FFF",
+    fontWeight: "bold",
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '80%',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "80%",
     marginTop: 20,
   },
   rugButton: {
-    backgroundColor: '#FF5A5F',
+    backgroundColor: "#FF5A5F",
     padding: 10,
     borderRadius: 10,
-    width: '45%',
-    alignItems: 'center',
+    width: "45%",
+    alignItems: "center",
   },
   kissButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: "#4CAF50",
     padding: 10,
     borderRadius: 10,
-    width: '45%',
-    alignItems: 'center',
+    width: "45%",
+    alignItems: "center",
   },
   buttonText: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   dosDontsContainer: {
-    width: '100%',
+    width: "100%",
     padding: 20,
-    backgroundColor: '#f4f9f5',
+    backgroundColor: "#f4f9f5",
     borderRadius: 8,
     marginBottom: 30,
   },
   dosContainer: {
-    backgroundColor: '#DFF2BF',
+    backgroundColor: "#DFF2BF",
     padding: 10,
     marginBottom: 20,
     borderRadius: 8,
   },
   dontsContainer: {
-    backgroundColor: '#FFBABA',
+    backgroundColor: "#FFBABA",
     padding: 10,
     borderRadius: 8,
   },
   headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 5,
   },
   dosTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#4F8A10',
+    fontWeight: "bold",
+    color: "#4F8A10",
   },
   dontsTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#D8000C',
+    fontWeight: "bold",
+    color: "#D8000C",
   },
   dosText: {
     fontSize: 14,
-    color: '#4F8A10',
+    color: "#4F8A10",
   },
   dontsText: {
     fontSize: 14,
-    color: '#D8000C',
+    color: "#D8000C",
   },
   checkIcon: {
     width: 20,
     height: 20,
-    tintColor: '#4F8A10',
+    tintColor: "#4F8A10",
   },
   crossIcon: {
     width: 20,
     height: 20,
-    tintColor: '#D8000C',
+    tintColor: "#D8000C",
   },
   goToProfileButton: {
-    width: '80%',
-    backgroundColor: '#FF0080',
+    width: "80%",
+    backgroundColor: "#FF0080",
     borderRadius: 30,
     paddingVertical: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   goToProfileText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFF',
+    fontWeight: "bold",
+    color: "#FFF",
   },
 });

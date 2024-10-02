@@ -12,7 +12,7 @@ const HomeScreen: React.FC = () => {
       const authStatus = await getAuthStatus();
 
       if (authStatus.status) {
-        router.push("/navigator/AppNavigator");
+        router.push("/main/mainScreen");
       } else {
         router.push("/LoginScreen");
       }

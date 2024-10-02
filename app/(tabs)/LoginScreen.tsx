@@ -6,10 +6,14 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  KeyboardAvoidingView,
+  Keyboard,
+  Platform,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { inputStyle } from "@/helpers/styles";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import Logo from "../../assets/images/newLogo.svg";
 import { validateInviteCode } from "@/services/apiService";
@@ -52,37 +56,51 @@ const LoginScreen: React.FC = () => {
   };
 
   return (
-    <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
-      <View style={styles.logoContainer}>
-        <Logo />
-      </View>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+    >
+      <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.mainContainer}>
+              <View style={styles.logoContainer}>
+                <Logo />
+              </View>
 
-      <View style={styles.contentContainer}>
-        <Text style={styles.title}>We're{"\n"}invite only</Text>
-        <View style={{ gap: 10 }}>
-          <TextInput
-            value={inviteCode}
-            placeholder="ENTER INVITE CODE"
-            style={inputStyle}
-            placeholderTextColor="#888"
-            maxLength={6}
-            onChangeText={handleInviteCodeChange}
-            autoCapitalize="characters"
-          />
+              <View style={styles.contentContainer}>
+                <Text style={styles.title}>We're{"\n"}invite only</Text>
+                <View style={{ gap: 10 }}>
+                  <TextInput
+                    value={inviteCode}
+                    placeholder="ENTER INVITE CODE"
+                    style={inputStyle}
+                    placeholderTextColor="#888"
+                    maxLength={6}
+                    onChangeText={handleInviteCodeChange}
+                    autoCapitalize="characters"
+                  />
 
-          <TouchableOpacity onPress={() => handleInviteCodeSubmit(inviteCode)}>
-            <LinearGradient
-              colors={["#FF56F8", "#B6E300"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.inviteButton}
-            >
-              <Text style={styles.inviteButtonText}>SUBMIT</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </LinearGradient>
+                  <TouchableOpacity
+                    onPress={() => handleInviteCodeSubmit(inviteCode)}
+                  >
+                    <LinearGradient
+                      colors={["#FF56F8", "#B6E300"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.inviteButton}
+                    >
+                      <Text style={styles.inviteButtonText}>SUBMIT</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </SafeAreaView>
+      </LinearGradient>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -91,6 +109,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   safeArea: {
+    flex: 1,
+  },
+  mainContainer: {
     flex: 1,
   },
   logoContainer: {

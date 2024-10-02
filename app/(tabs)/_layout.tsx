@@ -17,7 +17,6 @@ export default function AppLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
-        <Stack.Screen name="navigator/AppNavigator" />
         <Stack.Screen name="VerificationScreen" /> 
         <Stack.Screen name="NameInputScreen" />
         <Stack.Screen name="BirthdayInputScreen" />
@@ -31,6 +30,7 @@ export default function AppLayout() {
         <Stack.Screen name="ChatScreen"/>
         <Stack.Screen name="OnboardingScreen" />
         <Stack.Screen name="CryptonounScreen" />
+        <Stack.Screen name="main/mainScreen" />
       </Stack>
     </GestureHandlerRootView>
   );

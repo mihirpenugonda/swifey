@@ -8,14 +8,16 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import AppBar from "../../../components/AppBar";
 import { fetchUserWallet } from "../../../services/apiService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useBottomModal } from "@/helpers/context/bottomModalContext";
 
 export default function BagScreen() {
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [walletAddress, setWalletAddress] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const { showModal, hideModal } = useBottomModal();
 
   useEffect(() => {
     const loadWalletData = async () => {
@@ -55,7 +57,6 @@ export default function BagScreen() {
 
   return (
     <>
-      <AppBar />
       <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
         <View style={styles.balanceContainer}>
           <View style={styles.row}>
@@ -77,7 +78,16 @@ export default function BagScreen() {
         </View>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.addButton}>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => {
+              showModal(
+                <View>
+                  <Text>Hello</Text>
+                </View>
+              );
+            }}
+          >
             <LinearGradient
               colors={["#FF56F8", "#B6E300"]}
               style={styles.gradientButton}
@@ -117,8 +127,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
   },
   balanceContainer: {
     marginBottom: 20,

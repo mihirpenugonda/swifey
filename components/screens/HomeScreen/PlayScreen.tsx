@@ -14,9 +14,11 @@ import AppBar from "../../AppBar";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { fetchProfiles, sendSwipe } from "../../../services/apiService";
 import eventEmitter from "@/services/eventEmitter";
+import { LinearGradient } from "expo-linear-gradient";
 
 import NumOfKiss from "../../../assets/images/numofkiss.svg";
 import NumOfRug from "../../../assets/images/numofrug.svg";
+import { useBottomModal } from "@/helpers/context/bottomModalContext";
 
 export default function PlayScreen() {
   const [profiles, setProfiles] = useState<any[]>([]);
@@ -28,6 +30,8 @@ export default function PlayScreen() {
   const swiperRef = useRef<Swiper<any>>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [allSwiped, setAllSwiped] = useState(false);
+
+  const { showModal, hideModal } = useBottomModal();
 
   const loadProfiles = async () => {
     try {
@@ -67,74 +71,106 @@ export default function PlayScreen() {
     }
   }, [currentProfileIndex, profiles]);
 
-  const handleSwipeLeft = async () => {
+  const handleSwipe = async (direction: "left" | "right") => {
+    const currentProfile = profiles[currentProfileIndex];
+
     try {
-      const currentProfile = profiles[currentProfileIndex];
-      console.log("Current Profile on Rug Swipe:", currentProfile);
+      console.log(
+        `Current Profile on ${direction === "left" ? "Rug" : "Kiss"} Swipe:`,
+        currentProfile
+      );
+      console.log(`Current Profile Index: ${currentProfileIndex}`);
 
       if (!currentProfile?.id) {
         console.error("Profile ID is missing");
         return;
       }
 
-      const response = await sendSwipe(currentProfile?.id, "rug");
+      const swipeType = direction === "left" ? "rug" : "kiss";
+      console.log(
+        `Sending swipe request: ${swipeType} for profile ${currentProfile.id}`
+      );
+
+      const response = await sendSwipe(currentProfile.id, swipeType);
+
+      console.log("Swipe API response:", response, response?.message);
 
       if (response?.message === "You have already swiped on this profile") {
         console.log(
-          `You have already swiped on this profile. Past decision: ${response.past_decision}`
+          `Already swiped on this profile. Past decision: ${response.past_decision}`
         );
-        swiperRef.current?.swipeLeft();
+
         return;
       }
 
-      console.log("Swipe response:", response);
       processSwipeResponse(response);
-      swiperRef.current?.swipeLeft();
+
+      if (swipeType === "kiss" && response.decision === "match") {
+        console.log("Match made, emitting event");
+        eventEmitter.emit("matchMade");
+      }
+
+      console.log(`Updating balance: ${response.balance}`);
+
+      console.log(
+        `Moving to next profile. Current index: ${currentProfileIndex}`
+      );
 
       setCurrentProfileIndex((prevIndex) => {
         const nextIndex = prevIndex + 1;
+        console.log(`New profile index: ${nextIndex}`);
         return nextIndex >= profiles.length ? 0 : nextIndex;
       });
     } catch (error) {
-      console.error("Error sending rug swipe:", error);
-    }
-  };
+      console.error(`Error in handleSwipe (${direction}):`, error);
 
-  const handleSwipeRight = async () => {
-    try {
-      const currentProfile = profiles[currentProfileIndex];
-      console.log("Current Profile on Kiss Swipe:", currentProfile);
+      if (
+        error instanceof Error &&
+        error.message.toLowerCase().includes("insufficient balance")
+      ) {
+        console.log("Not enough balance, opening insufficient balance modal");
 
-      if (!currentProfile?.id) {
-        console.error("Profile ID is missing");
-        return;
-      }
-
-      const response = await sendSwipe(currentProfile?.id, "kiss");
-
-      if (response?.message === "You have already swiped on this profile") {
-        console.log(
-          `You have already swiped on this profile. Past decision: ${response.past_decision}`
+        showModal(
+          <View
+            style={{
+              width: "100%",
+              borderRadius: 15,
+              alignItems: "flex-start",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: "bold",
+                marginBottom: 5,
+              }}
+            >
+              Insufficient Balance
+            </Text>
+            <Text
+              style={{
+                fontSize: 16,
+                marginBottom: 10,
+              }}
+            >
+              You don't have enough balance to perform this action. Please
+              deposit to continue.
+            </Text>
+          </View>
         );
-        swiperRef.current?.swipeRight();
-        return;
+
+        setProfiles((prevProfiles) => [currentProfile, ...prevProfiles]);
       }
 
-      console.log("Swipe response:", response);
-      processSwipeResponse(response);
-
-      eventEmitter.emit("matchMade");
-
-      swiperRef.current?.swipeRight();
-
-      setCurrentProfileIndex((prevIndex) => {
-        const nextIndex = prevIndex + 1;
-        return nextIndex >= profiles.length ? 0 : nextIndex;
-      });
-    } catch (error) {
-      console.error("Error sending kiss swipe:", error);
+      // Add the profile back to the beginning of the profiles array
+      console.log(
+        `Added profile ${currentProfile?.id} back to the beginning of the profiles array`
+      );
     }
   };
+
+  const handleSwipeLeft = () => handleSwipe("left");
+  const handleSwipeRight = () => handleSwipe("right");
 
   const processSwipeResponse = (response: {
     decision: string;
@@ -236,9 +272,7 @@ export default function PlayScreen() {
 
   return (
     <>
-      <AppBar showRightSide={true} />
-
-      <View style={{ flex: 1, marginBottom: 25 }}>
+      <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
         <View style={styles.swiperContainer}>
           {allSwiped ? (
             <View style={styles.noProfilesContainer}>
@@ -259,15 +293,18 @@ export default function PlayScreen() {
                     source={{ uri: profile?.photos?.[currentImageIndex] || "" }}
                     style={styles.image}
                   />
+
                   <TouchableOpacity
                     style={styles.leftTapArea}
                     onPress={() => handleImageTap("left")}
                   />
+
                   <TouchableOpacity
                     style={styles.rightTapArea}
                     onPress={() => handleImageTap("right")}
                   />
-                  <TouchableOpacity
+
+                  {/* <TouchableOpacity
                     style={styles.bookButton}
                     onPress={handleBookButtonPress}
                   >
@@ -275,7 +312,25 @@ export default function PlayScreen() {
                       source={require("../../../assets/images/book.png")}
                       style={styles.bookIcon}
                     />
-                  </TouchableOpacity>
+                  </TouchableOpacity> */}
+
+                  <LinearGradient
+                    colors={[
+                      "rgba(134, 134, 134, 0.00)",
+                      "rgba(0, 0, 0, 0.50)",
+                      "rgba(0, 0, 0, 0.90)",
+                    ]}
+                    locations={[0.6908, 0.7869, 0.992]}
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      height: "100%", // Adjust this value as needed
+                      width: "100%",
+                    }}
+                  />
+
                   <View style={styles.profileInfo}>
                     <View
                       style={{ flexDirection: "row", alignItems: "center" }}
@@ -333,17 +388,17 @@ export default function PlayScreen() {
             <Text style={styles.buttonText}>😘</Text>
           </TouchableOpacity>
         </View>
-      </View>
 
-      <BottomSheet
-        ref={bottomSheetRef}
-        snapPoints={["25%", "40%"]}
-        index={-1}
-        onChange={(index) => setBottomSheetOpen(index >= 0)}
-        enablePanDownToClose
-      >
-        {renderBottomSheetContent()}
-      </BottomSheet>
+        <BottomSheet
+          ref={bottomSheetRef}
+          snapPoints={["25%", "40%"]}
+          index={-1}
+          onChange={(index) => setBottomSheetOpen(index >= 0)}
+          enablePanDownToClose
+        >
+          {renderBottomSheetContent()}
+        </BottomSheet>
+      </LinearGradient>
     </>
   );
 }
@@ -352,6 +407,9 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#F4F9F5",
+  },
+  container: {
+    flex: 1,
   },
   swiperContainer: {
     flex: 1,
@@ -395,7 +453,7 @@ const styles = StyleSheet.create({
   },
   profileInfo: {
     position: "absolute",
-    bottom: 80,
+    bottom: 60,
     left: 20,
     right: 20,
   },
@@ -411,6 +469,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-evenly",
+    marginBottom: 20,
   },
   button: {
     width: 60,

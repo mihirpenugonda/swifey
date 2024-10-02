@@ -89,8 +89,7 @@ const ProfileScreen = () => {
 
   return (
     <>
-      <AppBar />
-      <View style={styles.container}>
+      <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
         {avatarUrl ? (
           <Image source={{ uri: avatarUrl }} style={styles.avatar} />
         ) : (
@@ -116,7 +115,7 @@ const ProfileScreen = () => {
             <Text style={styles.buttonText}>EDIT PROFILE</Text>
           </LinearGradient>
         </TouchableOpacity>
-      </View>
+      </LinearGradient>
     </>
   );
 };
