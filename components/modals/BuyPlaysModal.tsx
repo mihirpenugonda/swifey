@@ -19,6 +19,7 @@ import {
 } from "react-native-iap";
 import { validateIAPPurchase } from "@/services/apiService";
 import { useMainContext } from "@/helpers/context/mainContext";
+import { getIosModule } from "react-native-iap/lib/typescript/src/internal";
 
 const productId = "kisstest123";
 
@@ -75,6 +76,7 @@ export default function BuyPlaysModal({ numOfPlays }: { numOfPlays: number }) {
               console.error("Error handling purchase", err);
             } finally {
               setProcessingIndex(null);
+              setIsProcessing(false);
             }
           }
         );
@@ -112,6 +114,7 @@ export default function BuyPlaysModal({ numOfPlays }: { numOfPlays: number }) {
 
   const onPurchaseClicked = async (quantity: number, index: number) => {
     try {
+      setIsProcessing(true);
       setProcessingIndex(index);
       const products = await InAppPurchases.getProducts({
         skus: [productId],
@@ -124,116 +127,97 @@ export default function BuyPlaysModal({ numOfPlays }: { numOfPlays: number }) {
       });
     } catch (error) {
       console.error("Purchase failed:", error);
-    } finally {
+      setIsProcessing(false);
       setProcessingIndex(null);
     }
   };
 
   return (
     <View style={{ width: "100%", minHeight: 200 }}>
-      {isProcessing ? (
+      <View
+        style={{
+          width: "100%",
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 3.84,
+          elevation: 5,
+        }}
+      >
         <View
           style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            justifyContent: "center",
+            flexDirection: "row",
+            justifyContent: "space-between",
             alignItems: "center",
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            marginBottom: 5,
           }}
         >
-          <Text style={{ color: "#FFFFFF", marginTop: 10, fontSize: 16 }}>
-            Processing transaction...
-          </Text>
-          <ActivityIndicator size="small" color="#FFFFFF" />
+          <Text style={{ fontSize: 28, fontWeight: "bold" }}>Get Plays</Text>
+          <TouchableOpacity onPress={hideModal}>
+            <View
+              style={{
+                backgroundColor: "#C8C8C8",
+                borderRadius: 9999,
+                width: 40,
+                height: 40,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ fontSize: 20, fontWeight: "bold" }}>×</Text>
+            </View>
+          </TouchableOpacity>
         </View>
-      ) : (
+
+        <Text style={{ marginBottom: 10 }}>Total Plays: {numOfPlays}</Text>
+
         <View
           style={{
-            width: "100%",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-            elevation: 5,
+            flexDirection: "row",
+            marginBottom: 15,
+            gap: 20,
+            justifyContent: "center",
           }}
         >
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 5,
-            }}
-          >
-            <Text style={{ fontSize: 28, fontWeight: "bold" }}>Get Plays</Text>
-            <TouchableOpacity onPress={hideModal}>
-              <View
-                style={{
-                  backgroundColor: "#C8C8C8",
-                  borderRadius: 9999,
-                  width: 40,
-                  height: 40,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Text style={{ fontSize: 20, fontWeight: "bold" }}>×</Text>
-              </View>
+          {products.map((product, index) => (
+            <TouchableOpacity
+              key={index}
+              onPress={() => onPurchaseClicked(product.quantity, index)}
+              style={{
+                backgroundColor: "#333",
+                paddingVertical: 8,
+                paddingHorizontal: 12,
+                borderRadius: 20,
+                height: 70,
+                width: 70,
+                justifyContent: "center",
+                alignItems: "center",
+                opacity: isProcessing ? 0.5 : 1,
+              }}
+              disabled={isProcessing}
+            >
+              {processingIndex === index ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text
+                  style={{
+                    color: "white",
+                    fontSize: 12,
+                    lineHeight: 16,
+                    textAlign: "center",
+                  }}
+                >
+                  {product.title}
+                </Text>
+              )}
             </TouchableOpacity>
-          </View>
-
-          <Text style={{ marginBottom: 10 }}>Total Plays: {numOfPlays}</Text>
-
-          <View
-            style={{
-              flexDirection: "row",
-              marginBottom: 15,
-              gap: 20,
-              justifyContent: "center",
-            }}
-          >
-            {products.map((product, index) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => onPurchaseClicked(product.quantity, index)}
-                style={{
-                  backgroundColor: "#333",
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  borderRadius: 20,
-                  height: 70,
-                  width: 70,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-                disabled={isProcessing}
-              >
-                {processingIndex === index ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <Text
-                    style={{
-                      color: "white",
-                      fontSize: 12,
-                      lineHeight: 16,
-                      textAlign: "center",
-                    }}
-                  >
-                    {product.title}
-                  </Text>
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <Text style={{ textAlign: "center", marginBottom: 15 }}>
-            1 Play = $1.00
-          </Text>
+          ))}
         </View>
-      )}
+
+        <Text style={{ textAlign: "center", marginBottom: 15 }}>
+          1 Play = $1.00
+        </Text>
+      </View>
     </View>
   );
 }
