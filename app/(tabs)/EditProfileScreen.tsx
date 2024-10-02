@@ -263,7 +263,10 @@ export default function EditProfileScreen() {
       if (error) {
         throw new Error(error.message);
       }
-      Alert.alert("Logged out", "You have been successfully logged out.");
+
+      await AsyncStorage.removeItem("jwtToken");
+      await AsyncStorage.removeItem("userId");
+
       router.replace("/LoginScreen");
     } catch (error) {
       console.error("Error logging out:", error);

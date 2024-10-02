@@ -13,6 +13,7 @@ import HeaderLogo from "../../components/HeaderLogo";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { supabase } from "../../supabaseClient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getAuthenticatedUser } from "@/helpers/auth";
 
 export default function VerificationScreen() {
   const router = useRouter();
@@ -57,23 +58,15 @@ export default function VerificationScreen() {
 
         if (jwtToken && userId) {
           await AsyncStorage.setItem("jwtToken", jwtToken);
-          await AsyncStorage.setItem("userId", userId);
+
+          const authorizedUser = await getAuthenticatedUser();
+
+          await AsyncStorage.setItem("userId", authorizedUser.id);
+
           console.log("JWT Token and User ID stored:", jwtToken, userId);
 
-          Alert.alert("Success", "Your email has been verified!");
-
-          const { data: userData, error: userError } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", userId)
-            .single();
-
-          if (userData) {
-            await AsyncStorage.setItem("userData", JSON.stringify(userData));
-          }
-
           router.push(
-            userData.onboarding_step == "completed"
+            authorizedUser.onboarding_step == "completed"
               ? "/main/mainScreen"
               : "/NameInputScreen"
           );

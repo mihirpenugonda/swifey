@@ -16,15 +16,16 @@ import {
   useBottomModal,
 } from "@/helpers/context/bottomModalContext";
 import BottomModal from "@/components/modals/BottomModal";
+import { MainScreenContext } from "@/helpers/context/mainContext";
 
-const HomeIcon = require("../../../assets/images/play.png");
 const KissesIcon = require("../../../assets/images/kisses.png");
-const YourMoveIcon = require("../../../assets/images/yourmove.png");
+const YourTurnIcon = require("../../../assets/images/yourmove.png");
+const PlayIcon = require("../../../assets/images/play.png");
 const BagIcon = require("../../../assets/images/bag.png");
 const ProfileIcon = require("../../../assets/images/profile.png");
 
 function MainScreenContent() {
-  const [activeTab, setActiveTab] = React.useState("Home");
+  const [activeTab, setActiveTab] = React.useState("Play");
   const insets = useSafeAreaInsets();
   const { isVisible, hideModal, modalContent } = useBottomModal();
 
@@ -32,9 +33,9 @@ function MainScreenContent() {
     switch (activeTab) {
       case "Kisses":
         return <KissesScreen />;
-      case "Your Move":
+      case "Your Turn":
         return <YourMoveScreen />;
-      case "Home":
+      case "Play":
         return <HomeScreen />;
       case "Bag":
         return <BagScreen />;
@@ -51,6 +52,11 @@ function MainScreenContent() {
       onPress={() => setActiveTab(name)}
     >
       <Image source={icon} style={[styles.tabIcon]} />
+      <Text
+        style={[styles.tabText, activeTab === name && styles.activeTabText]}
+      >
+        {name}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -63,8 +69,8 @@ function MainScreenContent() {
         <View style={styles.content}>{renderScreen()}</View>
         <View style={[styles.tabBar, { paddingBottom: insets.bottom }]}>
           <TabButton name="Kisses" icon={KissesIcon} />
-          <TabButton name="Your Move" icon={YourMoveIcon} />
-          <TabButton name="Home" icon={HomeIcon} />
+          <TabButton name="Your Turn" icon={YourTurnIcon} />
+          <TabButton name="Play" icon={PlayIcon} />
           <TabButton name="Bag" icon={BagIcon} />
           <TabButton name="Profile" icon={ProfileIcon} />
         </View>
@@ -79,9 +85,11 @@ function MainScreenContent() {
 
 export default function MainScreen() {
   return (
-    <BottomModalProvider>
-      <MainScreenContent />
-    </BottomModalProvider>
+    <MainScreenContext>
+      <BottomModalProvider>
+        <MainScreenContent />
+      </BottomModalProvider>
+    </MainScreenContext>
   );
 }
 
@@ -98,23 +106,36 @@ const styles = StyleSheet.create({
     backgroundColor: "#000000",
     justifyContent: "space-around",
     alignItems: "center",
-    paddingTop: 12,
+    paddingTop: 8,
+    paddingBottom: 8,
   },
   tabButton: {
     alignItems: "center",
     justifyContent: "center",
-    width: 48,
-    height: 48,
-    borderRadius: 8,
+    width: 60,
+    height: 60,
   },
   activeTabButton: {
-    backgroundColor: "rgba(205, 255, 139, 0.2)",
+    backgroundColor: "transparent",
   },
   tabIcon: {
-    width: 36,
-    height: 36,
+    width: 24,
+    height: 24,
+    marginBottom: 4,
+  },
+  playIcon: {
+    width: 40,
+    height: 40,
+    marginBottom: 0,
   },
   activeTabIcon: {
     tintColor: "#CDFF8B",
+  },
+  tabText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+  },
+  activeTabText: {
+    color: "#CDFF8B",
   },
 });

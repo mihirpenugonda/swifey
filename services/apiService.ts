@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const API_URL = "https://backend.kissorrug-968.workers.dev";
+const DEV_API_URL = "https://backend-dev.kissorrug-968.workers.dev";
 
 const getJwtToken = async () => {
   const jwtToken = await AsyncStorage.getItem("jwtToken");
@@ -46,8 +47,7 @@ export const fetchUserWallet = async (user_id: any) => {
     throw new Error("No JWT token found");
   }
 
-
-  console.log(jwtToken, "jwtToken")
+  console.log(jwtToken, "jwtToken");
   const response = await fetch(`${API_URL}/fetch-user-wallet`, {
     method: "POST",
     headers: {
@@ -217,5 +217,33 @@ export const validateInviteCode = async (code: string) => {
     console.error("error validating invite code:", error);
 
     return { isValid: false };
+  }
+};
+
+export const validateIAPPurchase = async (
+  purchaseReceipt: string,
+  is_sandbox: boolean
+) => {
+  try {
+    const jwtToken = await getJwtToken();
+
+    const response = await fetch(`${API_URL}/verify-purchase`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${jwtToken}`,
+      },
+      body: JSON.stringify({ receipt: purchaseReceipt, is_sandbox }),
+    });
+
+    if (!response.ok) {
+      const errorMessage = await response.text();
+      throw new Error(`Failed to validate IAP purchase: ${errorMessage}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error("Error validating IAP purchase:", error);
+    throw error; // Re-throw the error to be handled by the caller
   }
 };

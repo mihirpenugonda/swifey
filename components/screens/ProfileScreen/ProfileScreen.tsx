@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import AppBar from "../../../components/AppBar";
 import { supabase } from "../../../supabaseClient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useMainContext } from "@/helpers/context/mainContext";
 
 interface UserProfile {
   name: string;
@@ -14,58 +15,8 @@ interface UserProfile {
 
 const ProfileScreen = () => {
   const router = useRouter();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchUserProfile();
-  }, []);
-
-  const fetchUserProfile = async () => {
-    try {
-      const jwtToken = await AsyncStorage.getItem("jwtToken");
-      if (!jwtToken) {
-        throw new Error("No JWT token found");
-      }
-
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser(jwtToken);
-      if (userError || !user) {
-        throw new Error("User not logged in or error fetching user.");
-      }
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("name, date_of_birth, photos")
-        .eq("id", user.id)
-        .single();
-
-      if (error) {
-        throw new Error(`Error fetching profile: ${error.message}`);
-      }
-
-      setProfile(data);
-
-      if (data.photos && data.photos.length > 0) {
-        let avatarPath = data.photos[0];
-
-        if (avatarPath.startsWith("https://")) {
-          setAvatarUrl(avatarPath);
-        } else {
-          const fullUrl = `https://exftzdxtyfbiwlpmecmd.supabase.co/storage/v1/object/public/photos/${avatarPath}`;
-          console.log("Correct Avatar URL:", fullUrl);
-          setAvatarUrl(fullUrl);
-        }
-      }
-    } catch (error) {
-      console.error(
-        "Error:",
-        error instanceof Error ? error.message : "Unknown error"
-      );
-    }
-  };
+  const { profileDetails } = useMainContext();
 
   const calculateAge = (dateOfBirth: string): number => {
     const today = new Date();
@@ -90,18 +41,20 @@ const ProfileScreen = () => {
   return (
     <>
       <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
-        {avatarUrl ? (
-          <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+        {profileDetails ? (
+          <Image source={{ uri: profileDetails.image }} style={styles.avatar} />
         ) : (
           <View style={[styles.avatar, styles.placeholderAvatar]}>
             <Text style={styles.placeholderText}>No Image</Text>
           </View>
         )}
-        {profile && (
+
+        {profileDetails && (
           <Text style={styles.profileName}>
-            {profile.name}, {calculateAge(profile.date_of_birth)}
+            {profileDetails.name}, {calculateAge(profileDetails.date_of_birth)}
           </Text>
         )}
+
         <TouchableOpacity
           style={styles.buttonWrapper}
           onPress={navigateToEditProfile}

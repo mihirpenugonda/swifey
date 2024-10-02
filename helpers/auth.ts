@@ -30,5 +30,15 @@ export const getAuthenticatedUser = async () => {
     throw new Error("user not logged in.");
   }
 
-  return authStatus.user;
+  const { data: userData, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", authStatus.user.id)
+    .single();
+
+  if (error) {
+    throw new Error(`Error fetching user data: ${error.message}`);
+  }
+
+  return userData;
 };

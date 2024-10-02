@@ -1,120 +1,85 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
+  RefreshControl,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { fetchUserWallet } from "../../../services/apiService";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ScrollView } from "react-native-gesture-handler";
+
 import { useBottomModal } from "@/helpers/context/bottomModalContext";
+import { useMainContext } from "@/helpers/context/mainContext";
+
+import BuyPlaysModal from "@/components/modals/BuyPlaysModal";
+
+import TrophySvg from "../../../assets/images/icons/trophyIcon.svg";
 
 export default function BagScreen() {
-  const [walletBalance, setWalletBalance] = useState<number | null>(null);
-  const [walletAddress, setWalletAddress] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { showModal } = useBottomModal();
+  const { walletBalance, refreshBalance } = useMainContext();
+  const [refreshing, setRefreshing] = React.useState(false);
 
-  const { showModal, hideModal } = useBottomModal();
-
-  useEffect(() => {
-    const loadWalletData = async () => {
-      try {
-        const userId = await AsyncStorage.getItem("userId");
-        if (!userId) throw new Error("User ID not found");
-
-        const walletData = await fetchUserWallet(userId);
-        setWalletBalance(walletData.balance);
-        setWalletAddress(walletData.wallet_address);
-      } catch (error) {
-        console.error("Failed to fetch wallet data", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadWalletData();
-  }, []);
-
-  const formatWalletAddress = (address: string) => {
-    if (address.length > 10) {
-      return `${address.substring(0, 4)}...${address.substring(
-        address.length - 4
-      )}`;
-    }
-    return address;
-  };
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </SafeAreaView>
-    );
-  }
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refreshBalance();
+    setRefreshing(false);
+  }, [refreshBalance]);
 
   return (
-    <>
-      <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
-        <View style={styles.balanceContainer}>
-          <View style={styles.row}>
-            <Text style={styles.label}>Total Balance</Text>
-            <Text style={styles.balance}>
-              $
-              {typeof walletBalance === "number"
-                ? walletBalance.toFixed(2)
-                : "0.00"}{" "}
-              USD
+    <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.scrollViewContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <View style={styles.contentContainer}>
+          <View style={styles.bonusContainer}>
+            <TrophySvg />
+            <Text style={[styles.bonusText, { fontWeight: "bold" }]}>
+              $0 Total Bonus
             </Text>
           </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Wallet Address</Text>
-            <Text style={styles.walletAddress}>
-              {walletAddress ? formatWalletAddress(walletAddress) : "-"}
-            </Text>
-          </View>
-        </View>
 
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => {
-              showModal(
-                <View>
-                  <Text>Hello</Text>
-                </View>
-              );
-            }}
-          >
-            <LinearGradient
-              colors={["#FF56F8", "#B6E300"]}
-              style={styles.gradientButton}
-            >
-              <Text style={styles.addButtonText}>ADD CASH</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.withdrawButton}>
-            <Text style={styles.withdrawButtonText}>WITHDRAW</Text>
-          </TouchableOpacity>
-        </View>
+          <Text style={styles.playsText}>Total Plays Remaining</Text>
 
-        {/* <View style={styles.swipesBoxContainer}>
-          <View style={styles.swipesBox}>
-            <Text style={styles.swipesLabel}>Total Swipes Remaining</Text>
-            <Text style={styles.swipesValue}>0</Text>
-          </View>
-        </View> */}
-
-        <View style={styles.activitiesContainer}>
-          <Text style={styles.activitiesTitle}>Activity</Text>
-          <Text style={styles.activityItem}>
-            Your activity will show up here. Start swiping to see your stats!
+          <Text style={styles.playsCount}>
+            ${walletBalance} (${1}/play)
           </Text>
+
+          <LinearGradient
+            colors={["#FF56F8", "#B6E300"]}
+            start={{ x: -0.1338, y: 0 }}
+            end={{ x: 1.0774, y: 0 }}
+            style={styles.buyPlaysButton}
+          >
+            <TouchableOpacity
+              style={styles.buyPlaysButtonTouchable}
+              onPress={() => {
+                showModal(<BuyPlaysModal numOfPlays={walletBalance ?? 0} />);
+              }}
+            >
+              <Text style={styles.buyPlaysButtonText}>BUY PLAYS</Text>
+            </TouchableOpacity>
+          </LinearGradient>
+
+          {/* <TouchableOpacity>
+            <Text style={styles.transactionHistoryText}>
+              View Transaction History
+            </Text>
+          </TouchableOpacity> */}
+          {/* 
+          <View style={styles.summaryContainer}>
+            <Text style={styles.summaryTitle}>Summary</Text>
+            <Text style={styles.summaryItem}>🏆 You won 12 times</Text>
+            <Text style={styles.summaryItem}>❌ You lost 6 times</Text>
+            <Text style={styles.summaryItem}>⏳ 35 plays pending on others</Text>
+          </View> */}
         </View>
-      </LinearGradient>
-    </>
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
@@ -122,112 +87,70 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#F4F9F5",
-    paddingBottom: 0, // Remove any default padding
+    paddingBottom: 0,
   },
   container: {
     flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
     padding: 16,
   },
-  balanceContainer: {
-    marginBottom: 20,
+  contentContainer: {
+    backgroundColor: "#0000001A",
+    padding: 20,
+    borderRadius: 24,
+    width: "100%",
+    gap: 5,
   },
-  row: {
+  bonusContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 10,
   },
-  label: {
-    color: "#000",
-    fontSize: 18,
-    opacity: 0.8,
-    fontWeight: "400",
+  bonusText: {
+    fontFamily: "Tomorrow_700Bold",
+    color: "#00581B",
+    marginLeft: 10,
   },
-  balance: {
-    color: "#000",
-    fontSize: 20,
-    fontWeight: "bold",
+  playsText: {
+    fontFamily: "Tomorrow_400Regular",
+    marginBottom: 5,
   },
-  walletAddress: {
-    color: "#000",
-    fontSize: 18,
-    fontWeight: "400",
+  playsCount: {
+    fontFamily: "Tomorrow_700Bold",
+    fontSize: 24,
+    color: "#C30075",
+    marginBottom: 10,
   },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
-    height: 50,
+  buyPlaysButton: {
+    borderRadius: 20,
+    marginBottom: 10,
   },
-  addButton: {
-    flex: 1,
-    borderRadius: 25,
-    marginRight: 10,
-  },
-  gradientButton: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 25,
-  },
-  addButtonText: {
-    color: "#000",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  withdrawButton: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 25,
-    borderColor: "#121515",
-    borderWidth: 1,
-  },
-  withdrawButtonText: {
-    color: "#121515",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  swipesBoxContainer: {
-    position: "relative",
-    backgroundColor: "#E0E0E0",
-    borderRadius: 12,
-    marginBottom: 20,
+  buyPlaysButtonTouchable: {
     padding: 10,
+    alignItems: "center",
+    borderRadius: 20,
   },
-  swipesBox: {
-    backgroundColor: "#F4F9F5",
-    padding: 16,
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  swipesLabel: {
-    color: "#000",
-    fontSize: 16,
-    fontWeight: "400",
-    marginBottom: 8,
-  },
-  swipesValue: {
-    color: "#FF50B9",
-    fontSize: 20,
+  buyPlaysButtonText: {
+    color: "#313131",
     fontWeight: "bold",
   },
-  activitiesContainer: {
+  transactionHistoryText: {
+    fontFamily: "Tomorrow_400Regular",
+    color: "blue",
+    textDecorationLine: "underline",
+  },
+  summaryContainer: {
     marginTop: 20,
   },
-  activitiesTitle: {
-    color: "#000",
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 10,
+  summaryTitle: {
+    fontFamily: "Tomorrow_700Bold",
+    fontWeight: "bold",
+    marginBottom: 5,
   },
-  activityItem: {
-    color: "#000",
-    fontSize: 14,
-    fontWeight: "400",
+  summaryItem: {
+    fontFamily: "Tomorrow_400Regular",
     marginBottom: 5,
   },
 });

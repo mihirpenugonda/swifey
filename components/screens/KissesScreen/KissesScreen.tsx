@@ -1,9 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { Image, View, Text, FlatList, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
-import AppBar from '../../AppBar';
-import { fetchMatches } from '../../../services/apiService';
-import { useIsFocused } from '@react-navigation/native';
+import React, { useEffect, useState, useCallback } from "react";
+import {
+  Image,
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  SafeAreaView,
+  ActivityIndicator,
+  TouchableOpacity,
+  RefreshControl,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { useMainContext } from "@/helpers/context/mainContext";
+import { LinearGradient } from "expo-linear-gradient";
+import { ScrollView } from "react-native-gesture-handler";
 
 interface MatchItem {
   match_id: string;
@@ -15,31 +25,23 @@ interface MatchItem {
 }
 
 export default function KissesScreen() {
-  const [matches, setMatches] = useState<MatchItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const isFocused = useIsFocused();
+  const { matches, loadMatches } = useMainContext();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadMatches();
+    setRefreshing(false);
+  }, [loadMatches]);
 
   useEffect(() => {
-    const loadMatches = async () => {
-      try {
-        const fetchedMatches = await fetchMatches(20, 0);
-        setMatches(fetchedMatches);
-      } catch (error) {
-        console.error('Error loading matches:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (isFocused) {
-      loadMatches();
-    }
-  }, [isFocused]);
+    loadMatches();
+  }, []);
 
   const handleMatchPress = (match: MatchItem) => {
     router.push({
-      pathname: '/ChatScreen',
+      pathname: "/ChatScreen",
       params: {
         name: match.name,
         profileImage: match.photos[0],
@@ -49,7 +51,10 @@ export default function KissesScreen() {
   };
 
   const renderItem = ({ item }: { item: MatchItem }) => (
-    <TouchableOpacity onPress={() => handleMatchPress(item)} style={styles.chatItem}>
+    <TouchableOpacity
+      onPress={() => handleMatchPress(item)}
+      style={styles.chatItem}
+    >
       <View style={styles.avatarPlaceholder}>
         {item.photos.length > 0 ? (
           <Image source={{ uri: item.photos[0] }} style={styles.avatar} />
@@ -66,7 +71,7 @@ export default function KissesScreen() {
   const renderEmptyState = () => (
     <View style={styles.emptyStateContainer}>
       <Image
-        source={require('../../../assets/images/your-move-placeholder.png')}
+        source={require("../../../assets/images/your-move-placeholder.png")}
         style={styles.placeholderImage}
       />
       <Text style={styles.emptyStateText}>You don't have any kisses yet!</Text>
@@ -74,7 +79,7 @@ export default function KissesScreen() {
     </View>
   );
 
-  if (loading) {
+  if (!matches) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <ActivityIndicator size="large" color="#0000ff" />
@@ -83,45 +88,59 @@ export default function KissesScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      {matches.length === 0 ? (
-        renderEmptyState()
-      ) : (
-        <FlatList
-          data={matches}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.match_id}
-          style={styles.list}
-        />
-      )}
-    </SafeAreaView>
+    <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.scrollViewContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <SafeAreaView style={styles.safeArea}>
+          {matches.length === 0 ? (
+            renderEmptyState()
+          ) : (
+            <FlatList
+              data={matches}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.match_id}
+              style={styles.list}
+            />
+          )}
+        </SafeAreaView>
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    padding: 16,
+  },
   safeArea: {
     flex: 1,
-    backgroundColor: '#F4F9F5',
   },
   list: {
     flex: 1,
-    paddingHorizontal: 16,
   },
   chatItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 12,
-    borderBottomColor: '#333',
+    borderBottomColor: "#333",
     borderBottomWidth: 1,
   },
   avatarPlaceholder: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#808080',
+    backgroundColor: "#808080",
     marginRight: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   avatar: {
     width: 50,
@@ -129,22 +148,22 @@ const styles = StyleSheet.create({
     borderRadius: 25,
   },
   placeholderText: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 12,
   },
   messageContent: {
     flex: 1,
   },
   name: {
-    color: '#000',
+    color: "#000",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 4,
   },
   emptyStateContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 20,
   },
   placeholderImage: {
@@ -154,15 +173,15 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 10,
-    color: '#000',
+    color: "#000",
   },
   subText: {
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 30,
-    color: '#666',
+    color: "#666",
   },
 });

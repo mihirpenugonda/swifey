@@ -1,59 +1,17 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Image, ActivityIndicator } from "react-native";
-import { fetchUserWallet } from "../services/apiService";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import Logo from "../assets/images/newLogo.svg";
+import React from "react";
+import { View, StyleSheet } from "react-native";
+import Logo from "../assets/images/logos/kissOrRugTextLogo.svg";
 
 interface AppBarProps {
   showRightSide?: boolean;
 }
 
 const AppBar: React.FC<AppBarProps> = ({ showRightSide = true }) => {
-  const [balance, setBalance] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchWallet = async () => {
-      try {
-        const userId = await AsyncStorage.getItem("userId");
-        if (!userId) throw new Error("User ID not found");
-
-        const walletData = await fetchUserWallet(userId);
-        const solBalance = walletData.balance.toFixed(2);
-        setBalance(`${solBalance} USD`);
-      } catch (error) {
-        console.error("Error fetching wallet balance:", error);
-        setBalance("Error");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchWallet();
-  }, []);
-
   return (
     <View style={styles.appBar}>
       <View style={styles.leftContainer}>
-        <Logo width={40} height={40} style={styles.logo} />
-        <Text style={styles.logoText}>KISS or RUG</Text>
+        <Logo height={60} style={styles.logo} />
       </View>
-
-      {showRightSide && (
-        <View style={styles.bagContainer}>
-          <Image
-            source={require("../assets/images/bag.png")}
-            style={styles.bagImage}
-          />
-          {loading ? (
-            <ActivityIndicator size="small" color="#0000ff" />
-          ) : (
-            <Text style={styles.usdText}>
-              {balance ? balance : "Loading..."}
-            </Text>
-          )}
-        </View>
-      )}
     </View>
   );
 };
@@ -63,8 +21,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 16,
     backgroundColor: "#F4F9F5",
+    paddingHorizontal: 16,
     width: "100%",
   },
   leftContainer: {
