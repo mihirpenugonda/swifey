@@ -8,6 +8,8 @@ import {
   SafeAreaView,
   Dimensions,
   ActivityIndicator,
+  RefreshControl,
+  ScrollView,
 } from "react-native";
 import Swiper from "react-native-deck-swiper";
 import AppBar from "../../AppBar";
@@ -30,6 +32,7 @@ export default function PlayScreen() {
   const swiperRef = useRef<Swiper<any>>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [allSwiped, setAllSwiped] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const { showModal, hideModal } = useBottomModal();
 
@@ -43,6 +46,7 @@ export default function PlayScreen() {
 
       if (Array.isArray(fetchedProfiles) && fetchedProfiles.length > 0) {
         setProfiles(fetchedProfiles);
+        setAllSwiped(false); // Reset allSwiped when new profiles are loaded
       } else {
         console.error(
           "No profiles found or invalid response format:",
@@ -58,6 +62,7 @@ export default function PlayScreen() {
       setError(errorMessage);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -119,7 +124,11 @@ export default function PlayScreen() {
       setCurrentProfileIndex((prevIndex) => {
         const nextIndex = prevIndex + 1;
         console.log(`New profile index: ${nextIndex}`);
-        return nextIndex >= profiles.length ? 0 : nextIndex;
+        if (nextIndex >= profiles.length) {
+          setAllSwiped(true);
+          return 0;
+        }
+        return nextIndex;
       });
     } catch (error) {
       console.error(`Error in handleSwipe (${direction}):`, error);
@@ -129,6 +138,8 @@ export default function PlayScreen() {
         error.message.toLowerCase().includes("insufficient balance")
       ) {
         console.log("Not enough balance, opening insufficient balance modal");
+
+        console.log("HERE");
 
         showModal(
           <View
@@ -158,14 +169,22 @@ export default function PlayScreen() {
             </Text>
           </View>
         );
-
-        setProfiles((prevProfiles) => [currentProfile, ...prevProfiles]);
       }
 
-      // Add the profile back to the beginning of the profiles array
-      console.log(
-        `Added profile ${currentProfile?.id} back to the beginning of the profiles array`
-      );
+      setProfiles((prevProfiles) => {
+        const updatedProfiles = [
+          currentProfile,
+          ...prevProfiles.filter((p) => p.id !== currentProfile.id),
+        ];
+        console.log(
+          `Added profile ${currentProfile?.id} back to the beginning of the profiles array`
+        );
+        return updatedProfiles;
+      });
+
+      // Reset the current profile index to show the added profile
+      setCurrentProfileIndex(0);
+      setAllSwiped(false);
     }
   };
 
@@ -262,6 +281,11 @@ export default function PlayScreen() {
     );
   };
 
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    loadProfiles();
+  }, []);
+
   if (loading) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -273,121 +297,121 @@ export default function PlayScreen() {
   return (
     <>
       <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
-        <View style={styles.swiperContainer}>
-          {allSwiped ? (
-            <View style={styles.noProfilesContainer}>
-              <Text style={styles.noProfilesText}>
-                No profiles left to be swiped
-              </Text>
-            </View>
-          ) : Array.isArray(profiles) && profiles.length > 0 ? (
-            <Swiper
-              ref={swiperRef}
-              cards={profiles}
-              renderCard={(profile) => (
-                <View
-                  style={styles.card}
-                  key={`${profile.id}-${currentImageIndex}`}
-                >
-                  <Image
-                    source={{ uri: profile?.photos?.[currentImageIndex] || "" }}
-                    style={styles.image}
-                  />
-
-                  <TouchableOpacity
-                    style={styles.leftTapArea}
-                    onPress={() => handleImageTap("left")}
-                  />
-
-                  <TouchableOpacity
-                    style={styles.rightTapArea}
-                    onPress={() => handleImageTap("right")}
-                  />
-
-                  {/* <TouchableOpacity
-                    style={styles.bookButton}
-                    onPress={handleBookButtonPress}
+        <ScrollView
+          contentContainerStyle={styles.scrollViewContent}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          <View style={styles.swiperContainer}>
+            {allSwiped ? (
+              <View style={styles.noProfilesContainer}>
+                <Text style={styles.noProfilesText}>
+                  No profiles left to be swiped
+                </Text>
+              </View>
+            ) : Array.isArray(profiles) && profiles.length > 0 ? (
+              <Swiper
+                ref={swiperRef}
+                cards={profiles}
+                renderCard={(profile) => (
+                  <View
+                    style={styles.card}
+                    key={`${profile.id}-${currentImageIndex}`}
                   >
                     <Image
-                      source={require("../../../assets/images/book.png")}
-                      style={styles.bookIcon}
+                      source={{
+                        uri: profile?.photos?.[currentImageIndex] || "",
+                      }}
+                      style={styles.image}
                     />
-                  </TouchableOpacity> */}
 
-                  <LinearGradient
-                    colors={[
-                      "rgba(134, 134, 134, 0.00)",
-                      "rgba(0, 0, 0, 0.50)",
-                      "rgba(0, 0, 0, 0.90)",
-                    ]}
-                    locations={[0.6908, 0.7869, 0.992]}
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      height: "100%", // Adjust this value as needed
-                      width: "100%",
-                    }}
-                  />
+                    <TouchableOpacity
+                      style={styles.leftTapArea}
+                      onPress={() => handleImageTap("left")}
+                    />
 
-                  <View style={styles.profileInfo}>
-                    <View
-                      style={{ flexDirection: "row", alignItems: "center" }}
-                    >
-                      <Text style={styles.profileName}>
-                        {profile?.name || "Unknown"},{" "}
-                        {profile?.date_of_birth
-                          ? calculateAge(profile.date_of_birth)
-                          : "N/A"}
+                    <TouchableOpacity
+                      style={styles.rightTapArea}
+                      onPress={() => handleImageTap("right")}
+                    />
+
+                    <LinearGradient
+                      colors={[
+                        "rgba(134, 134, 134, 0.00)",
+                        "rgba(0, 0, 0, 0.50)",
+                        "rgba(0, 0, 0, 0.90)",
+                      ]}
+                      locations={[0.6908, 0.7869, 0.992]}
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        height: "100%", // Adjust this value as needed
+                        width: "100%",
+                      }}
+                    />
+
+                    <View style={styles.profileInfo}>
+                      <View
+                        style={{ flexDirection: "row", alignItems: "center" }}
+                      >
+                        <Text style={styles.profileName}>
+                          {profile?.name || "Unknown"},{" "}
+                          {profile?.date_of_birth
+                            ? calculateAge(profile.date_of_birth)
+                            : "N/A"}
+                        </Text>
+                        <View style={styles.countContainer}>
+                          <NumOfKiss width={20} height={20} />
+                          <Text style={styles.countText}>
+                            {profile?.num_of_kisses || 0}
+                          </Text>
+                        </View>
+                        <View style={styles.countContainer}>
+                          <NumOfRug width={20} height={20} />
+                          <Text style={styles.countText}>
+                            {profile?.num_of_rugs || 0}
+                          </Text>
+                        </View>
+                      </View>
+                      <Text style={styles.profileDescription}>
+                        {profile?.bio || ""}
                       </Text>
-                      <View style={styles.countContainer}>
-                        <NumOfKiss width={20} height={20} />
-                        <Text style={styles.countText}>
-                          {profile?.num_of_kisses || 0}
-                        </Text>
-                      </View>
-                      <View style={styles.countContainer}>
-                        <NumOfRug width={20} height={20} />
-                        <Text style={styles.countText}>
-                          {profile?.num_of_rugs || 0}
-                        </Text>
-                      </View>
                     </View>
-                    <Text style={styles.profileDescription}>
-                      {profile?.bio || ""}
-                    </Text>
                   </View>
-                </View>
-              )}
-              onSwipedLeft={handleSwipeLeft}
-              onSwipedRight={handleSwipeRight}
-              onSwipedAll={() => {
-                console.log("All cards swiped");
-                setAllSwiped(true);
-                setCurrentProfileIndex(0);
-              }}
-              cardIndex={0}
-              stackSize={3}
-              backgroundColor={"transparent"}
-              cardVerticalMargin={20}
-              animateCardOpacity
-            />
-          ) : (
-            <View style={styles.noProfilesContainer}>
-              <Text style={styles.noProfilesText}>No profiles available</Text>
-            </View>
-          )}
-        </View>
+                )}
+                onSwipedLeft={handleSwipeLeft}
+                onSwipedRight={handleSwipeRight}
+                onSwipedAll={() => {
+                  console.log("All cards swiped");
+                  setAllSwiped(true);
+                  setCurrentProfileIndex(0);
+                }}
+                cardIndex={currentProfileIndex}
+                stackSize={3}
+                backgroundColor={"transparent"}
+                cardVerticalMargin={20}
+                animateCardOpacity
+                key={profiles.length} // Add this line to force re-render when profiles change
+              />
+            ) : (
+              <View style={styles.noProfilesContainer}>
+                <Text style={styles.noProfilesText}>No profiles available</Text>
+              </View>
+            )}
+          </View>
 
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={handleSwipeLeft}>
-            <Text style={styles.buttonText}>❌</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={handleSwipeRight}>
-            <Text style={styles.buttonText}>😘</Text>
-          </TouchableOpacity>
-        </View>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.button} onPress={handleSwipeLeft}>
+              <Text style={styles.buttonText}>❌</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={handleSwipeRight}>
+              <Text style={styles.buttonText}>😘</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
 
         <BottomSheet
           ref={bottomSheetRef}
@@ -410,6 +434,9 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
   },
   swiperContainer: {
     flex: 1,

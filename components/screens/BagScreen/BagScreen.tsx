@@ -46,7 +46,7 @@ export default function BagScreen() {
           <Text style={styles.playsText}>Total Plays Remaining</Text>
 
           <Text style={styles.playsCount}>
-            ${walletBalance} (${1}/play)
+            {walletBalance} Swipes
           </Text>
 
           <LinearGradient
