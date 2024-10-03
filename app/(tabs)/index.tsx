@@ -10,7 +10,7 @@ const HomeScreen: React.FC = () => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       const authStatus = await getAuthStatus();
-
+      
       if (authStatus.status) {
         const authenticatedUser = await getAuthenticatedUser();
 

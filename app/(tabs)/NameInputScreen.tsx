@@ -15,6 +15,7 @@ import { supabase } from "../../supabaseClient";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { updateUserProfile } from "@/services/apiService";
 
 export default function NameInputScreen() {
   const router = useRouter();
@@ -46,7 +47,7 @@ export default function NameInputScreen() {
       "keyboardWillShow",
       keyboardWillShow
     );
-    
+
     const hideSubscription = Keyboard.addListener(
       "keyboardWillHide",
       keyboardWillHide
@@ -67,33 +68,14 @@ export default function NameInputScreen() {
     setLoading(true);
 
     try {
-      const jwtToken = await AsyncStorage.getItem("jwtToken");
-      if (!jwtToken) {
-        throw new Error("No JWT token found");
-      }
+      const token = await AsyncStorage.getItem("jwtToken");
 
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser(jwtToken);
+      console.log(token, "token");
 
-      if (userError) throw userError;
+      await updateUserProfile({
+        name: name,
+      });
 
-      if (!user) {
-        throw new Error("No user logged in");
-      }
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .update({ name })
-        .eq("id", user.id);
-
-      console.log(error);
-      if (error) throw error;
-
-      console.log(data, error);
-
-      Alert.alert("Success", "Name has been saved.");
       router.push("/BirthdayInputScreen");
     } catch (error) {
       Alert.alert(

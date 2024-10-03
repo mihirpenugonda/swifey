@@ -89,6 +89,7 @@ export default function VerificationScreen() {
     userId: string | undefined
   ) => {
     if (jwtToken && userId) {
+      console.log(jwtToken, "jwtToken");
       await AsyncStorage.setItem("jwtToken", jwtToken);
 
       const authorizedUser = await getAuthenticatedUser();
@@ -97,11 +98,7 @@ export default function VerificationScreen() {
 
       console.log("JWT Token and User ID stored:", jwtToken, userId);
 
-      router.push(
-        authorizedUser.onboarding_step == "completed"
-          ? "/main/mainScreen"
-          : "/NameInputScreen"
-      );
+      router.push("/NameInputScreen");
     } else {
       Alert.alert("Error", "Could not retrieve session information");
     }
@@ -243,7 +240,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     textAlign: "center",
     fontSize: 24,
-    color: "#FFFFFF",
+    color: "#313131",
     marginHorizontal: 4,
   },
   inputContainer: {

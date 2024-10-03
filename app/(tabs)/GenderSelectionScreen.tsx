@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-import { supabase } from '../../supabaseClient';
-import HeaderLogo from '../../components/HeaderLogo';
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { useRouter } from "expo-router";
+import { supabase } from "../../supabaseClient";
+import HeaderLogo from "../../components/HeaderLogo";
+import { updateUserProfile } from "@/services/apiService";
 
 export default function GenderSelectionScreen() {
   const [selectedGender, setSelectedGender] = useState<string | null>(null);
@@ -11,25 +12,20 @@ export default function GenderSelectionScreen() {
   const handleGenderSelect = async (gender: string) => {
     setSelectedGender(gender);
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        throw new Error('User not logged in or error fetching user.');
-      }
+      await updateUserProfile({
+        gender: gender.toLowerCase(),
+      });
 
-      const { error } = await supabase
-        .from('profiles')
-        .update({ gender })
-        .eq('id', user.id);
-
-      if (error) {
-        throw new Error(`Error updating gender: ${error.message}`);
-      }
-
-      console.log('Gender updated successfully');
-      router.push('/CryptonounScreen');
+      router.push("/CryptonounScreen");
     } catch (error) {
-      console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
-      Alert.alert('Error', error instanceof Error ? error.message : 'An unexpected error occurred.');
+      console.error(
+        "Error:",
+        error instanceof Error ? error.message : "Unknown error"
+      );
+      Alert.alert(
+        "Error",
+        error instanceof Error ? error.message : "An unexpected error occurred."
+      );
     }
   };
 
@@ -41,7 +37,7 @@ export default function GenderSelectionScreen() {
 
       <Text style={styles.title}>What's your gender?</Text>
 
-      {['woman', 'man', 'non-binary'].map((gender) => (
+      {["Woman", "Man", "Non-Binary"].map((gender) => (
         <TouchableOpacity
           key={gender}
           style={[
@@ -51,7 +47,11 @@ export default function GenderSelectionScreen() {
           onPress={() => handleGenderSelect(gender)}
         >
           <Text style={styles.optionText}>{gender}</Text>
-          <View style={selectedGender === gender ? styles.selectedCircle : styles.circle}>
+          <View
+            style={
+              selectedGender === gender ? styles.selectedCircle : styles.circle
+            }
+          >
             {selectedGender === gender && <Text style={styles.tick}>✓</Text>}
           </View>
         </TouchableOpacity>
@@ -63,7 +63,7 @@ export default function GenderSelectionScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121515',
+    backgroundColor: "#121515",
     paddingHorizontal: 20,
     paddingVertical: 40,
   },
@@ -72,25 +72,25 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 18,
     marginBottom: 20,
-    textAlign: 'left',
+    textAlign: "left",
   },
   optionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#333',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#333",
     borderRadius: 8,
     padding: 15,
     marginBottom: 15,
   },
   selectedOptionContainer: {
-    backgroundColor: '#444',
+    backgroundColor: "#444",
   },
   optionText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
   },
   circle: {
@@ -98,21 +98,21 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
   },
   selectedCircle: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#FF56F8',  
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#FF56F8",
+    alignItems: "center",
+    justifyContent: "center",
   },
   tick: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });

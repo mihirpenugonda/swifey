@@ -16,6 +16,7 @@ import { useRouter } from "expo-router";
 import { supabase } from "../../supabaseClient";
 import HeaderLogo from "../../components/HeaderLogo";
 import { LinearGradient } from "expo-linear-gradient";
+import { updateUserProfile } from "@/services/apiService";
 
 export default function CryptonounScreen() {
   const [selectedCryptonoun, setSelectedCryptonoun] = useState<string | null>(
@@ -65,24 +66,10 @@ export default function CryptonounScreen() {
     setSelectedCryptonoun(cryptonoun);
     setLoading(true);
     try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      if (userError || !user) {
-        throw new Error("User not logged in or error fetching user.");
-      }
+      await updateUserProfile({
+        cryptonoun: cryptonoun,
+      });
 
-      const { error } = await supabase
-        .from("profiles")
-        .update({ cryptonoun })
-        .eq("id", user.id);
-
-      if (error) {
-        throw new Error(`Error updating cryptonoun: ${error.message}`);
-      }
-
-      console.log("Cryptonoun updated successfully");
       router.push("/PreferenceScreen");
     } catch (error) {
       console.error(
