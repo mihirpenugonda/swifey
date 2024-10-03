@@ -259,7 +259,7 @@ export default function EditProfileScreen() {
       await AsyncStorage.removeItem("jwtToken");
       await AsyncStorage.removeItem("userId");
 
-      router.replace("/LoginScreen");
+      router.replace("/EmailScreen");
     } catch (error) {
       console.error("Error logging out:", error);
       Alert.alert("Error", "Failed to log out. Please try again.");

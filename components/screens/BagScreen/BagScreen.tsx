@@ -45,7 +45,7 @@ export default function BagScreen() {
 
           <Text style={styles.playsText}>Total Plays Remaining</Text>
 
-          <Text style={styles.playsCount}>{walletBalance} Swipes</Text>
+          <Text style={styles.playsCount}>{walletBalance}</Text>
 
           <LinearGradient
             colors={["#FF56F8", "#B6E300"]}

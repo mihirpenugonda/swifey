@@ -41,7 +41,7 @@ export const MainScreenContext: React.FC<{ children: ReactNode }> = ({
       const userId = await AsyncStorage.getItem("userId");
 
       if (!userId) {
-        router.navigate("/LoginScreen");
+        router.navigate("/EmailScreen");
         return;
       }
 
