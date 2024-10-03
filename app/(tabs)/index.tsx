@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { View, StyleSheet, Image, ActivityIndicator } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { getAuthStatus } from "@/helpers/auth";
+import { getAuthenticatedUser, getAuthStatus } from "@/helpers/auth";
 
 import Logo from "../../assets/images/newLogo.svg";
 import { router } from "expo-router";
@@ -12,7 +12,13 @@ const HomeScreen: React.FC = () => {
       const authStatus = await getAuthStatus();
 
       if (authStatus.status) {
-        router.push("/main/mainScreen");
+        const authenticatedUser = await getAuthenticatedUser();
+
+        if (authenticatedUser.onboarding_step == "completed") {
+          router.push("/main/mainScreen");
+        } else {
+          router.push("/NameInputScreen");
+        }
       } else {
         router.push("/LoginScreen");
       }

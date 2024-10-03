@@ -75,7 +75,9 @@ const LoginScreen: React.FC = () => {
                   <TextInput
                     value={inviteCode}
                     placeholder="ENTER INVITE CODE"
-                    style={inputStyle}
+                    style={[inputStyle, {
+                      marginHorizontal: 20
+                    }]}
                     placeholderTextColor="#888"
                     maxLength={6}
                     onChangeText={handleInviteCodeChange}
@@ -115,14 +117,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   logoContainer: {
-    position: "absolute",
-    left: 0,
-    right: 0,
     alignItems: "center",
   },
   contentContainer: {
     flex: 1,
-    justifyContent: "flex-end",
+    marginTop: 36
   },
   title: {
     fontSize: 48,

@@ -111,6 +111,7 @@ android {
 
     namespace 'com.kissOrRug.kissOrRug'
     defaultConfig {
+missingDimensionStrategy "store", "play"
         applicationId 'com.kissOrRug.kissOrRug'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion

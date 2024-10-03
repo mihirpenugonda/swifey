@@ -8,5 +8,4 @@ export const inputStyle: ViewStyle & TextStyle = {
   paddingHorizontal: 10,
   backgroundColor: "#fff",
   color: "#000",
-  marginHorizontal: 20,
 };
