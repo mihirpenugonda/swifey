@@ -19,6 +19,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',  // Center children horizontally
     marginBottom: 40,
     flexDirection: 'column',  // Stack elements in a column
+    marginHorizontal: 20
   },
   logo: {
     alignSelf: 'flex-start',  // Align logo to the left

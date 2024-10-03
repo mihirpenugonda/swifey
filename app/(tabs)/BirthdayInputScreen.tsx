@@ -4,8 +4,9 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { LinearGradient } from "expo-linear-gradient";
 import HeaderLogo from "../../components/HeaderLogo";
 import { useRouter } from "expo-router";
-import { supabase } from "../../supabaseClient";
 import { updateUserProfile } from "@/services/apiService";
+import Container from "@/components/Container";
+import { inputStyle } from "@/helpers/styles";
 
 export default function BirthdayInputScreen() {
   const router = useRouter();
@@ -47,56 +48,61 @@ export default function BirthdayInputScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <HeaderLogo />
+    <Container>
+      <View style={{ flex: 1 }}>
+        <HeaderLogo />
 
-      <View style={styles.contentContainer}>
-        <Text style={styles.title}>When's your Birthday?</Text>
+        <View style={styles.contentContainer}>
+          <Text style={styles.title}>When's your Birthday?</Text>
 
-        <TouchableOpacity
-          style={[styles.input, styles.buttonWidth]}
-          onPress={() => setShowPicker(true)}
-        >
-          <Text style={styles.dateText}>
-            {date ? date.toDateString() : "Select your birth date"}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={handleConfirm} style={styles.buttonWrapper}>
-          <LinearGradient
-            colors={["#FF56F8", "#B6E300"]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={[
-              styles.gradientButton,
-              date ? styles.buttonEnabled : styles.buttonDisabled,
-            ]}
+          <TouchableOpacity
+            style={[inputStyle, styles.buttonWidth]}
+            onPress={() => setShowPicker(true)}
           >
-            <Text style={styles.buttonText}>
-              {date
-                ? `I confirm that I am ${calculateAge(date)} years old`
-                : "PLEASE SELECT YOUR BIRTH DATE"}
+            <Text style={styles.dateText}>
+              {date ? date.toDateString() : "Select your birth date"}
             </Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
+          </TouchableOpacity>
 
-      {showPicker && (
-        <View style={styles.datePickerOverlay}>
-          <View style={styles.datePickerContainer}>
-            <DateTimePicker
-              value={date || new Date()}
-              mode="date"
-              display="spinner"
-              onChange={handleDateChange}
-              maximumDate={new Date()}
-              style={styles.datePicker}
-              textColor="#000000"
-            />
-          </View>
+          <TouchableOpacity
+            onPress={handleConfirm}
+            style={styles.buttonWrapper}
+          >
+            <LinearGradient
+              colors={["#FF56F8", "#B6E300"]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={[
+                styles.gradientButton,
+                date ? styles.buttonEnabled : styles.buttonDisabled,
+              ]}
+            >
+              <Text style={styles.buttonText}>
+                {date
+                  ? `I confirm that I am ${calculateAge(date)} years old`
+                  : "PLEASE SELECT YOUR BIRTH DATE"}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
-      )}
-    </View>
+
+        {showPicker && (
+          <View style={styles.datePickerOverlay}>
+            <View style={styles.datePickerContainer}>
+              <DateTimePicker
+                value={date || new Date()}
+                mode="date"
+                display="spinner"
+                onChange={handleDateChange}
+                maximumDate={new Date()}
+                style={styles.datePicker}
+                textColor="#000000"
+              />
+            </View>
+          </View>
+        )}
+      </View>
+    </Container>
   );
 }
 
@@ -109,14 +115,14 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    paddingHorizontal: 20
   },
   title: {
-    color: "#FFFFFF",
-    fontSize: 18,
+    fontSize: 30,
+    fontWeight: "700",
     marginBottom: 20,
-    textAlign: "center",
+    textAlign: "left",
+    fontFamily: "WorkSans_700Bold",
   },
   input: {
     height: 50,
@@ -129,7 +135,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#1E1E1E",
   },
   dateText: {
-    color: "#FFFFFF",
+    color: "#313131",
   },
   buttonWidth: {
     width: "100%",
@@ -143,7 +149,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
+    marginTop: 10
   },
   buttonDisabled: {
     opacity: 0.5,

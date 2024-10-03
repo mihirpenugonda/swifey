@@ -8,14 +8,14 @@ import {
   Alert,
   Keyboard,
   Animated,
-  TouchableWithoutFeedback,
 } from "react-native";
 import HeaderLogo from "../../components/HeaderLogo";
-import { supabase } from "../../supabaseClient";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { updateUserProfile } from "@/services/apiService";
+import Container from "@/components/Container";
+import { inputStyle } from "@/helpers/styles";
 
 export default function NameInputScreen() {
   const router = useRouter();
@@ -88,15 +88,13 @@ export default function NameInputScreen() {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <Animated.View
-        style={[styles.container, { paddingBottom: keyboardHeight }]}
-      >
+    <Container>
+      <View style={{ flex: 1 }}>
         <HeaderLogo />
         <View style={styles.contentContainer}>
           <Text style={styles.title}>What's your name?</Text>
           <TextInput
-            style={styles.input}
+            style={inputStyle}
             placeholder="Enter your name"
             placeholderTextColor="#666"
             value={name}
@@ -120,30 +118,26 @@ export default function NameInputScreen() {
             </LinearGradient>
           </TouchableOpacity>
         </View>
-      </Animated.View>
-    </TouchableWithoutFeedback>
+      </View>
+    </Container>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#121515",
-    paddingHorizontal: 20,
-    justifyContent: "flex-start",
-    paddingVertical: 40,
   },
   contentContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "flex-start",
     width: "100%",
+    paddingHorizontal: 20
   },
   title: {
-    color: "#FFFFFF",
-    fontSize: 18,
+    fontSize: 32,
+    fontWeight: "700",
     marginBottom: 20,
     textAlign: "left",
+    fontFamily: "WorkSans_700Bold",
   },
   input: {
     width: "100%",

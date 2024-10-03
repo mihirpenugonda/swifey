@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { useRouter } from "expo-router";
-import { supabase } from "../../supabaseClient";
 import HeaderLogo from "../../components/HeaderLogo";
 import { updateUserProfile } from "@/services/apiService";
+import Container from "@/components/Container";
 
 export default function GenderSelectionScreen() {
   const [selectedGender, setSelectedGender] = useState<string | null>(null);
@@ -30,67 +30,64 @@ export default function GenderSelectionScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.headerLogoContainer}>
+    <Container>
+      <View style={{ flex: 1 }}>
         <HeaderLogo />
+
+        <View style={{ flex: 1, paddingHorizontal: 20 }}>
+          <Text style={styles.title}>What's your gender?</Text>
+
+          {["Woman", "Man", "Non-Binary"].map((gender) => (
+            <TouchableOpacity
+              key={gender}
+              style={[
+                styles.optionContainer,
+                selectedGender === gender && styles.selectedOptionContainer,
+              ]}
+              onPress={() => handleGenderSelect(gender)}
+            >
+              <Text style={styles.optionText}>{gender}</Text>
+              <View
+                style={
+                  selectedGender === gender
+                    ? styles.selectedCircle
+                    : styles.circle
+                }
+              >
+                {selectedGender === gender && (
+                  <Text style={styles.tick}>✓</Text>
+                )}
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
-
-      <Text style={styles.title}>What's your gender?</Text>
-
-      {["Woman", "Man", "Non-Binary"].map((gender) => (
-        <TouchableOpacity
-          key={gender}
-          style={[
-            styles.optionContainer,
-            selectedGender === gender && styles.selectedOptionContainer,
-          ]}
-          onPress={() => handleGenderSelect(gender)}
-        >
-          <Text style={styles.optionText}>{gender}</Text>
-          <View
-            style={
-              selectedGender === gender ? styles.selectedCircle : styles.circle
-            }
-          >
-            {selectedGender === gender && <Text style={styles.tick}>✓</Text>}
-          </View>
-        </TouchableOpacity>
-      ))}
-    </View>
+    </Container>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#121515",
-    paddingHorizontal: 20,
-    paddingVertical: 40,
-  },
-  headerLogoContainer: {
-    paddingLeft: 20,
-    marginBottom: 20,
-  },
   title: {
-    color: "#FFFFFF",
-    fontSize: 18,
+    fontSize: 30,
+    fontWeight: "700",
     marginBottom: 20,
     textAlign: "left",
+    fontFamily: "WorkSans_700Bold",
   },
   optionContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#333",
+    backgroundColor: "#1111111A",
     borderRadius: 8,
     padding: 15,
     marginBottom: 15,
   },
   selectedOptionContainer: {
-    backgroundColor: "#444",
+    backgroundColor: "#1111111A",
   },
   optionText: {
-    color: "#FFFFFF",
+    color: "#313131",
     fontSize: 16,
   },
   circle: {
@@ -98,7 +95,7 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: "#FFFFFF",
+    borderColor: "#313131",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -106,7 +103,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "#FF56F8",
+    backgroundColor: "#8F00FF",
     alignItems: "center",
     justifyContent: "center",
   },

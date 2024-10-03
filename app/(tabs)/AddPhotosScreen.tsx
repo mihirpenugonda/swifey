@@ -9,7 +9,6 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 import { supabase } from "../../supabaseClient";
@@ -20,6 +19,7 @@ import { Buffer } from "buffer";
 import * as ImageManipulator from "expo-image-manipulator";
 import { updateUserProfile } from "@/services/apiService";
 import uuid from "react-native-uuid";
+import Container from "@/components/Container";
 export default function AddPhotosScreen() {
   const [images, setImages] = useState<(string | null)[]>(Array(6).fill(null));
   const [isUploading, setIsUploading] = useState(false);
@@ -157,44 +157,44 @@ export default function AddPhotosScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.headerLogoContainer}>
+    <Container>
+      <View style={{ flex: 1 }}>
         <HeaderLogo />
-      </View>
 
-      <View style={styles.container}>
-        <Text style={styles.header}>Add your photos</Text>
+        <View style={styles.container}>
+          <Text style={styles.header}>Add your photos</Text>
 
-        <FlatList
-          data={images}
-          renderItem={renderImageSlot}
-          keyExtractor={(item, index) => index.toString()}
-          numColumns={3}
-          scrollEnabled={false}
-          columnWrapperStyle={styles.imageRow}
-          style={styles.imageGrid}
-        />
+          <FlatList
+            data={images}
+            renderItem={renderImageSlot}
+            keyExtractor={(item, index) => index.toString()}
+            numColumns={3}
+            scrollEnabled={false}
+            columnWrapperStyle={styles.imageRow}
+            style={styles.imageGrid}
+          />
 
-        <TouchableOpacity
-          style={styles.buttonWrapper}
-          onPress={handleNext}
-          disabled={isUploading}
-        >
-          <LinearGradient
-            colors={["#FF56F8", "#B6E300"]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={styles.gradientButton}
+          <TouchableOpacity
+            style={styles.buttonWrapper}
+            onPress={handleNext}
+            disabled={isUploading}
           >
-            {isUploading ? (
-              <ActivityIndicator size="small" color="#000" />
-            ) : (
-              <Text style={styles.buttonText}>NEXT</Text>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
+            <LinearGradient
+              colors={["#FF56F8", "#B6E300"]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.gradientButton}
+            >
+              {isUploading ? (
+                <ActivityIndicator size="small" color="#000" />
+              ) : (
+                <Text style={styles.buttonText}>NEXT</Text>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
       </View>
-    </SafeAreaView>
+    </Container>
   );
 }
 
@@ -203,24 +203,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#121515",
   },
-  headerLogoContainer: {
-    paddingLeft: 20,
-    marginBottom: 20,
+  header: {
+    fontSize: 32,
+    fontWeight: "700",
+    textAlign: "left",
+    fontFamily: "WorkSans_700Bold",
+    color: "#313131",
   },
   container: {
     flex: 1,
     paddingHorizontal: 20,
   },
-  header: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    marginBottom: 20,
-  },
   imageGrid: {
     marginBottom: 20,
   },
   imageRow: {
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
   },
   imageSlotContainer: {
     position: "relative",
