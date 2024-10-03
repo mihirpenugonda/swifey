@@ -4,6 +4,7 @@ import * as Location from 'expo-location';
 import { router } from 'expo-router';
 import { supabase } from '../../supabaseClient';
 import HeaderLogo from '../../components/HeaderLogo';
+import { updateUserProfile } from '@/services/apiService';
 
 export default function LocationAccessScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
@@ -35,26 +36,11 @@ export default function LocationAccessScreen() {
 
   const storeLocation = async (locationData: Location.LocationObject) => {
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        throw new Error('User not logged in or error fetching user.');
-      }
-
-      const locationJson = {
-        latitude: locationData.coords.latitude,
-        longitude: locationData.coords.longitude,
-        accuracy: locationData.coords.accuracy,
-        timestamp: locationData.timestamp
-      };
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({ location: locationJson })
-        .eq('id', user.id);
-
-      if (error) {
-        throw new Error(`Error updating location: ${error.message}`);
-      }
+      
+      await updateUserProfile({
+        location: locationData,
+        onboarding_step: "completed",
+      });
 
       console.log('Location stored successfully');
     } catch (error) {

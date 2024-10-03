@@ -247,3 +247,44 @@ export const validateIAPPurchase = async (
     throw error; // Re-throw the error to be handled by the caller
   }
 };
+
+export const updateUserProfile = async (profileData: {
+  name?: string;
+  bio?: string;
+  photos?: string[];
+  gender?: string;
+  date_of_birth?: string;
+  location?: Record<string, any>;
+  gender_preference?: string[];
+  cryptonoun?: string;
+  onboarding_step?: string;
+}) => {
+  try {
+    const jwtToken = await getJwtToken();
+
+    const token = await AsyncStorage.getItem("jwtToken");
+
+    console.log(token, "token");
+
+    const response = await fetch(`${API_URL}/update-profile`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${jwtToken}`,
+      },
+      body: JSON.stringify(profileData),
+    });
+
+    if (!response.ok) {
+      const errorMessage = await response.text();
+      throw new Error(
+        `Failed to update profile: ${response.statusText} - ${errorMessage}`
+      );
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error updating user profile:", error);
+    throw error;
+  }
+};

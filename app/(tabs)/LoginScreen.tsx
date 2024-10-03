@@ -21,9 +21,11 @@ import { router } from "expo-router";
 
 const LoginScreen: React.FC = () => {
   const [inviteCode, setInviteCode] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const validate = async (code: string) => {
     try {
+      setIsLoading(true);
       const response = await validateInviteCode(code);
       if (response.isValid) {
         router.push("/EmailScreen");
@@ -49,7 +51,9 @@ const LoginScreen: React.FC = () => {
 
   const handleInviteCodeChange = (text: string) => {
     const upperText = text.toUpperCase().slice(0, 6);
+
     setInviteCode(upperText);
+
     if (upperText.length === 6) {
       handleInviteCodeSubmit(upperText);
     }
@@ -75,7 +79,12 @@ const LoginScreen: React.FC = () => {
                   <TextInput
                     value={inviteCode}
                     placeholder="ENTER INVITE CODE"
-                    style={inputStyle}
+                    style={[
+                      inputStyle,
+                      {
+                        marginHorizontal: 20,
+                      },
+                    ]}
                     placeholderTextColor="#888"
                     maxLength={6}
                     onChangeText={handleInviteCodeChange}
@@ -84,6 +93,7 @@ const LoginScreen: React.FC = () => {
 
                   <TouchableOpacity
                     onPress={() => handleInviteCodeSubmit(inviteCode)}
+                    disabled={isLoading}
                   >
                     <LinearGradient
                       colors={["#FF56F8", "#B6E300"]}
@@ -115,14 +125,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   logoContainer: {
-    position: "absolute",
-    left: 0,
-    right: 0,
     alignItems: "center",
   },
   contentContainer: {
     flex: 1,
-    justifyContent: "flex-end",
+    marginTop: 36,
   },
   title: {
     fontSize: 48,

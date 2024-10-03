@@ -1,49 +1,45 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-import { supabase } from '../../supabaseClient';
-import HeaderLogo from '../../components/HeaderLogo';
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { useRouter } from "expo-router";
+import { supabase } from "../../supabaseClient";
+import HeaderLogo from "../../components/HeaderLogo";
+import { updateUserProfile } from "@/services/apiService";
 
 export default function PreferenceScreen() {
   const [selectedPreferences, setSelectedPreferences] = useState<string[]>([]);
   const router = useRouter();
 
-  const preferences = ['woman', 'man', 'non-binary'];
+  const preferences = ["Woman", "Man", "Non-Binary"];
 
   const togglePreference = (preference: string) => {
-    setSelectedPreferences(prev => 
+    setSelectedPreferences((prev) =>
       prev.includes(preference)
-        ? prev.filter(p => p !== preference)
+        ? prev.filter((p) => p !== preference)
         : [...prev, preference]
     );
   };
 
   const handleNext = async () => {
     if (selectedPreferences.length === 0) {
-      Alert.alert('Error', 'Please select at least one preference.');
+      Alert.alert("Error", "Please select at least one preference.");
       return;
     }
 
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        throw new Error('User not logged in or error fetching user.');
-      }
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({ gender_preference: selectedPreferences })
-        .eq('id', user.id);
-
-      if (error) {
-        throw new Error(`Error updating preferences: ${error.message}`);
-      }
-
-      console.log('Preferences updated successfully');
-      router.push('/LocationAccessScreen'); 
+      await updateUserProfile({
+        gender_preference: selectedPreferences.map((p) => p.toLowerCase()),
+      });
+      
+      router.push("/LocationAccessScreen");
     } catch (error) {
-      console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
-      Alert.alert('Error', error instanceof Error ? error.message : 'An unexpected error occurred.');
+      console.error(
+        "Error:",
+        error instanceof Error ? error.message : "Unknown error"
+      );
+      Alert.alert(
+        "Error",
+        error instanceof Error ? error.message : "An unexpected error occurred."
+      );
     }
   };
 
@@ -60,13 +56,22 @@ export default function PreferenceScreen() {
           key={preference}
           style={[
             styles.optionContainer,
-            selectedPreferences.includes(preference) && styles.selectedOptionContainer,
+            selectedPreferences.includes(preference) &&
+              styles.selectedOptionContainer,
           ]}
           onPress={() => togglePreference(preference)}
         >
           <Text style={styles.optionText}>{preference}</Text>
-          <View style={selectedPreferences.includes(preference) ? styles.selectedCircle : styles.circle}>
-            {selectedPreferences.includes(preference) && <Text style={styles.tick}>✓</Text>}
+          <View
+            style={
+              selectedPreferences.includes(preference)
+                ? styles.selectedCircle
+                : styles.circle
+            }
+          >
+            {selectedPreferences.includes(preference) && (
+              <Text style={styles.tick}>✓</Text>
+            )}
           </View>
         </TouchableOpacity>
       ))}
@@ -81,7 +86,7 @@ export default function PreferenceScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121515',
+    backgroundColor: "#121515",
     paddingHorizontal: 20,
     paddingVertical: 40,
   },
@@ -90,25 +95,25 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 18,
     marginBottom: 20,
-    textAlign: 'left',
+    textAlign: "left",
   },
   optionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#333',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#333",
     borderRadius: 8,
     padding: 15,
     marginBottom: 15,
   },
   selectedOptionContainer: {
-    backgroundColor: '#444',
+    backgroundColor: "#444",
   },
   optionText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
   },
   circle: {
@@ -116,33 +121,33 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
   },
   selectedCircle: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#FF56F8',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#FF56F8",
+    alignItems: "center",
+    justifyContent: "center",
   },
   tick: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   nextButton: {
-    backgroundColor: '#FF56F8',
+    backgroundColor: "#FF56F8",
     borderRadius: 8,
     padding: 15,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 20,
   },
   nextButtonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });

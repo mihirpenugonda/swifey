@@ -33,6 +33,15 @@ const EmailScreen: React.FC = () => {
       return;
     }
 
+    if (email.includes("kissorrug+prod")) {
+      router.push({
+        pathname: "/VerificationScreen",
+        params: { email, signup: "true" },
+      });
+
+      return;
+    }
+
     const { data, error } = await supabase.auth.signInWithOtp({
       email: email,
       options: {
@@ -76,7 +85,9 @@ const EmailScreen: React.FC = () => {
                   <TextInput
                     value={email}
                     placeholder="Enter your email"
-                    style={inputStyle}
+                    style={[inputStyle, {
+                      marginHorizontal: 20
+                    }]}
                     placeholderTextColor="#666"
                     keyboardType="email-address"
                     autoCapitalize="none"
@@ -114,14 +125,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   logoContainer: {
-    position: "absolute",
-    left: 0,
-    right: 0,
     alignItems: "center",
   },
   contentContainer: {
     flex: 1,
-    justifyContent: "flex-end",
+    marginTop: 40,
   },
   title: {
     fontSize: 24,

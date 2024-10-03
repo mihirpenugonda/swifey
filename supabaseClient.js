@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = "https://exftzdxtyfbiwlpmecmd.supabase.co";

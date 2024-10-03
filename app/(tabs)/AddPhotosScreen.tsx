@@ -18,7 +18,8 @@ import { router } from "expo-router";
 import * as FileSystem from "expo-file-system";
 import { Buffer } from "buffer";
 import * as ImageManipulator from "expo-image-manipulator";
-
+import { updateUserProfile } from "@/services/apiService";
+import uuid from "react-native-uuid";
 export default function AddPhotosScreen() {
   const [images, setImages] = useState<(string | null)[]>(Array(6).fill(null));
   const [isUploading, setIsUploading] = useState(false);
@@ -88,7 +89,7 @@ export default function AddPhotosScreen() {
           const arrayBuffer = Buffer.from(base64Data, "base64");
 
           const fileExt = "jpg"; // We're always saving as JPEG after compression
-          const fileName = `photo-${i}-${user.id}.${fileExt}`;
+          const fileName = `photo-${i}-${uuid.v4()}-${user.id}.${fileExt}`;
 
           const { data: storageData, error: storageError } =
             await supabase.storage
@@ -111,29 +112,9 @@ export default function AddPhotosScreen() {
         }
       }
 
-      const { data: currentProfile, error: fetchError } = await supabase
-        .from("profiles")
-        .select("photos")
-        .eq("id", user.id)
-        .single();
-
-      if (fetchError) {
-        throw new Error(
-          `Error fetching current profile: ${fetchError.message}`
-        );
-      }
-
-      const currentPhotos = currentProfile.photos || [];
-      const updatedPhotos = [...currentPhotos, ...uploadedImagePaths];
-
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ photos: updatedPhotos })
-        .eq("id", user.id);
-
-      if (updateError) {
-        throw new Error(`Error updating user profile: ${updateError.message}`);
-      }
+      await updateUserProfile({
+        photos: uploadedImagePaths,
+      });
 
       router.push("/GenderSelectionScreen");
     } catch (error) {
