@@ -36,9 +36,9 @@ export default function PlayScreen() {
 
   const { showModal, hideModal } = useBottomModal();
 
-  const loadProfiles = async () => {
+  const loadProfiles = async (is_refreshing: boolean = false) => {
     try {
-      setLoading(true);
+      if (!is_refreshing) setLoading(true);
       setError(null);
 
       const fetchedProfiles = await fetchProfiles(20, 0);
@@ -283,7 +283,7 @@ export default function PlayScreen() {
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    loadProfiles();
+    loadProfiles(true);
   }, []);
 
   if (loading) {

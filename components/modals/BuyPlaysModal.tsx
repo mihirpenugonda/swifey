@@ -20,7 +20,7 @@ import {
 import { validateIAPPurchase } from "@/services/apiService";
 import { useMainContext } from "@/helpers/context/mainContext";
 
-const productId = "kisstest123";
+const productId = "prod.plays.1";
 
 const products = [
   {
