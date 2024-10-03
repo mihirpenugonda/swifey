@@ -19,6 +19,9 @@ import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import { Buffer } from "buffer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { updateUserProfile } from "@/services/apiService";
+import { getAuthenticatedUser } from "@/helpers/auth";
+import { useMainContext } from "@/helpers/context/mainContext";
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -39,10 +42,10 @@ export default function EditProfileScreen() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchUserProfile();
+    fetchProfile();
   }, []);
 
-  const fetchUserProfile = async () => {
+  const fetchProfile = async () => {
     try {
       const jwtToken = await AsyncStorage.getItem("jwtToken");
 
@@ -129,14 +132,7 @@ export default function EditProfileScreen() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      if (userError || !user) {
-        throw new Error("User not logged in or error fetching user.");
-      }
-
+      const authenticatedUser = await getAuthenticatedUser();
       const currentDate = new Date();
       const birthYear = currentDate.getFullYear() - parseInt(age);
       const dateOfBirth = new Date(
@@ -150,9 +146,10 @@ export default function EditProfileScreen() {
       const { data: currentProfile, error: fetchError } = await supabase
         .from("profiles")
         .select("photos")
-        .eq("id", user.id)
+        .eq("id", authenticatedUser.id)
         .single();
 
+      console.log(currentProfile, "currentProfile");
       if (fetchError) throw fetchError;
 
       const currentPhotos = currentProfile.photos || [];
@@ -183,7 +180,7 @@ export default function EditProfileScreen() {
             const arrayBuffer = Buffer.from(base64Data, "base64");
             const fileExt = photo.split(".").pop();
             const fileName = `${Date.now()}_${index}.${fileExt}`;
-            const filePath = `${user.id}/${fileName}`;
+            const filePath = `${authenticatedUser.id}/${fileName}`;
 
             const { data, error: uploadError } = await supabase.storage
               .from("photos")
@@ -208,17 +205,12 @@ export default function EditProfileScreen() {
         ...addedPhotos,
       ];
 
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          name,
-          date_of_birth: dateOfBirth,
-          bio,
-          photos: updatedPhotos,
-        })
-        .eq("id", user.id);
-
-      if (error) throw error;
+      const response = await updateUserProfile({
+        name,
+        date_of_birth: dateOfBirth,
+        bio,
+        photos: updatedPhotos,
+      });
 
       Alert.alert("Success", "Profile updated successfully");
       router.back();
