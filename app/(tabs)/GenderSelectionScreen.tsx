@@ -16,7 +16,7 @@ export default function GenderSelectionScreen() {
         gender: gender.toLowerCase(),
       });
 
-      router.push("/CryptonounScreen");
+      router.push("/PreferenceScreen");
     } catch (error) {
       console.error(
         "Error:",
