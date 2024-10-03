@@ -98,7 +98,11 @@ export default function VerificationScreen() {
 
       console.log("JWT Token and User ID stored:", jwtToken, userId);
 
-      router.push("/NameInputScreen");
+      router.push(
+        authorizedUser.onboarding_step === "completed"
+          ? "/main/mainScreen"
+          : "/NameInputScreen"
+      );
     } else {
       Alert.alert("Error", "Could not retrieve session information");
     }
