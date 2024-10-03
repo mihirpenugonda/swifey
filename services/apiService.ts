@@ -266,7 +266,7 @@ export const updateUserProfile = async (profileData: {
 
     console.log(token, "token");
 
-    const response = await fetch(`http://localhost:8787/update-profile`, {
+    const response = await fetch(`${API_URL}/update-profile`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
