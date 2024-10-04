@@ -20,7 +20,7 @@ const HomeScreen: React.FC = () => {
           router.push("/NameInputScreen");
         }
       } else {
-        router.push("/EmailScreen");
+        router.push("/OnboardingScreen");
       }
     };
 

@@ -28,7 +28,7 @@ export default function LocationAccessScreen() {
 
         await storeLocation(locationData);
 
-        router.push("/OnboardingScreen");
+        router.push("/main/mainScreen")
       } catch (error) {
         console.error(
           "Error:",

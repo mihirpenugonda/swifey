@@ -321,7 +321,12 @@ export default function PlayScreen() {
                   >
                     <Image
                       source={{
-                        uri: profile?.photos?.[currentImageIndex] || "",
+                        uri: profile?.photos?.[currentImageIndex]?.startsWith(
+                          "https://"
+                        )
+                          ? profile?.photos?.[currentImageIndex]
+                          : `https://exftzdxtyfbiwlpmecmd.supabase.co/storage/v1/object/public/photos/${profile?.photos?.[currentImageIndex]}` ||
+                            "",
                       }}
                       style={styles.image}
                     />
@@ -355,30 +360,48 @@ export default function PlayScreen() {
 
                     <View style={styles.profileInfo}>
                       <View
-                        style={{ flexDirection: "row", alignItems: "center" }}
+                        style={{
+                          flexDirection: "column",
+                          alignItems: "flex-start",
+                        }}
                       >
-                        <Text style={styles.profileName}>
-                          {profile?.name || "Unknown"},{" "}
-                          {profile?.date_of_birth
-                            ? calculateAge(profile.date_of_birth)
-                            : "N/A"}
-                        </Text>
-                        <View style={styles.countContainer}>
-                          <NumOfKiss width={20} height={20} />
-                          <Text style={styles.countText}>
-                            {profile?.num_of_kisses || 0}
+                        <View
+                          style={{ flexDirection: "row", alignItems: "center" }}
+                        >
+                          <Text style={styles.profileName}>
+                            {profile?.name || "Unknown"},{" "}
+                            {profile?.date_of_birth
+                              ? calculateAge(profile.date_of_birth)
+                              : "N/A"}
                           </Text>
                         </View>
-                        <View style={styles.countContainer}>
-                          <NumOfRug width={20} height={20} />
-                          <Text style={styles.countText}>
-                            {profile?.num_of_rugs || 0}
-                          </Text>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            marginTop: 5,
+                            gap: 10,
+                          }}
+                        >
+                          <View style={styles.countContainer}>
+                            <NumOfKiss width={20} height={20} />
+                            <Text style={styles.countText}>
+                              {profile?.num_of_kisses || 0}
+                            </Text>
+                          </View>
+                          <View style={styles.countContainer}>
+                            <NumOfRug width={20} height={20} />
+                            <Text style={styles.countText}>
+                              {profile?.num_of_rugs || 0}
+                            </Text>
+                          </View>
                         </View>
                       </View>
-                      <Text style={styles.profileDescription}>
-                        {profile?.bio || ""}
-                      </Text>
+                      {profile?.bio && (
+                        <Text style={styles.profileDescription}>
+                          {profile?.bio || ""}
+                        </Text>
+                      )}
                     </View>
                   </View>
                 )}
@@ -492,6 +515,7 @@ const styles = StyleSheet.create({
   profileDescription: {
     fontSize: 14,
     color: "#FFF",
+    marginTop: 6,
   },
   buttonContainer: {
     flexDirection: "row",
@@ -566,7 +590,6 @@ const styles = StyleSheet.create({
   countContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginLeft: 10,
     backgroundColor: "#fff",
     padding: 4,
     borderRadius: 9999,

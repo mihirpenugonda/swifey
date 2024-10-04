@@ -1,17 +1,25 @@
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Text } from "react-native";
 import Logo from "../assets/images/logos/kissOrRugTextLogo.svg";
+import { useMainContext } from "@/helpers/context/mainContext";
 
 interface AppBarProps {
   showRightSide?: boolean;
 }
 
 const AppBar: React.FC<AppBarProps> = ({ showRightSide = true }) => {
+  const { walletBalance } = useMainContext();
+
   return (
     <View style={styles.appBar}>
       <View style={styles.leftContainer}>
         <Logo height={60} style={styles.logo} />
       </View>
+      {showRightSide && (
+        <View style={styles.rightContainer}>
+          <Text style={styles.balanceText}>{walletBalance} Plays</Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -26,6 +34,10 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   leftContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  rightContainer: {
     flexDirection: "row",
     alignItems: "center",
   },
@@ -50,7 +62,7 @@ const styles = StyleSheet.create({
     height: 20,
     marginRight: 5,
   },
-  usdText: {
+  balanceText: {
     color: "#000",
     fontSize: 14,
     fontFamily: "Tomorrow_700Bold",

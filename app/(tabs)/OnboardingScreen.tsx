@@ -12,17 +12,17 @@ import SvgLogo from "../../assets/images/logoText.svg";
 import DynamicallySelectedPicker from "@/components/customPicker";
 import { router } from "expo-router";
 
-const KissKiss = require("../../assets/images/onboarding/kisskiss.png");
-const RugKiss = require("../../assets/images/onboarding/rugkiss.png");
-const KissRug = require("../../assets/images/onboarding/kissrug.png");
-const RugRug = require("../../assets/images/onboarding/rugrug.png");
+const KissKiss = require("../../assets/images/onboarding/kisskiss.jpeg");
+const RugKiss = require("../../assets/images/onboarding/rugkiss.jpeg");
+const KissRug = require("../../assets/images/onboarding/kissrug.jpeg");
+const RugRug = require("../../assets/images/onboarding/rugrug.jpeg");
 
 const OnboardingScreen: React.FC = () => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const [selected, setSelected] = useState("kisskiss");
 
   const handleNext = () => {
-    router.push("/main/mainScreen");
+    router.push("/EmailScreen");
   };
 
   const selectedMap = [
@@ -92,7 +92,7 @@ const OnboardingScreen: React.FC = () => {
             end={{ x: 1, y: 0 }}
             style={styles.nextButton}
           >
-            <Text style={styles.nextButtonText}>NEXT</Text>
+            <Text style={styles.nextButtonText}>Enter App</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>

@@ -241,7 +241,11 @@ export default function YourMoveScreen() {
             </TouchableOpacity>
             <View style={styles.modalContent}>
               <Image
-                source={{ uri: selectedProfile.imageUri }}
+                source={{
+                  uri: selectedProfile.imageUri?.startsWith("https://")
+                    ? selectedProfile.imageUri
+                    : `https://exftzdxtyfbiwlpmecmd.supabase.co/storage/v1/object/public/photos/${selectedProfile.imageUri}`,
+                }}
                 style={[styles.modalImage, { height: screenHeight * 0.6 }]}
               />
               <Text style={styles.modalName}>{selectedProfile.name}</Text>
