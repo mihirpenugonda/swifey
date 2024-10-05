@@ -57,9 +57,10 @@ function MainScreenContent() {
         currentScreen === name && styles.activeTabButton,
       ]}
       onPress={() => {
-        console.log("name", name);
+        console.log("Button pressed:", name);
         setCurrentScreen(name);
       }}
+      activeOpacity={0.7}
     >
       <Image source={icon} style={styles.tabIcon} />
       <Text
@@ -78,6 +79,19 @@ function MainScreenContent() {
         </View>
         <View style={styles.content}>{renderScreen()}</View>
         <View style={[styles.tabBar, { paddingBottom: insets.bottom }]}>
+          <View style={styles.playButtonContainer}>
+            <TouchableOpacity
+              style={styles.playButton}
+              onPress={() => {
+                console.log("Play button pressed");
+                setCurrentScreen("Play");
+              }}
+              activeOpacity={0.7}
+            >
+              <Image source={PlayIcon} style={styles.playIcon} />
+              <Text style={styles.playButtonText}>Play</Text>
+            </TouchableOpacity>
+          </View>
           <View style={styles.tabGroup}>
             <TabButton name="Kisses" icon={KissesIcon} />
             <TabButton name="Your Turn" icon={YourTurnIcon} />
@@ -85,15 +99,6 @@ function MainScreenContent() {
           <View style={styles.tabGroup}>
             <TabButton name="Bag" icon={BagIcon} />
             <TabButton name="Profile" icon={ProfileIcon} />
-          </View>
-          <View style={styles.playButtonContainer}>
-            <TouchableOpacity
-              style={styles.playButton}
-              onPress={() => setCurrentScreen("Play")}
-            >
-              <Image source={PlayIcon} style={styles.playIcon} />
-              <Text style={styles.playButtonText}>Play</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </SafeAreaProvider>
@@ -139,10 +144,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
   },
   tabButton: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    width: 60,
-    height: 60,
+    padding: 8,
   },
   activeTabButton: {
     backgroundColor: "transparent",
