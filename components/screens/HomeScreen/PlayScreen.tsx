@@ -21,6 +21,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import NumOfKiss from "../../../assets/images/numofkiss.svg";
 import NumOfRug from "../../../assets/images/numofrug.svg";
 import { useBottomModal } from "@/helpers/context/bottomModalContext";
+import { useMainContext } from "@/helpers/context/mainContext";
+import InsufficientPlaysModal from "@/components/modals/InsufficientPlaysModal";
 
 export default function PlayScreen() {
   const [profiles, setProfiles] = useState<any[]>([]);
@@ -34,7 +36,8 @@ export default function PlayScreen() {
   const [allSwiped, setAllSwiped] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const { showModal, hideModal } = useBottomModal();
+  const { showModal } = useBottomModal();
+  const { setWalletBalance } = useMainContext();
 
   const loadProfiles = async (is_refreshing: boolean = false) => {
     try {
@@ -76,7 +79,10 @@ export default function PlayScreen() {
     }
   }, [currentProfileIndex, profiles]);
 
-  const handleSwipe = async (direction: "left" | "right") => {
+  const handleSwipe = async (
+    direction: "left" | "right",
+    is_button_press: boolean = false
+  ) => {
     const currentProfile = profiles[currentProfileIndex];
 
     try {
@@ -110,6 +116,8 @@ export default function PlayScreen() {
 
       processSwipeResponse(response);
 
+      setWalletBalance(response.balance ?? 0);
+
       if (swipeType === "kiss" && response.decision === "match") {
         console.log("Match made, emitting event");
         eventEmitter.emit("matchMade");
@@ -126,10 +134,18 @@ export default function PlayScreen() {
         console.log(`New profile index: ${nextIndex}`);
         if (nextIndex >= profiles.length) {
           setAllSwiped(true);
-          return 0;
+          return prevIndex; // Keep the current index if we've reached the end
         }
         return nextIndex;
       });
+
+      if (is_button_press) {
+        if (swipeType === "rug") {
+          swiperRef?.current?.swipeLeft();
+        } else {
+          swiperRef?.current?.swipeRight();
+        }
+      }
     } catch (error) {
       console.error(`Error in handleSwipe (${direction}):`, error);
 
@@ -141,34 +157,7 @@ export default function PlayScreen() {
 
         console.log("HERE");
 
-        showModal(
-          <View
-            style={{
-              width: "100%",
-              borderRadius: 15,
-              alignItems: "flex-start",
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 20,
-                fontWeight: "bold",
-                marginBottom: 5,
-              }}
-            >
-              Insufficient Balance
-            </Text>
-            <Text
-              style={{
-                fontSize: 16,
-                marginBottom: 10,
-              }}
-            >
-              You don't have enough balance to perform this action. Please
-              deposit to continue.
-            </Text>
-          </View>
-        );
+        showModal(<InsufficientPlaysModal />);
       }
 
       setProfiles((prevProfiles) => {
@@ -427,10 +416,16 @@ export default function PlayScreen() {
           </View>
 
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button} onPress={handleSwipeLeft}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => handleSwipe("left", true)}
+            >
               <Text style={styles.buttonText}>❌</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={handleSwipeRight}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => handleSwipe("right", true)}
+            >
               <Text style={styles.buttonText}>😘</Text>
             </TouchableOpacity>
           </View>

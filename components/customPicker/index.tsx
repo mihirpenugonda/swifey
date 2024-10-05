@@ -1,4 +1,4 @@
-import React, { createRef, useState } from "react";
+import React, { createRef, useState, useEffect } from "react";
 
 import {
   StyleSheet,
@@ -37,16 +37,14 @@ export default function DynamicallySelectedPicker<ItemT extends ListItem>({
   fontSize,
   selectedItemBorderColor = "#313131",
   renderGradientOverlay = false,
-  topGradientColors = [
-    "rgba(255, 255, 255, 0.4)",
-    "rgba(255, 255, 255, 0.0)",
-  ],
+  topGradientColors = ["rgba(255, 255, 255, 0.4)", "rgba(255, 255, 255, 0.0)"],
   bottomGradientColors = [
     "rgba(182, 227, 0, 0.0)",
     "rgba(182, 227, 0, 0.03)",
     "rgba(182, 227, 0, 0.06)",
     "rgba(182, 227, 0, 0.1)",
   ],
+  currentIndex,
 }: PickerProps<ItemT>) {
   // work out the size of each 'slice' so it fits in the size of the view
   const itemSize = Math.ceil(
@@ -54,6 +52,7 @@ export default function DynamicallySelectedPicker<ItemT extends ListItem>({
   );
 
   const [itemIndex, setItemIndex] = useState<number>(initialSelectedIndex);
+  const [isUserScrolling, setIsUserScrolling] = useState<boolean>(false);
 
   // create a reference to the scroll view so we can control it's fine scroll
   const scrollViewRef = createRef<ScrollView>();
@@ -65,6 +64,17 @@ export default function DynamicallySelectedPicker<ItemT extends ListItem>({
         : { y: itemSize * initialSelectedIndex, animated: false }
     );
   };
+
+  useEffect(() => {
+    if (currentIndex !== undefined && currentIndex !== itemIndex) {
+      setItemIndex(currentIndex);
+      scrollViewRef.current?.scrollTo(
+        horizontal
+          ? { x: itemSize * currentIndex, animated: true }
+          : { y: itemSize * currentIndex, animated: true }
+      );
+    }
+  }, [currentIndex, horizontal, itemSize]);
 
   const gradientSize = Math.round(
     ((horizontal ? width : height) - itemSize) / 2
@@ -87,7 +97,7 @@ export default function DynamicallySelectedPicker<ItemT extends ListItem>({
   }
 
   function onScrollListener(event: NativeSyntheticEvent<NativeScrollEvent>) {
-    if (onScroll != null) {
+    if (onScroll != null && isUserScrolling) {
       const index = getItemIndex(event);
       if (itemIndex !== index && index >= 0 && index < allItemsLength()) {
         setItemIndex(index);
@@ -119,11 +129,13 @@ export default function DynamicallySelectedPicker<ItemT extends ListItem>({
         onMomentumScrollEnd({ index });
       }
     }
+    setIsUserScrolling(false);
   }
 
   function onScrollBeginDragListener(
     event: NativeSyntheticEvent<NativeScrollEvent>
   ) {
+    setIsUserScrolling(true);
     if (onScrollBeginDrag != null) {
       const index = getItemIndex(event);
 

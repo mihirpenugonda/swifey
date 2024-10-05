@@ -17,6 +17,7 @@ import { supabase } from "@/supabaseClient";
 
 interface MainContextType {
   walletBalance: number;
+  setWalletBalance: React.Dispatch<React.SetStateAction<number>>;
   refreshBalance: () => Promise<void>;
   profileDetails: any;
   fetchUserProfile: () => Promise<void>;
@@ -24,6 +25,9 @@ interface MainContextType {
   loadMatches: () => Promise<void>;
   yourTurnProfiles: any[] | null;
   loadYourTurnProfiles: () => Promise<void>;
+
+  currentScreen: string;
+  setCurrentScreen: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const MainContext = createContext<MainContextType | undefined>(undefined);
@@ -35,6 +39,7 @@ export const MainScreenContext: React.FC<{ children: ReactNode }> = ({
   const [profileDetails, setProfileDetails] = useState<any | null>(null);
   const [matches, setMatches] = useState<any[] | null>(null);
   const [yourTurnProfiles, setYourTurnProfiles] = useState<any[] | null>(null);
+  const [currentScreen, setCurrentScreen] = useState<string>("Home");
 
   const refreshBalance = async () => {
     try {
@@ -126,6 +131,7 @@ export const MainScreenContext: React.FC<{ children: ReactNode }> = ({
     <MainContext.Provider
       value={{
         walletBalance,
+        setWalletBalance,
         refreshBalance,
         profileDetails,
         fetchUserProfile,
@@ -133,6 +139,8 @@ export const MainScreenContext: React.FC<{ children: ReactNode }> = ({
         loadMatches,
         yourTurnProfiles,
         loadYourTurnProfiles,
+        currentScreen,
+        setCurrentScreen,
       }}
     >
       {children}

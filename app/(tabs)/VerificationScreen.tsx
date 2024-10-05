@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -31,6 +31,24 @@ export default function VerificationScreen() {
   const inputRefs = useRef<TextInput[]>([]);
   const [password, setPassword] = useState("");
   const isProductionEmail = (email as string).includes("kissorrug+prod");
+
+  const [resendTimer, setResendTimer] = useState(60);
+  const [canResend, setCanResend] = useState(false);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer((prevTimer) => prevTimer - 1);
+      }, 1000);
+    } else {
+      setCanResend(true);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [resendTimer]);
 
   const handleOtpChange = (text: string, index: number) => {
     if (text.length > 0) {
@@ -122,6 +140,27 @@ export default function VerificationScreen() {
     }
   };
 
+  const handleResendOtp = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOtp({
+        email: email as string,
+        options: {
+          shouldCreateUser: true,
+        },
+      });
+
+      if (error) {
+        Alert.alert("Resend Failed", error.message);
+      } else {
+        Alert.alert("OTP Resent", "A new OTP has been sent to your email.");
+        setResendTimer(60);
+        setCanResend(false);
+      }
+    } catch (error) {
+      Alert.alert("Error", "An unexpected error occurred");
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -172,29 +211,42 @@ export default function VerificationScreen() {
                       </TouchableOpacity>
                     </View>
                   ) : (
-                    <View style={styles.boxContainer}>
-                      {otp.map((value, index) => (
-                        <TextInput
-                          key={index}
-                          ref={(ref) => (inputRefs.current[index] = ref!)}
-                          style={[
-                            styles.inputBox,
-                            { width: boxSize, height: boxSize },
-                          ]}
-                          keyboardType="numeric"
-                          maxLength={1}
-                          value={value}
-                          onChangeText={(text) => handleOtpChange(text, index)}
-                          onKeyPress={({ nativeEvent }) => {
-                            if (
-                              nativeEvent.key === "Backspace" &&
-                              value === ""
-                            ) {
-                              handleBackspace(index);
+                    <View>
+                      <View style={styles.boxContainer}>
+                        {otp.map((value, index) => (
+                          <TextInput
+                            key={index}
+                            ref={(ref) => (inputRefs.current[index] = ref!)}
+                            style={[
+                              styles.inputBox,
+                              { width: boxSize, height: boxSize },
+                            ]}
+                            keyboardType="numeric"
+                            maxLength={1}
+                            value={value}
+                            onChangeText={(text) =>
+                              handleOtpChange(text, index)
                             }
-                          }}
-                        />
-                      ))}
+                            onKeyPress={({ nativeEvent }) => {
+                              if (
+                                nativeEvent.key === "Backspace" &&
+                                value === ""
+                              ) {
+                                handleBackspace(index);
+                              }
+                            }}
+                          />
+                        ))}
+                      </View>
+                      {canResend ? (
+                        <TouchableOpacity onPress={handleResendOtp}>
+                          <Text style={styles.resendText}>Resend OTP</Text>
+                        </TouchableOpacity>
+                      ) : (
+                        <Text style={styles.timerText}>
+                          Resend OTP in {resendTimer}s
+                        </Text>
+                      )}
                     </View>
                   )}
                 </View>
@@ -236,7 +288,7 @@ const styles = StyleSheet.create({
   boxContainer: {
     flexDirection: "row",
     width: "100%",
-    marginBottom: 16,
+    gap: 4
   },
   inputBox: {
     borderWidth: 1,
@@ -245,7 +297,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 24,
     color: "#313131",
-    marginHorizontal: 4,
   },
   inputContainer: {
     width: "100%",
@@ -261,5 +312,16 @@ const styles = StyleSheet.create({
     color: "#313131",
     fontSize: 14,
     fontWeight: "600",
+  },
+  resendText: {
+    color: "#313131",
+    textAlign: "left", // Changed from 'center' to 'left'
+    marginTop: 20,
+    textDecorationLine: "underline",
+  },
+  timerText: {
+    color: "#666",
+    textAlign: "left", // Changed from 'center' to 'left'
+    marginTop: 20,
   },
 });

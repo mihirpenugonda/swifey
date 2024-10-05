@@ -16,7 +16,10 @@ import {
   useBottomModal,
 } from "@/helpers/context/bottomModalContext";
 import BottomModal from "@/components/modals/BottomModal";
-import { MainScreenContext } from "@/helpers/context/mainContext";
+import {
+  MainScreenContext,
+  useMainContext,
+} from "@/helpers/context/mainContext";
 
 const KissesIcon = require("../../../assets/images/kisses.png");
 const YourTurnIcon = require("../../../assets/images/yourmove.png");
@@ -25,12 +28,13 @@ const BagIcon = require("../../../assets/images/bag.png");
 const ProfileIcon = require("../../../assets/images/profile.png");
 
 function MainScreenContent() {
-  const [activeTab, setActiveTab] = React.useState("Play");
   const insets = useSafeAreaInsets();
+
   const { isVisible, hideModal, modalContent } = useBottomModal();
+  const { currentScreen, setCurrentScreen } = useMainContext();
 
   const renderScreen = () => {
-    switch (activeTab) {
+    switch (currentScreen) {
       case "Kisses":
         return <KissesScreen />;
       case "Your Turn":
@@ -48,12 +52,15 @@ function MainScreenContent() {
 
   const TabButton = ({ name, icon }: { name: string; icon: any }) => (
     <TouchableOpacity
-      style={[styles.tabButton, activeTab === name && styles.activeTabButton]}
-      onPress={() => setActiveTab(name)}
+      style={[
+        styles.tabButton,
+        currentScreen === name && styles.activeTabButton,
+      ]}
+      onPress={() => setCurrentScreen(name)}
     >
       <Image source={icon} style={[styles.tabIcon]} />
       <Text
-        style={[styles.tabText, activeTab === name && styles.activeTabText]}
+        style={[styles.tabText, currentScreen === name && styles.activeTabText]}
       >
         {name}
       </Text>
