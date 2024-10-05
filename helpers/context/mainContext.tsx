@@ -39,7 +39,7 @@ export const MainScreenContext: React.FC<{ children: ReactNode }> = ({
   const [profileDetails, setProfileDetails] = useState<any | null>(null);
   const [matches, setMatches] = useState<any[] | null>(null);
   const [yourTurnProfiles, setYourTurnProfiles] = useState<any[] | null>(null);
-  const [currentScreen, setCurrentScreen] = useState<string>("Home");
+  const [currentScreen, setCurrentScreen] = useState<string>("Play");
 
   const refreshBalance = async () => {
     try {

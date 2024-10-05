@@ -39,6 +39,24 @@ export default function PlayScreen() {
   const { showModal } = useBottomModal();
   const { setWalletBalance } = useMainContext();
 
+  const preloadImages = async (profiles: any[]) => {
+    const imageUrls = profiles.flatMap((profile) =>
+      profile.photos.map((photo: string) =>
+        photo.startsWith("https://")
+          ? photo
+          : `https://exftzdxtyfbiwlpmecmd.supabase.co/storage/v1/object/public/photos/${photo}`
+      )
+    );
+
+    try {
+      const preloadPromises = imageUrls.map((url) => Image.prefetch(url));
+      await Promise.all(preloadPromises);
+      console.log("all images preloaded successfully");
+    } catch (error) {
+      console.error("error preloading images:", error);
+    }
+  };
+
   const loadProfiles = async (is_refreshing: boolean = false) => {
     try {
       if (!is_refreshing) setLoading(true);
@@ -49,13 +67,16 @@ export default function PlayScreen() {
 
       if (Array.isArray(fetchedProfiles) && fetchedProfiles.length > 0) {
         setProfiles(fetchedProfiles);
-        setAllSwiped(false); // Reset allSwiped when new profiles are loaded
+        setAllSwiped(false);
+
+        preloadImages(fetchedProfiles);
       } else {
         console.error(
           "No profiles found or invalid response format:",
           fetchedProfiles
         );
         setError("No profiles found or invalid response format");
+
         setProfiles([]);
       }
     } catch (err) {
@@ -279,6 +300,7 @@ export default function PlayScreen() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={styles.loadingText}>Loading profiles...</Text>
       </SafeAreaView>
     );
   }
@@ -594,5 +616,11 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     fontSize: 16,
     color: "#313131",
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
   },
 });

@@ -56,9 +56,12 @@ function MainScreenContent() {
         styles.tabButton,
         currentScreen === name && styles.activeTabButton,
       ]}
-      onPress={() => setCurrentScreen(name)}
+      onPress={() => {
+        console.log("name", name);
+        setCurrentScreen(name);
+      }}
     >
-      <Image source={icon} style={[styles.tabIcon]} />
+      <Image source={icon} style={styles.tabIcon} />
       <Text
         style={[styles.tabText, currentScreen === name && styles.activeTabText]}
       >
@@ -75,11 +78,23 @@ function MainScreenContent() {
         </View>
         <View style={styles.content}>{renderScreen()}</View>
         <View style={[styles.tabBar, { paddingBottom: insets.bottom }]}>
-          <TabButton name="Kisses" icon={KissesIcon} />
-          <TabButton name="Your Turn" icon={YourTurnIcon} />
-          <TabButton name="Play" icon={PlayIcon} />
-          <TabButton name="Bag" icon={BagIcon} />
-          <TabButton name="Profile" icon={ProfileIcon} />
+          <View style={styles.tabGroup}>
+            <TabButton name="Kisses" icon={KissesIcon} />
+            <TabButton name="Your Turn" icon={YourTurnIcon} />
+          </View>
+          <View style={styles.tabGroup}>
+            <TabButton name="Bag" icon={BagIcon} />
+            <TabButton name="Profile" icon={ProfileIcon} />
+          </View>
+          <View style={styles.playButtonContainer}>
+            <TouchableOpacity
+              style={styles.playButton}
+              onPress={() => setCurrentScreen("Play")}
+            >
+              <Image source={PlayIcon} style={styles.playIcon} />
+              <Text style={styles.playButtonText}>Play</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </SafeAreaProvider>
 
@@ -111,10 +126,17 @@ const styles = StyleSheet.create({
   tabBar: {
     flexDirection: "row",
     backgroundColor: "#000000",
-    justifyContent: "space-around",
+    justifyContent: "space-between",
     alignItems: "center",
     paddingTop: 8,
     paddingBottom: 8,
+    paddingHorizontal: 20,
+    gap: 48,
+  },
+  tabGroup: {
+    flexDirection: "row",
+    flex: 1,
+    justifyContent: "space-around",
   },
   tabButton: {
     alignItems: "center",
@@ -130,19 +152,40 @@ const styles = StyleSheet.create({
     height: 24,
     marginBottom: 4,
   },
-  playIcon: {
-    width: 40,
-    height: 40,
-    marginBottom: 0,
-  },
-  activeTabIcon: {
-    tintColor: "#CDFF8B",
-  },
   tabText: {
     color: "#FFFFFF",
     fontSize: 10,
   },
   activeTabText: {
     color: "#CDFF8B",
+  },
+  playButtonContainer: {
+    position: "absolute",
+    bottom: 60,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+  },
+  playButton: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: "#111111",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 3,
+    borderColor: "#FF62EF33",
+    borderStyle: "solid",
+    gap: 4,
+  },
+  playButtonText: {
+    color: "#CDFF8B",
+    fontSize: 12,
+    fontFamily: "Tomorrow_700Bold_Italic",
+    fontStyle: "italic",
+  },
+  playIcon: {
+    width: 30,
+    height: 30,
   },
 });

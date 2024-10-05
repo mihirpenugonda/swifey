@@ -12,6 +12,7 @@ import { WorkSans_700Bold } from "@expo-google-fonts/work-sans";
 import {
   Tomorrow_400Regular,
   Tomorrow_700Bold,
+  Tomorrow_700Bold_Italic,
 } from "@expo-google-fonts/tomorrow";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
@@ -29,6 +30,7 @@ export default function RootLayout() {
     WorkSans_700Bold,
     Tomorrow_400Regular,
     Tomorrow_700Bold,
+    Tomorrow_700Bold_Italic,
   });
 
   useEffect(() => {
