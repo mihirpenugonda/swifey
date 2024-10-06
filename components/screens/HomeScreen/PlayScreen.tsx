@@ -37,6 +37,7 @@ export default function PlayScreen() {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [allSwiped, setAllSwiped] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [imagesPreloaded, setImagesPreloaded] = useState(false);
 
   const { showModal } = useBottomModal();
   const { setWalletBalance } = useMainContext();
@@ -54,14 +55,19 @@ export default function PlayScreen() {
       const preloadPromises = imageUrls.map((url) => Image.prefetch(url));
       await Promise.all(preloadPromises);
       console.log("all images preloaded successfully");
+      setImagesPreloaded(true);
     } catch (error) {
       console.error("error preloading images:", error);
+      setImagesPreloaded(true); // Set to true even on error to allow users to see profiles
     }
   };
 
   const loadProfiles = async (is_refreshing: boolean = false) => {
     try {
-      if (!is_refreshing) setLoading(true);
+      if (!is_refreshing) {
+        setLoading(true);
+        setImagesPreloaded(false);
+      }
       setError(null);
 
       const fetchedProfiles = await fetchProfiles(20, 0);
@@ -71,7 +77,7 @@ export default function PlayScreen() {
         setProfiles(fetchedProfiles);
         setAllSwiped(false);
 
-        preloadImages(fetchedProfiles);
+        await preloadImages(fetchedProfiles);
       } else {
         console.error(
           "No profiles found or invalid response format:",
@@ -80,16 +86,15 @@ export default function PlayScreen() {
         setError("No profiles found or invalid response format");
 
         setProfiles([]);
+        setImagesPreloaded(true); // Set to true even when no profiles are found
       }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "An unknown error occurred";
       console.error("Error fetching profiles:", errorMessage);
       setError(errorMessage);
+      setImagesPreloaded(true); // Set to true even on error
     } finally {
-      // Add a 3 second artificial delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
       setLoading(false);
       setRefreshing(false);
     }
@@ -301,7 +306,7 @@ export default function PlayScreen() {
     loadProfiles(true);
   }, []);
 
-  if (loading) {
+  if (loading || !imagesPreloaded) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <LottieView

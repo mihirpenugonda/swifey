@@ -161,6 +161,10 @@ export default function VerificationScreen() {
     }
   };
 
+  const handleNotYou = () => {
+    router.back(); // Go back to the previous screen
+  };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -288,7 +292,7 @@ const styles = StyleSheet.create({
   boxContainer: {
     flexDirection: "row",
     width: "100%",
-    gap: 4
+    gap: 4,
   },
   inputBox: {
     borderWidth: 1,
