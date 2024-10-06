@@ -14,6 +14,7 @@ import React, {
 } from "react";
 import { getAuthenticatedUser } from "../auth";
 import { supabase } from "@/supabaseClient";
+import { Image } from "react-native";
 
 interface MainContextType {
   walletBalance: number;
@@ -82,6 +83,15 @@ export const MainScreenContext: React.FC<{ children: ReactNode }> = ({
           const fullUrl = `https://exftzdxtyfbiwlpmecmd.supabase.co/storage/v1/object/public/photos/${avatarPath}`;
           image = fullUrl;
         }
+
+        // Preload the image
+        Image.prefetch(image)
+          .then(() => {
+            console.log("Image preloaded successfully");
+          })
+          .catch((error) => {
+            console.error("Error preloading image:", error);
+          });
       }
 
       setProfileDetails({

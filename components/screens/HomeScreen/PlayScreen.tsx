@@ -24,6 +24,8 @@ import { useBottomModal } from "@/helpers/context/bottomModalContext";
 import { useMainContext } from "@/helpers/context/mainContext";
 import InsufficientPlaysModal from "@/components/modals/InsufficientPlaysModal";
 
+import LottieView from "lottie-react-native";
+
 export default function PlayScreen() {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,6 +87,9 @@ export default function PlayScreen() {
       console.error("Error fetching profiles:", errorMessage);
       setError(errorMessage);
     } finally {
+      // Add a 3 second artificial delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
       setLoading(false);
       setRefreshing(false);
     }
@@ -299,8 +304,17 @@ export default function PlayScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text style={styles.loadingText}>Loading profiles...</Text>
+        <LottieView
+          source={require("../../../assets/animations/loading.json")}
+          autoPlay
+          loop
+          style={{
+            width: 200,
+            height: 200,
+            flex: 1,
+          }}
+          speed={2}
+        />
       </SafeAreaView>
     );
   }
@@ -471,6 +485,8 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#F4F9F5",
+    justifyContent: "center",
+    alignItems: "center",
   },
   container: {
     flex: 1,

@@ -18,6 +18,7 @@ import {
   sendSwipe,
 } from "../../../services/apiService";
 import eventEmitter from "@/services/eventEmitter";
+import LottieView from "lottie-react-native";
 
 interface MoveItem {
   id: string;
@@ -212,7 +213,19 @@ export default function YourMoveScreen() {
     <SafeAreaView style={styles.safeArea}>
       <Text style={styles.header}>Your Turn</Text>
       {loading ? (
-        <Text>Loading...</Text>
+        <View style= {{flex: 1, justifyContent: "center", alignItems: "center"}}>
+          <LottieView
+            source={require("../../../assets/animations/loading.json")}
+            autoPlay
+            loop
+            style={{
+              width: 200,
+              height: 200,
+              flex: 1,
+            }}
+            speed={2}
+          />
+        </View>
       ) : data.length === 0 ? (
         renderEmptyState()
       ) : (
