@@ -21,7 +21,6 @@ import { Buffer } from "buffer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { updateUserProfile } from "@/services/apiService";
 import { getAuthenticatedUser } from "@/helpers/auth";
-import { useMainContext } from "@/helpers/context/mainContext";
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -266,6 +265,8 @@ export default function EditProfileScreen() {
     }
   };
 
+  const hasImages = images.some(image => image !== null);
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <View style={styles.appBar}>
@@ -318,12 +319,12 @@ export default function EditProfileScreen() {
           />
 
           <TouchableOpacity
-            style={styles.buttonWrapper}
+            style={[styles.buttonWrapper, !hasImages && styles.disabledButton]}
             onPress={handleSave}
-            disabled={isSaving}
+            disabled={isSaving || !hasImages}
           >
             <LinearGradient
-              colors={["#FF56F8", "#B6E300"]}
+              colors={hasImages ? ["#FF56F8", "#B6E300"] : ["#ccc", "#ccc"]}
               start={{ x: 0, y: 0.5 }}
               end={{ x: 1, y: 0.5 }}
               style={styles.gradientButton}
@@ -331,7 +332,9 @@ export default function EditProfileScreen() {
               {isSaving ? (
                 <ActivityIndicator color="#000000" />
               ) : (
-                <Text style={styles.buttonText}>SAVE</Text>
+                <Text style={[styles.buttonText, !hasImages && styles.disabledButtonText]}>
+                  SAVE
+                </Text>
               )}
             </LinearGradient>
           </TouchableOpacity>
@@ -342,15 +345,6 @@ export default function EditProfileScreen() {
               onPress={handleLogout}
             >
               <Text style={styles.logoutButtonText}>LOGOUT</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={handleLogout}
-              disabled={loading}
-            >
-              <Text style={styles.deleteButtonText}>
-                {loading ? "Deleting..." : "DELETE MY ACCOUNT"}
-              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -474,17 +468,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   logoutContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
     width: "100%",
   },
   logoutButton: {
-    flex: 1,
     borderWidth: 1,
     borderRadius: 8,
     paddingVertical: 15,
     alignItems: "center",
-    marginRight: 5,
   },
   backButton: {
     marginRight: 10,
@@ -499,23 +489,15 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#000",
   },
-  deleteButton: {
-    flex: 1,
-    borderColor: "red",
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 15,
-    alignItems: "center",
-    marginLeft: 5,
-  },
   logoutButtonText: {
     color: "#000",
     fontSize: 14,
     fontWeight: "bold",
   },
-  deleteButtonText: {
-    color: "red",
-    fontSize: 14,
-    fontWeight: "bold",
+  disabledButton: {
+    opacity: 0.5,
+  },
+  disabledButtonText: {
+    color: "#666",
   },
 });

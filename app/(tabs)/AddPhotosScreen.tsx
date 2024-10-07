@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   FlatList,
   Alert,
   ActivityIndicator,
+  Platform,
+  Dimensions,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
@@ -20,9 +22,24 @@ import * as ImageManipulator from "expo-image-manipulator";
 import { updateUserProfile } from "@/services/apiService";
 import uuid from "react-native-uuid";
 import Container from "@/components/Container";
+
 export default function AddPhotosScreen() {
   const [images, setImages] = useState<(string | null)[]>(Array(6).fill(null));
   const [isUploading, setIsUploading] = useState(false);
+  const [isNextButtonDisabled, setIsNextButtonDisabled] = useState(true);
+
+  const screenWidth = Dimensions.get("window").width;
+  const padding = 20; // Horizontal padding
+  const gap = 5; // Gap between image slots
+  const numColumns = 3;
+  const imageSlotWidth = Math.floor(
+    (screenWidth - 2 * padding - (numColumns - 1) * gap) / numColumns
+  );
+
+  useEffect(() => {
+    const hasPhotos = images.some((image) => image !== null);
+    setIsNextButtonDisabled(!hasPhotos);
+  }, [images]);
 
   const handleAddImage = async (index: number): Promise<void> => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -42,9 +59,17 @@ export default function AddPhotosScreen() {
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
+      const selectedImageUri = result.assets[0].uri;
+
+      const compressedImage = await ImageManipulator.manipulateAsync(
+        selectedImageUri,
+        [{ resize: { width: 800 } }],
+        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+      );
+
       setImages((prevImages) => {
         const newImages = [...prevImages];
-        newImages[index] = result.assets[0].uri;
+        newImages[index] = compressedImage.uri;
         return newImages;
       });
     }
@@ -59,7 +84,7 @@ export default function AddPhotosScreen() {
   };
 
   const handleNext = async () => {
-    setIsUploading(true); // Start loader
+    setIsUploading(true);
     try {
       const {
         data: { user },
@@ -74,21 +99,13 @@ export default function AddPhotosScreen() {
       for (let i = 0; i < images.length; i++) {
         const imageUri = images[i];
         if (imageUri) {
-          const compressedImage = await ImageManipulator.manipulateAsync(
-            imageUri,
-            [{ resize: { width: 1024 } }],
-            { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
-          );
-          const base64Data = await FileSystem.readAsStringAsync(
-            compressedImage.uri,
-            {
-              encoding: FileSystem.EncodingType.Base64,
-            }
-          );
+          const base64Data = await FileSystem.readAsStringAsync(imageUri, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
 
           const arrayBuffer = Buffer.from(base64Data, "base64");
 
-          const fileExt = "jpg"; // We're always saving as JPEG after compression
+          const fileExt = "jpg";
           const fileName = `photo-${i}-${uuid.v4()}-${user.id}.${fileExt}`;
 
           const { data: storageData, error: storageError } =
@@ -123,7 +140,7 @@ export default function AddPhotosScreen() {
         error instanceof Error ? error.message : "An unexpected error occurred."
       );
     } finally {
-      setIsUploading(false); // Stop loader
+      setIsUploading(false);
     }
   };
 
@@ -134,9 +151,12 @@ export default function AddPhotosScreen() {
     item: string | null;
     index: number;
   }) => (
-    <View style={styles.imageSlotContainer}>
+    <View style={[styles.imageSlotContainer, { width: imageSlotWidth }]}>
       <TouchableOpacity
-        style={styles.imageSlot}
+        style={[
+          styles.imageSlot,
+          { width: imageSlotWidth, height: imageSlotWidth * 1.18 },
+        ]}
         onPress={() => handleAddImage(index)}
       >
         {item ? (
@@ -175,9 +195,12 @@ export default function AddPhotosScreen() {
           />
 
           <TouchableOpacity
-            style={styles.buttonWrapper}
+            style={[
+              styles.buttonWrapper,
+              isNextButtonDisabled && styles.disabledButton,
+            ]}
             onPress={handleNext}
-            disabled={isUploading}
+            disabled={isUploading || isNextButtonDisabled}
           >
             <LinearGradient
               colors={["#FF56F8", "#B6E300"]}
@@ -199,16 +222,13 @@ export default function AddPhotosScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#121515",
-  },
   header: {
     fontSize: 32,
     fontWeight: "700",
     textAlign: "left",
     fontFamily: "WorkSans_700Bold",
     color: "#313131",
+    marginBottom: 5
   },
   container: {
     flex: 1,
@@ -218,20 +238,20 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   imageRow: {
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
   },
   imageSlotContainer: {
     position: "relative",
-    margin: 5,
+    marginBottom: 10,
   },
   imageSlot: {
-    width: 110,
-    height: 130,
-    backgroundColor: "#333",
+    backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 8,
     overflow: "visible",
+    borderWidth: 1,
+    borderColor: "#313131",
   },
   image: {
     width: "100%",
@@ -264,6 +284,9 @@ const styles = StyleSheet.create({
   },
   buttonWrapper: {
     width: "100%",
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
   gradientButton: {
     paddingVertical: 15,

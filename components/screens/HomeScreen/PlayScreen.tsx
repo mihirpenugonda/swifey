@@ -37,12 +37,11 @@ export default function PlayScreen() {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [allSwiped, setAllSwiped] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [imagesPreloaded, setImagesPreloaded] = useState(false);
 
   const { showModal } = useBottomModal();
   const { setWalletBalance } = useMainContext();
 
-  const preloadImages = async (profiles: any[]) => {
+  const preloadImages = (profiles: any[]) => {
     const imageUrls = profiles.flatMap((profile) =>
       profile.photos.map((photo: string) =>
         photo.startsWith("https://")
@@ -51,22 +50,13 @@ export default function PlayScreen() {
       )
     );
 
-    try {
-      const preloadPromises = imageUrls.map((url) => Image.prefetch(url));
-      await Promise.all(preloadPromises);
-      console.log("all images preloaded successfully");
-      setImagesPreloaded(true);
-    } catch (error) {
-      console.error("error preloading images:", error);
-      setImagesPreloaded(true); // Set to true even on error to allow users to see profiles
-    }
+    imageUrls.forEach((url) => Image.prefetch(url));
   };
 
   const loadProfiles = async (is_refreshing: boolean = false) => {
     try {
       if (!is_refreshing) {
         setLoading(true);
-        setImagesPreloaded(false);
       }
       setError(null);
 
@@ -77,7 +67,7 @@ export default function PlayScreen() {
         setProfiles(fetchedProfiles);
         setAllSwiped(false);
 
-        await preloadImages(fetchedProfiles);
+        preloadImages(fetchedProfiles);
       } else {
         console.error(
           "No profiles found or invalid response format:",
@@ -86,14 +76,12 @@ export default function PlayScreen() {
         setError("No profiles found or invalid response format");
 
         setProfiles([]);
-        setImagesPreloaded(true); // Set to true even when no profiles are found
       }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "An unknown error occurred";
       console.error("Error fetching profiles:", errorMessage);
       setError(errorMessage);
-      setImagesPreloaded(true); // Set to true even on error
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -141,7 +129,6 @@ export default function PlayScreen() {
         console.log(
           `Already swiped on this profile. Past decision: ${response.past_decision}`
         );
-
         return;
       }
 
@@ -185,26 +172,15 @@ export default function PlayScreen() {
         error.message.toLowerCase().includes("insufficient balance")
       ) {
         console.log("Not enough balance, opening insufficient balance modal");
-
-        console.log("HERE");
-
         showModal(<InsufficientPlaysModal />);
       }
-
-      setProfiles((prevProfiles) => {
-        const updatedProfiles = [
-          currentProfile,
-          ...prevProfiles.filter((p) => p.id !== currentProfile.id),
-        ];
-        console.log(
-          `Added profile ${currentProfile?.id} back to the beginning of the profiles array`
-        );
-        return updatedProfiles;
-      });
 
       // Reset the current profile index to show the added profile
       setCurrentProfileIndex(0);
       setAllSwiped(false);
+
+      // Prevent the swipe animation if it's a button press
+      swiperRef?.current?.swipeBack();
     }
   };
 
@@ -306,7 +282,7 @@ export default function PlayScreen() {
     loadProfiles(true);
   }, []);
 
-  if (loading || !imagesPreloaded) {
+  if (loading) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <LottieView

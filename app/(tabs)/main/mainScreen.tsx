@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useRef } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import LottieView from "lottie-react-native";
 
 import AppBar from "../../../components/AppBar";
 import HomeScreen from "../../../components/screens/HomeScreen/PlayScreen";
@@ -32,6 +33,7 @@ function MainScreenContent() {
 
   const { isVisible, hideModal, modalContent } = useBottomModal();
   const { currentScreen, setCurrentScreen } = useMainContext();
+  const lottieRef = useRef<LottieView>(null);
 
   const renderScreen = () => {
     switch (currentScreen) {
@@ -85,10 +87,19 @@ function MainScreenContent() {
               onPress={() => {
                 console.log("Play button pressed");
                 setCurrentScreen("Play");
+                if (lottieRef.current) {
+                  lottieRef.current.play();
+                }
               }}
               activeOpacity={0.7}
             >
-              <Image source={PlayIcon} style={styles.playIcon} />
+              <LottieView
+                ref={lottieRef}
+                source={require("../../../assets/animations/dice.json")}
+                style={styles.playIcon}
+                loop={false}
+                speed={1.5}
+              />
               <Text style={styles.playButtonText}>Play</Text>
             </TouchableOpacity>
           </View>
@@ -190,7 +201,8 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
   },
   playIcon: {
-    width: 30,
-    height: 30,
+    width: 48,
+    height: 48,
+    marginTop: -16
   },
 });

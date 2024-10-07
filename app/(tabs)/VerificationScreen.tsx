@@ -165,6 +165,15 @@ export default function VerificationScreen() {
     router.back(); // Go back to the previous screen
   };
 
+  const maskEmail = (email: string) => {
+    const [username, domain] = email.split("@");
+    const maskedUsername =
+      username.slice(0, 3) +
+      "*".repeat(Math.max(0, username.length - 6)) +
+      username.slice(-3);
+    return `${maskedUsername}@${domain}`;
+  };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -186,6 +195,17 @@ export default function VerificationScreen() {
                       ? "Enter Your Password"
                       : "Verify Your Email"}
                   </Text>
+
+                  {!isProductionEmail && (
+                    <View style={styles.emailInfoContainer}>
+                      <Text style={styles.emailInfoText}>
+                        OTP sent to {maskEmail(email as string)}
+                      </Text>
+                      <TouchableOpacity onPress={handleNotYou}>
+                        <Text style={styles.notYouText}>Not you?</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
 
                   {isProductionEmail ? (
                     <View style={styles.inputContainer}>
@@ -285,7 +305,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "700",
-    marginBottom: 20,
+    marginBottom: 5,
     textAlign: "left",
     fontFamily: "WorkSans_700Bold",
   },
@@ -327,5 +347,22 @@ const styles = StyleSheet.create({
     color: "#666",
     textAlign: "left", // Changed from 'center' to 'left'
     marginTop: 20,
+  },
+  emailInfoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  emailInfoText: {
+    fontSize: 14,
+    color: "#666",
+    fontFamily: "WorkSans_400Regular",
+  },
+  notYouText: {
+    fontSize: 14,
+    color: "#313131",
+    textDecorationLine: "underline",
+    marginLeft: 10,
+    fontFamily: "WorkSans_400Regular",
   },
 });

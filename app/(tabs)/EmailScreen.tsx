@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableWithoutFeedback,
+  ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { inputStyle } from "@/helpers/styles";
@@ -22,6 +23,7 @@ import { useRouter } from "expo-router";
 const EmailScreen: React.FC = () => {
   const [email, setEmail] = useState("");
   const [isCooldown, setIsCooldown] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleSignUp = async () => {
@@ -33,35 +35,43 @@ const EmailScreen: React.FC = () => {
       return;
     }
 
+    setIsLoading(true);
+
     if (email.includes("kissorrug+prod")) {
       router.push({
         pathname: "/VerificationScreen",
         params: { email, signup: "true" },
       });
-
+      setIsLoading(false);
       return;
     }
 
-    const { data, error } = await supabase.auth.signInWithOtp({
-      email: email,
-      options: {
-        shouldCreateUser: true,
-      },
-    });
-
-    if (error) {
-      Alert.alert("Error", error.message);
-    } else {
-      Alert.alert(
-        "Check your email",
-        "An OTP has been sent to your email address. Please check your inbox to verify your account."
-      );
-      setIsCooldown(true);
-      setTimeout(() => setIsCooldown(false), 300000);
-      router.push({
-        pathname: "/VerificationScreen",
-        params: { email, signup: "true" },
+    try {
+      const { data, error } = await supabase.auth.signInWithOtp({
+        email: email,
+        options: {
+          shouldCreateUser: true,
+        },
       });
+
+      if (error) {
+        Alert.alert("Error", error.message);
+      } else {
+        Alert.alert(
+          "Check your email",
+          "An OTP has been sent to your email address. Please check your inbox to verify your account."
+        );
+        setIsCooldown(true);
+        setTimeout(() => setIsCooldown(false), 300000);
+        router.push({
+          pathname: "/VerificationScreen",
+          params: { email, signup: "true" },
+        });
+      }
+    } catch (error) {
+      Alert.alert("Error", "An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -85,23 +95,31 @@ const EmailScreen: React.FC = () => {
                   <TextInput
                     value={email}
                     placeholder="Enter your email"
-                    style={[inputStyle, {
-                      marginHorizontal: 20
-                    }]}
+                    style={[
+                      inputStyle,
+                      {
+                        marginHorizontal: 20,
+                      },
+                    ]}
                     placeholderTextColor="#666"
                     keyboardType="email-address"
                     autoCapitalize="none"
                     onChangeText={setEmail}
+                    editable={!isLoading}
                   />
 
-                  <TouchableOpacity onPress={handleSignUp}>
+                  <TouchableOpacity onPress={handleSignUp} disabled={isLoading}>
                     <LinearGradient
                       colors={["#FF56F8", "#B6E300"]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={styles.inviteButton}
                     >
-                      <Text style={styles.inviteButtonText}>NEXT</Text>
+                      {isLoading ? (
+                        <ActivityIndicator color="#313131" />
+                      ) : (
+                        <Text style={styles.inviteButtonText}>NEXT</Text>
+                      )}
                     </LinearGradient>
                   </TouchableOpacity>
                 </View>
