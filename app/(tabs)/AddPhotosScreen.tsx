@@ -24,6 +24,7 @@ import * as ImageManipulator from "expo-image-manipulator";
 import { updateUserProfile } from "@/services/apiService";
 import uuid from "react-native-uuid";
 import Container from "@/components/Container";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function AddPhotosScreen() {
   const [images, setImages] = useState<(string | null)[]>(Array(6).fill(null));
@@ -130,10 +131,16 @@ export default function AddPhotosScreen() {
   const handleNext = async () => {
     setIsUploading(true);
     try {
+      const jwtToken = await AsyncStorage.getItem("jwtToken");
+
+      if(!jwtToken) {
+        throw new Error("No JWT token found.");
+      }
+
       const {
         data: { user },
         error: userError,
-      } = await supabase.auth.getUser();
+      } = await supabase.auth.getUser(jwtToken);
       if (userError || !user) {
         throw new Error("User not logged in or error fetching user.");
       }
