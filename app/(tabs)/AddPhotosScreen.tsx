@@ -7,9 +7,11 @@ import {
   StyleSheet,
   FlatList,
   Alert,
-  ActivityIndicator,
   Platform,
   Dimensions,
+  Modal,
+  Linking,
+  AppState,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
@@ -27,6 +29,12 @@ export default function AddPhotosScreen() {
   const [images, setImages] = useState<(string | null)[]>(Array(6).fill(null));
   const [isUploading, setIsUploading] = useState(false);
   const [isNextButtonDisabled, setIsNextButtonDisabled] = useState(true);
+  const [isPermissionModalVisible, setIsPermissionModalVisible] =
+    useState(false);
+  const [hasCheckedPermissions, setHasCheckedPermissions] = useState(false);
+  const [loadingImageIndex, setLoadingImageIndex] = useState<number | null>(
+    null
+  );
 
   const screenWidth = Dimensions.get("window").width;
   const padding = 20; // Horizontal padding
@@ -37,41 +45,77 @@ export default function AddPhotosScreen() {
   );
 
   useEffect(() => {
+    checkPhotoLibraryPermissions();
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  const handleAppStateChange = (nextAppState: string) => {
+    if (nextAppState === 'active') {
+      checkPhotoLibraryPermissions();
+    }
+  };
+
+  const checkPhotoLibraryPermissions = async () => {
+    const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      setIsPermissionModalVisible(true);
+    } else {
+      setIsPermissionModalVisible(false);
+    }
+    setHasCheckedPermissions(true);
+  };
+
+  useEffect(() => {
     const hasPhotos = images.some((image) => image !== null);
     setIsNextButtonDisabled(!hasPhotos);
   }, [images]);
 
   const handleAddImage = async (index: number): Promise<void> => {
+    if (!hasCheckedPermissions) {
+      await checkPhotoLibraryPermissions();
+    }
+
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert(
-        "Permission Denied",
-        "Sorry, we need camera roll permissions to make this work!"
-      );
+      setIsPermissionModalVisible(true);
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
+    setLoadingImageIndex(index);
 
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      const selectedImageUri = result.assets[0].uri;
-
-      const compressedImage = await ImageManipulator.manipulateAsync(
-        selectedImageUri,
-        [{ resize: { width: 800 } }],
-        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
-      );
-
-      setImages((prevImages) => {
-        const newImages = [...prevImages];
-        newImages[index] = compressedImage.uri;
-        return newImages;
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
       });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const selectedImageUri = result.assets[0].uri;
+
+        const compressedImage = await ImageManipulator.manipulateAsync(
+          selectedImageUri,
+          [{ resize: { width: 800 } }],
+          { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+        );
+
+        setImages((prevImages) => {
+          const newImages = [...prevImages];
+          newImages[index] = compressedImage.uri;
+          return newImages;
+        });
+      }
+    } catch (error) {
+      console.error("Error processing image:", error);
+      Alert.alert("Error", "Failed to process the image. Please try again.");
+    } finally {
+      setLoadingImageIndex(null);
     }
   };
 
@@ -144,6 +188,14 @@ export default function AddPhotosScreen() {
     }
   };
 
+  const openAppSettings = () => {
+    if (Platform.OS === "ios") {
+      Linking.openURL("app-settings:");
+    } else {
+      Linking.openSettings();
+    }
+  };
+
   const renderImageSlot = ({
     item,
     index,
@@ -158,6 +210,7 @@ export default function AddPhotosScreen() {
           { width: imageSlotWidth, height: imageSlotWidth * 1.18 },
         ]}
         onPress={() => handleAddImage(index)}
+        disabled={loadingImageIndex !== null}
       >
         {item ? (
           <>
@@ -208,14 +261,37 @@ export default function AddPhotosScreen() {
               end={{ x: 1, y: 0.5 }}
               style={styles.gradientButton}
             >
-              {isUploading ? (
-                <ActivityIndicator size="small" color="#000" />
-              ) : (
-                <Text style={styles.buttonText}>NEXT</Text>
-              )}
+              <Text style={styles.buttonText}>NEXT</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
+
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={isPermissionModalVisible}
+          onRequestClose={() => setIsPermissionModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Permission Required</Text>
+              <Text style={styles.modalText}>
+                Hey there! We need your awesome pics to make your dating profile
+                shine. Let's get those photos ready to impress potential
+                matches!
+              </Text>
+              <TouchableOpacity
+                style={styles.settingsButton}
+                onPress={() => {
+                  openAppSettings();
+                  setIsPermissionModalVisible(false);
+                }}
+              >
+                <Text style={styles.settingsButtonText}>Open Settings</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </View>
     </Container>
   );
@@ -228,7 +304,7 @@ const styles = StyleSheet.create({
     textAlign: "left",
     fontFamily: "WorkSans_700Bold",
     color: "#313131",
-    marginBottom: 5
+    marginBottom: 5,
   },
   container: {
     flex: 1,
@@ -298,5 +374,59 @@ const styles = StyleSheet.create({
     color: "#000000",
     fontSize: 16,
     fontWeight: "500",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: "#F4F9F5",
+    borderRadius: 20,
+    padding: 20,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    width: "100%",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 15,
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  settingsButton: {
+    backgroundColor: "#4CAF50",
+    borderRadius: 8,
+    padding: 10,
+    elevation: 2,
+    width: "100%",
+  },
+  settingsButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  closeButton: {
+    backgroundColor: "#2196F3",
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+  },
+  closeButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
   },
 });
