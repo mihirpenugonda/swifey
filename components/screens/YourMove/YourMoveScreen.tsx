@@ -46,7 +46,11 @@ export default function YourMoveScreen() {
       const formattedProfiles = profiles.map((profile: any) => ({
         id: profile.id,
         name: profile.name,
-        imageUri: profile.photos.length > 0 ? profile.photos[0] : undefined,
+        imageUri: profile.photos?.length > 0
+          ? profile.photos[0]?.startsWith("https://")
+            ? profile.photos[0]
+            : `https://exftzdxtyfbiwlpmecmd.supabase.co/storage/v1/object/public/photos/${profile.photos[0]}`
+          : undefined,
       }));
       setData(formattedProfiles);
     } catch (error) {

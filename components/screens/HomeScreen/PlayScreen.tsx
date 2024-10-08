@@ -37,20 +37,43 @@ export default function PlayScreen() {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [allSwiped, setAllSwiped] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [firstProfileImagesLoaded, setFirstProfileImagesLoaded] =
+    useState(false);
 
   const { showModal } = useBottomModal();
-  const { setWalletBalance } = useMainContext();
+  const { setWalletBalance, walletBalance } = useMainContext();
 
-  const preloadImages = (profiles: any[]) => {
-    const imageUrls = profiles.flatMap((profile) =>
-      profile.photos.map((photo: string) =>
-        photo.startsWith("https://")
-          ? photo
-          : `https://exftzdxtyfbiwlpmecmd.supabase.co/storage/v1/object/public/photos/${photo}`
-      )
+  const preloadImages = async (profiles: any[]) => {
+    if (profiles.length === 0) return;
+
+    const firstProfileImages = profiles[0].photos.map((photo: string) =>
+      photo.startsWith("https://")
+        ? photo
+        : `https://exftzdxtyfbiwlpmecmd.supabase.co/storage/v1/object/public/photos/${photo}`
     );
 
-    imageUrls.forEach((url) => Image.prefetch(url));
+    try {
+      await Promise.all(
+        firstProfileImages.map((url: string) => Image.prefetch(url))
+      );
+      setFirstProfileImagesLoaded(true);
+    } catch (error) {
+      console.error("Error preloading images:", error);
+      setFirstProfileImagesLoaded(true); // Set to true even on error to avoid blocking UI
+    }
+
+    // Preload remaining images in the background
+    const remainingImageUrls = profiles
+      .slice(1)
+      .flatMap((profile) =>
+        profile.photos.map((photo: string) =>
+          photo.startsWith("https://")
+            ? photo
+            : `https://exftzdxtyfbiwlpmecmd.supabase.co/storage/v1/object/public/photos/${photo}`
+        )
+      );
+
+    remainingImageUrls.forEach((url) => Image.prefetch(url));
   };
 
   const loadProfiles = async (is_refreshing: boolean = false) => {
@@ -67,7 +90,7 @@ export default function PlayScreen() {
         setProfiles(fetchedProfiles);
         setAllSwiped(false);
 
-        preloadImages(fetchedProfiles);
+        await preloadImages(fetchedProfiles);
       } else {
         console.error(
           "No profiles found or invalid response format:",
@@ -111,6 +134,11 @@ export default function PlayScreen() {
       );
       console.log(`Current Profile Index: ${currentProfileIndex}`);
 
+      if (walletBalance == 0) {
+        showModal(<InsufficientPlaysModal />);
+        return;
+      }
+
       if (!currentProfile?.id) {
         console.error("Profile ID is missing");
         return;
@@ -120,6 +148,14 @@ export default function PlayScreen() {
       console.log(
         `Sending swipe request: ${swipeType} for profile ${currentProfile.id}`
       );
+
+      if (is_button_press) {
+        if (swipeType === "rug") {
+          swiperRef?.current?.swipeLeft();
+        } else {
+          swiperRef?.current?.swipeRight();
+        }
+      }
 
       const response = await sendSwipe(currentProfile.id, swipeType);
 
@@ -156,14 +192,6 @@ export default function PlayScreen() {
         }
         return nextIndex;
       });
-
-      if (is_button_press) {
-        if (swipeType === "rug") {
-          swiperRef?.current?.swipeLeft();
-        } else {
-          swiperRef?.current?.swipeRight();
-        }
-      }
     } catch (error) {
       console.error(`Error in handleSwipe (${direction}):`, error);
 
@@ -173,6 +201,8 @@ export default function PlayScreen() {
       ) {
         console.log("Not enough balance, opening insufficient balance modal");
         showModal(<InsufficientPlaysModal />);
+
+        swiperRef?.current?.swipeBack();
       }
 
       // Reset the current profile index to show the added profile
@@ -180,7 +210,6 @@ export default function PlayScreen() {
       setAllSwiped(false);
 
       // Prevent the swipe animation if it's a button press
-      swiperRef?.current?.swipeBack();
     }
   };
 
@@ -282,7 +311,7 @@ export default function PlayScreen() {
     loadProfiles(true);
   }, []);
 
-  if (loading) {
+  if (loading || !firstProfileImagesLoaded) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <LottieView
