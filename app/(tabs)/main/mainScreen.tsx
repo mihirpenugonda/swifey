@@ -164,13 +164,13 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   tabIcon: {
-    width: 24,
-    height: 24,
+    width: 32,
+    height: 32,
     marginBottom: 4,
   },
   tabText: {
     color: "#FFFFFF",
-    fontSize: 10,
+    fontSize: 12,
   },
   activeTabText: {
     color: "#CDFF8B",
@@ -183,26 +183,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   playButton: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: "auto",
+    height: "auto",
+    borderRadius: 9999,
     backgroundColor: "#111111",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 3,
     borderColor: "#FF62EF33",
     borderStyle: "solid",
+    padding: 8,
     gap: 4,
   },
   playButtonText: {
     color: "#CDFF8B",
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: "Tomorrow_700Bold_Italic",
     fontStyle: "italic",
   },
   playIcon: {
-    width: 48,
-    height: 48,
-    marginTop: -16
+    width: 64,
+    height: 64,
+    marginTop: -20
   },
 });
