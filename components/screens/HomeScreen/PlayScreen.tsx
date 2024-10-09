@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,42 +6,37 @@ import {
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
-  Dimensions,
-  ActivityIndicator,
   RefreshControl,
   ScrollView,
+  Dimensions,
 } from "react-native";
 import Swiper from "react-native-deck-swiper";
-import AppBar from "../../AppBar";
-import BottomSheet from "@gorhom/bottom-sheet";
 import { fetchProfiles, sendSwipe } from "../../../services/apiService";
 import eventEmitter from "@/services/eventEmitter";
 import { LinearGradient } from "expo-linear-gradient";
-
-import NumOfKiss from "../../../assets/images/numofkiss.svg";
-import NumOfRug from "../../../assets/images/numofrug.svg";
 import { useBottomModal } from "@/helpers/context/bottomModalContext";
 import { useMainContext } from "@/helpers/context/mainContext";
 import InsufficientPlaysModal from "@/components/modals/InsufficientPlaysModal";
-
 import LottieView from "lottie-react-native";
+import SwipeProfile from "@/components/SwipeProfile";
 
 export default function PlayScreen() {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [currentProfileIndex, setCurrentProfileIndex] = useState(0);
-  const [isBottomSheetOpen, setBottomSheetOpen] = useState(false);
-  const swiperRef = useRef<Swiper<any>>(null);
-  const bottomSheetRef = useRef<BottomSheet>(null);
   const [allSwiped, setAllSwiped] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [firstProfileImagesLoaded, setFirstProfileImagesLoaded] =
     useState(false);
 
+  const swiperRef = useRef<Swiper<any>>(null);
   const { showModal } = useBottomModal();
   const { setWalletBalance, walletBalance } = useMainContext();
+
+  const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+  const cardHeight = screenHeight * 0.65; // Adjust this value as needed
+  const cardWidth = screenWidth * 0.9; // Adjust this value as needed
 
   const preloadImages = async (profiles: any[]) => {
     if (profiles.length === 0) return;
@@ -59,10 +54,9 @@ export default function PlayScreen() {
       setFirstProfileImagesLoaded(true);
     } catch (error) {
       console.error("Error preloading images:", error);
-      setFirstProfileImagesLoaded(true); // Set to true even on error to avoid blocking UI
+      setFirstProfileImagesLoaded(true);
     }
 
-    // Preload remaining images in the background
     const remainingImageUrls = profiles
       .slice(1)
       .flatMap((profile) =>
@@ -89,7 +83,6 @@ export default function PlayScreen() {
       if (Array.isArray(fetchedProfiles) && fetchedProfiles.length > 0) {
         setProfiles(fetchedProfiles);
         setAllSwiped(false);
-
         await preloadImages(fetchedProfiles);
       } else {
         console.error(
@@ -97,7 +90,6 @@ export default function PlayScreen() {
           fetchedProfiles
         );
         setError("No profiles found or invalid response format");
-
         setProfiles([]);
       }
     } catch (err) {
@@ -134,7 +126,7 @@ export default function PlayScreen() {
       );
       console.log(`Current Profile Index: ${currentProfileIndex}`);
 
-      if (walletBalance == 0) {
+      if (walletBalance === 0) {
         showModal(<InsufficientPlaysModal />);
         return;
       }
@@ -150,11 +142,9 @@ export default function PlayScreen() {
       );
 
       if (is_button_press) {
-        if (swipeType === "rug") {
-          swiperRef?.current?.swipeLeft();
-        } else {
-          swiperRef?.current?.swipeRight();
-        }
+        swiperRef?.current?.[
+          swipeType === "rug" ? "swipeLeft" : "swipeRight"
+        ]();
       }
 
       const response = await sendSwipe(currentProfile.id, swipeType);
@@ -178,7 +168,6 @@ export default function PlayScreen() {
       }
 
       console.log(`Updating balance: ${response.balance}`);
-
       console.log(
         `Moving to next profile. Current index: ${currentProfileIndex}`
       );
@@ -188,7 +177,7 @@ export default function PlayScreen() {
         console.log(`New profile index: ${nextIndex}`);
         if (nextIndex >= profiles.length) {
           setAllSwiped(true);
-          return prevIndex; // Keep the current index if we've reached the end
+          return prevIndex;
         }
         return nextIndex;
       });
@@ -201,15 +190,11 @@ export default function PlayScreen() {
       ) {
         console.log("Not enough balance, opening insufficient balance modal");
         showModal(<InsufficientPlaysModal />);
-
         swiperRef?.current?.swipeBack();
       }
 
-      // Reset the current profile index to show the added profile
       setCurrentProfileIndex(0);
       setAllSwiped(false);
-
-      // Prevent the swipe animation if it's a button press
     }
   };
 
@@ -220,93 +205,22 @@ export default function PlayScreen() {
     decision: string;
     match_id: any;
   }) => {
-    if (response.decision === "match") {
-      console.log("It's a match! Match ID", response.match_id);
-    } else if (response.decision === "pending") {
-      console.log("Swipe is pending");
-    } else if (response.decision === "rugged") {
-      console.log("Rugged!");
-    } else if (response.decision === "profit") {
-      console.log("Profit earned!");
-    } else if (response.decision === "mutual_rug") {
-      console.log("Mutual rug!");
-    }
-  };
+    const decisions = {
+      match: "It's a match! Match ID",
+      pending: "Swipe is pending",
+      rugged: "Rugged!",
+      profit: "Profit earned!",
+      mutual_rug: "Mutual rug!",
+    };
 
-  const resetImageIndex = () => {
-    setCurrentImageIndex(0);
-  };
-
-  const calculateAge = (dateOfBirth: string): number => {
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDifference = today.getMonth() - birthDate.getMonth();
-
-    if (
-      monthDifference < 0 ||
-      (monthDifference === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-
-    return age;
-  };
-
-  const handleImageTap = (direction: string) => {
-    setCurrentImageIndex((prevIndex) => {
-      const imagesLength = profiles[currentProfileIndex]?.photos?.length || 0;
-      let newIndex = prevIndex;
-
-      if (direction === "left" && prevIndex > 0) {
-        newIndex = prevIndex - 1;
-      } else if (direction === "right" && prevIndex < imagesLength - 1) {
-        newIndex = newIndex + 1;
-      }
-
-      return newIndex;
-    });
-  };
-
-  const handleBookButtonPress = () => {
-    console.log("Book button pressed");
-    setBottomSheetOpen(true);
-    bottomSheetRef.current?.expand();
-  };
-
-  const renderBottomSheetContent = () => {
-    const profile = profiles[currentProfileIndex];
-    if (!profile) return null;
-
-    return (
-      <View style={styles.bottomSheetContainer}>
-        <View style={styles.whiteContainer}>
-          <Image
-            source={{ uri: profile?.photos?.[0] || "" }}
-            style={styles.bottomSheetImage}
-            borderRadius={50}
-          />
-          <Text style={styles.bottomSheetName}>
-            {profile?.name || "Unknown"},{" "}
-            {profile?.date_of_birth
-              ? calculateAge(profile.date_of_birth)
-              : "N/A"}
-          </Text>
-          <View style={styles.verifiedContainer}>
-            <Image
-              source={require("../../../assets/images/verified-badge.png")}
-              style={styles.verifiedIcon}
-            />
-            <Text style={styles.verifiedText}>
-              {profile?.is_verified ? "Verified" : "Not Verified"}
-            </Text>
-          </View>
-        </View>
-      </View>
+    console.log(
+      decisions[response.decision as keyof typeof decisions] ||
+        "Unknown decision",
+      response.match_id
     );
   };
 
-  const onRefresh = React.useCallback(() => {
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadProfiles(true);
   }, []);
@@ -318,11 +232,7 @@ export default function PlayScreen() {
           source={require("../../../assets/animations/loading.json")}
           autoPlay
           loop
-          style={{
-            width: 200,
-            height: 200,
-            flex: 1,
-          }}
+          style={{ width: 200, height: 200, flex: 1 }}
           speed={2}
         />
       </SafeAreaView>
@@ -330,164 +240,72 @@ export default function PlayScreen() {
   }
 
   return (
-    <>
-      <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
-        <ScrollView
-          contentContainerStyle={styles.scrollViewContent}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
-          <View style={styles.swiperContainer}>
-            {allSwiped ? (
-              <View style={styles.noProfilesContainer}>
-                <Text style={styles.noProfilesText}>
-                  No profiles left to be swiped
-                </Text>
-              </View>
-            ) : Array.isArray(profiles) && profiles.length > 0 ? (
-              <Swiper
-                ref={swiperRef}
-                cards={profiles}
-                renderCard={(profile) => (
-                  <View
-                    style={styles.card}
-                    key={`${profile.id}-${currentImageIndex}`}
-                  >
-                    <Image
-                      source={{
-                        uri: profile?.photos?.[currentImageIndex]?.startsWith(
-                          "https://"
-                        )
-                          ? profile?.photos?.[currentImageIndex]
-                          : `https://exftzdxtyfbiwlpmecmd.supabase.co/storage/v1/object/public/photos/${profile?.photos?.[currentImageIndex]}` ||
-                            "",
-                      }}
-                      style={styles.image}
-                    />
+    <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.scrollViewContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <View style={styles.swiperContainer}>
+          {allSwiped ? (
+            <View style={styles.noProfilesContainer}>
+              <Text style={styles.noProfilesText}>
+                No profiles left to be swiped
+              </Text>
+            </View>
+          ) : Array.isArray(profiles) && profiles.length > 0 ? (
+            <Swiper
+              ref={swiperRef}
+              cards={profiles}
+              renderCard={(profile) => (
+                <SwipeProfile 
+                  profile={profile} 
+                  cardHeight={cardHeight} 
+                  cardWidth={cardWidth}
+                />
+              )}
+              onSwipedLeft={handleSwipeLeft}
+              onSwipedRight={handleSwipeRight}
+              onSwipedAll={() => {
+                console.log("All cards swiped");
+                setAllSwiped(true);
+                setCurrentProfileIndex(0);
+              }}
+              cardIndex={currentProfileIndex}
+              stackSize={3}
+              backgroundColor="transparent"
+              cardVerticalMargin={20}
+              animateCardOpacity
+              key={profiles.length}
+              cardStyle={{
+                height: cardHeight,
+                width: cardWidth,
+              }}
+            />
+          ) : (
+            <View style={styles.noProfilesContainer}>
+              <Text style={styles.noProfilesText}>No profiles available</Text>
+            </View>
+          )}
+        </View>
 
-                    <TouchableOpacity
-                      style={styles.leftTapArea}
-                      onPress={() => handleImageTap("left")}
-                    />
-
-                    <TouchableOpacity
-                      style={styles.rightTapArea}
-                      onPress={() => handleImageTap("right")}
-                    />
-
-                    <LinearGradient
-                      colors={[
-                        "rgba(134, 134, 134, 0.00)",
-                        "rgba(0, 0, 0, 0.50)",
-                        "rgba(0, 0, 0, 0.90)",
-                      ]}
-                      locations={[0.6908, 0.7869, 0.992]}
-                      style={{
-                        position: "absolute",
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        height: "100%", // Adjust this value as needed
-                        width: "100%",
-                      }}
-                    />
-
-                    <View style={styles.profileInfo}>
-                      <View
-                        style={{
-                          flexDirection: "column",
-                          alignItems: "flex-start",
-                        }}
-                      >
-                        <View
-                          style={{ flexDirection: "row", alignItems: "center" }}
-                        >
-                          <Text style={styles.profileName}>
-                            {profile?.name || "Unknown"},{" "}
-                            {profile?.date_of_birth
-                              ? calculateAge(profile.date_of_birth)
-                              : "N/A"}
-                          </Text>
-                        </View>
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            marginTop: 5,
-                            gap: 10,
-                          }}
-                        >
-                          <View style={styles.countContainer}>
-                            <NumOfKiss width={20} height={20} />
-                            <Text style={styles.countText}>
-                              {profile?.num_of_kisses || 0}
-                            </Text>
-                          </View>
-                          <View style={styles.countContainer}>
-                            <NumOfRug width={20} height={20} />
-                            <Text style={styles.countText}>
-                              {profile?.num_of_rugs || 0}
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-                      {profile?.bio && (
-                        <Text style={styles.profileDescription}>
-                          {profile?.bio || ""}
-                        </Text>
-                      )}
-                    </View>
-                  </View>
-                )}
-                onSwipedLeft={handleSwipeLeft}
-                onSwipedRight={handleSwipeRight}
-                onSwipedAll={() => {
-                  console.log("All cards swiped");
-                  setAllSwiped(true);
-                  setCurrentProfileIndex(0);
-                }}
-                cardIndex={currentProfileIndex}
-                stackSize={3}
-                backgroundColor={"transparent"}
-                cardVerticalMargin={20}
-                animateCardOpacity
-                key={profiles.length} // Add this line to force re-render when profiles change
-              />
-            ) : (
-              <View style={styles.noProfilesContainer}>
-                <Text style={styles.noProfilesText}>No profiles available</Text>
-              </View>
-            )}
-          </View>
-
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => handleSwipe("left", true)}
-            >
-              <Text style={styles.buttonText}>❌</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => handleSwipe("right", true)}
-            >
-              <Text style={styles.buttonText}>😘</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-
-        <BottomSheet
-          ref={bottomSheetRef}
-          snapPoints={["25%", "40%"]}
-          index={-1}
-          onChange={(index) => setBottomSheetOpen(index >= 0)}
-          enablePanDownToClose
-        >
-          {renderBottomSheetContent()}
-        </BottomSheet>
-      </LinearGradient>
-    </>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => handleSwipe("left", true)}
+          >
+            <Text style={styles.buttonText}>❌</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => handleSwipe("right", true)}
+          >
+            <Text style={styles.buttonText}>😘</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
@@ -507,58 +325,8 @@ const styles = StyleSheet.create({
   swiperContainer: {
     flex: 1,
     marginBottom: 25,
-  },
-  card: {
-    height: "70%",
-    borderRadius: 8,
-    justifyContent: "center",
-    backgroundColor: "#F4F9F5",
-    overflow: "hidden",
-  },
-  image: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover",
-  },
-  leftTapArea: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    width: "50%",
-    height: "100%",
-  },
-  rightTapArea: {
-    position: "absolute",
-    right: 0,
-    top: 0,
-    width: "50%",
-    height: "100%",
-  },
-  bookButton: {
-    position: "absolute",
-    bottom: 150,
-    left: 20,
-    zIndex: 10,
-  },
-  bookIcon: {
-    width: 30,
-    height: 30,
-  },
-  profileInfo: {
-    position: "absolute",
-    bottom: 60,
-    left: 20,
-    right: 20,
-  },
-  profileName: {
-    fontSize: 24,
-    color: "#FFF",
-    fontWeight: "bold",
-  },
-  profileDescription: {
-    fontSize: 14,
-    color: "#FFF",
-    marginTop: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonContainer: {
     flexDirection: "row",
@@ -582,45 +350,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: "#FF5A5F",
   },
-  bottomSheetContainer: {
-    flex: 1,
-    backgroundColor: "#E0E0E0",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  whiteContainer: {
-    width: "90%",
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 20,
-    alignItems: "center",
-  },
-  bottomSheetImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  bottomSheetName: {
-    marginTop: 10,
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  verifiedContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 10,
-  },
-  verifiedIcon: {
-    width: 20,
-    height: 20,
-    marginRight: 5,
-  },
-  verifiedText: {
-    fontSize: 14,
-    color: "red",
-  },
   noProfilesContainer: {
     flex: 1,
     justifyContent: "center",
@@ -629,24 +358,5 @@ const styles = StyleSheet.create({
   noProfilesText: {
     fontSize: 16,
     color: "#666",
-  },
-  countContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    padding: 4,
-    borderRadius: 9999,
-    gap: 2,
-  },
-  countText: {
-    marginLeft: 5,
-    fontSize: 16,
-    color: "#313131",
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: "#666",
-    textAlign: "center",
   },
 });
