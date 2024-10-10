@@ -136,7 +136,7 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
       );
       console.log(`Current Profile Index: ${currentProfileIndex}`);
 
-      if (walletBalance === 0) {
+      if (walletBalance === 0 && direction === "right") {
         showModal(<InsufficientPlaysModal />);
         return;
       }
