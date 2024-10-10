@@ -1,14 +1,15 @@
 import React from "react";
-import { View, StyleSheet, Text } from "react-native";
+import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
 import Logo from "../assets/images/logos/kissOrRugTextLogo.svg";
 import { useMainContext } from "@/helpers/context/mainContext";
+import { router } from "expo-router";
 
 interface AppBarProps {
   showRightSide?: boolean;
 }
 
 const AppBar: React.FC<AppBarProps> = ({ showRightSide = true }) => {
-  const { walletBalance } = useMainContext();
+  const { walletBalance, setCurrentScreen } = useMainContext();
 
   return (
     <View style={styles.appBar}>
@@ -17,7 +18,9 @@ const AppBar: React.FC<AppBarProps> = ({ showRightSide = true }) => {
       </View>
       {showRightSide && (
         <View style={styles.rightContainer}>
-          <Text style={styles.balanceText}>{walletBalance} Plays</Text>
+          <TouchableOpacity onPress={() => setCurrentScreen("Bag")}>
+            <Text style={styles.balanceText}>{walletBalance} Plays</Text>
+          </TouchableOpacity>
         </View>
       )}
     </View>

@@ -98,7 +98,8 @@ function MainScreenContent() {
                 source={require("../../../assets/animations/dice.json")}
                 style={styles.playIcon}
                 loop={false}
-                speed={1.5}
+                speed={2.5}
+                autoPlay={false}
               />
               <Text style={styles.playButtonText}>Play</Text>
             </TouchableOpacity>
@@ -204,6 +205,6 @@ const styles = StyleSheet.create({
   playIcon: {
     width: 64,
     height: 64,
-    marginTop: -20
+    marginTop: -20,
   },
 });

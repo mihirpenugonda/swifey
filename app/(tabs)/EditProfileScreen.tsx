@@ -21,6 +21,7 @@ import { Buffer } from "buffer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { updateUserProfile } from "@/services/apiService";
 import { getAuthenticatedUser } from "@/helpers/auth";
+import * as ImageManipulator from "expo-image-manipulator";
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -113,8 +114,14 @@ export default function EditProfileScreen() {
       });
 
       if (!result.canceled && result.assets[0].uri) {
+        const compressedImage = await ImageManipulator.manipulateAsync(
+          result.assets[0].uri,
+          [{ resize: { width: 800 } }],
+          { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+        );
+
         const newImages = [...images];
-        newImages[index] = result.assets[0].uri;
+        newImages[index] = compressedImage.uri;
         setImages(newImages);
       }
     } catch (error) {
@@ -265,7 +272,7 @@ export default function EditProfileScreen() {
     }
   };
 
-  const hasImages = images.some(image => image !== null);
+  const hasImages = images.some((image) => image !== null);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
@@ -332,7 +339,12 @@ export default function EditProfileScreen() {
               {isSaving ? (
                 <ActivityIndicator color="#000000" />
               ) : (
-                <Text style={[styles.buttonText, !hasImages && styles.disabledButtonText]}>
+                <Text
+                  style={[
+                    styles.buttonText,
+                    !hasImages && styles.disabledButtonText,
+                  ]}
+                >
                   SAVE
                 </Text>
               )}

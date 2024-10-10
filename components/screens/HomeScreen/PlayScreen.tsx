@@ -67,7 +67,8 @@ export default function PlayScreen() {
         )
       );
 
-    remainingImageUrls.forEach((url) => Image.prefetch(url));
+    await Promise.all(remainingImageUrls.map((url) => Image.prefetch(url)));
+    console.log("All images preloaded");
   };
 
   const loadProfiles = async (is_refreshing: boolean = false) => {
@@ -259,9 +260,9 @@ export default function PlayScreen() {
               ref={swiperRef}
               cards={profiles}
               renderCard={(profile) => (
-                <SwipeProfile 
-                  profile={profile} 
-                  cardHeight={cardHeight} 
+                <SwipeProfile
+                  profile={profile}
+                  cardHeight={cardHeight}
                   cardWidth={cardWidth}
                 />
               )}
@@ -325,8 +326,8 @@ const styles = StyleSheet.create({
   swiperContainer: {
     flex: 1,
     marginBottom: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   buttonContainer: {
     flexDirection: "row",

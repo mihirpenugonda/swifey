@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Image,
@@ -8,6 +8,7 @@ import {
   Dimensions,
   StyleProp,
   ViewStyle,
+  ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import NumOfKiss from "../assets/images/numofkiss.svg";
@@ -25,6 +26,13 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
   cardWidth,
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [imageLoadingStates, setImageLoadingStates] = useState<boolean[]>([]);
+
+  useEffect(() => {
+    if (profile?.photos) {
+      setImageLoadingStates(new Array(profile.photos.length).fill(true));
+    }
+  }, [profile?.photos]);
 
   const calculateAge = (dateOfBirth: string): number => {
     const today = new Date();
@@ -54,8 +62,21 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
     });
   };
 
+  const handleImageLoad = (index: number) => {
+    setImageLoadingStates(prevStates => {
+      const newStates = [...prevStates];
+      newStates[index] = false;
+      return newStates;
+    });
+  };
+
   return (
     <View style={[styles.card, { height: cardHeight, width: cardWidth }]}>
+      {imageLoadingStates[currentImageIndex] && (
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color="#FFF" />
+        </View>
+      )}
       <Image
         source={{
           uri: profile?.photos?.[currentImageIndex]?.startsWith("https://")
@@ -64,6 +85,7 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
               "",
         }}
         style={styles.image}
+        onLoad={() => handleImageLoad(currentImageIndex)}
       />
 
       <TouchableOpacity
@@ -101,12 +123,14 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
             <View style={styles.countContainer}>
               <NumOfKiss width={20} height={20} />
               <Text style={styles.countText}>
-                {profile?.num_of_kisses || 0}
+                {profile?.num_of_kisses_sent || 0}
               </Text>
             </View>
             <View style={styles.countContainer}>
               <NumOfRug width={20} height={20} />
-              <Text style={styles.countText}>{profile?.num_of_rugs || 0}</Text>
+              <Text style={styles.countText}>
+                {profile?.num_of_kisses_received || 0}
+              </Text>
             </View>
           </View>
         </View>
@@ -140,6 +164,13 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     resizeMode: "cover",
+  },
+  loaderContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    zIndex: 3,
   },
   leftTapArea: {
     position: "absolute",

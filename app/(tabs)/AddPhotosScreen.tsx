@@ -10,8 +10,6 @@ import {
   Platform,
   Dimensions,
   Modal,
-  Linking,
-  AppState,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
@@ -25,6 +23,7 @@ import { updateUserProfile } from "@/services/apiService";
 import uuid from "react-native-uuid";
 import Container from "@/components/Container";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import PhotoPermissionsModal from "@/components/modals/PhotoPermissionsModal";
 
 export default function AddPhotosScreen() {
   const [images, setImages] = useState<(string | null)[]>(Array(6).fill(null));
@@ -32,55 +31,23 @@ export default function AddPhotosScreen() {
   const [isNextButtonDisabled, setIsNextButtonDisabled] = useState(true);
   const [isPermissionModalVisible, setIsPermissionModalVisible] =
     useState(false);
-  const [hasCheckedPermissions, setHasCheckedPermissions] = useState(false);
   const [loadingImageIndex, setLoadingImageIndex] = useState<number | null>(
     null
   );
 
   const screenWidth = Dimensions.get("window").width;
-  const padding = 20; // Horizontal padding
-  const gap = 5; // Gap between image slots
+  const padding = 20;
+  const gap = 5;
   const numColumns = 3;
   const imageSlotWidth = Math.floor(
     (screenWidth - 2 * padding - (numColumns - 1) * gap) / numColumns
   );
 
   useEffect(() => {
-    checkPhotoLibraryPermissions();
-
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-
-    return () => {
-      subscription.remove();
-    };
-  }, []);
-
-  const handleAppStateChange = (nextAppState: string) => {
-    if (nextAppState === 'active') {
-      checkPhotoLibraryPermissions();
-    }
-  };
-
-  const checkPhotoLibraryPermissions = async () => {
-    const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      setIsPermissionModalVisible(true);
-    } else {
-      setIsPermissionModalVisible(false);
-    }
-    setHasCheckedPermissions(true);
-  };
-
-  useEffect(() => {
-    const hasPhotos = images.some((image) => image !== null);
-    setIsNextButtonDisabled(!hasPhotos);
+    setIsNextButtonDisabled(!images.some((image) => image !== null));
   }, [images]);
 
   const handleAddImage = async (index: number): Promise<void> => {
-    if (!hasCheckedPermissions) {
-      await checkPhotoLibraryPermissions();
-    }
-
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
       setIsPermissionModalVisible(true);
@@ -133,7 +100,7 @@ export default function AddPhotosScreen() {
     try {
       const jwtToken = await AsyncStorage.getItem("jwtToken");
 
-      if(!jwtToken) {
+      if (!jwtToken) {
         throw new Error("No JWT token found.");
       }
 
@@ -156,8 +123,7 @@ export default function AddPhotosScreen() {
 
           const arrayBuffer = Buffer.from(base64Data, "base64");
 
-          const fileExt = "jpg";
-          const fileName = `photo-${i}-${uuid.v4()}-${user.id}.${fileExt}`;
+          const fileName = `photo-${i}-${uuid.v4()}-${user.id}.jpg`;
 
           const { data: storageData, error: storageError } =
             await supabase.storage
@@ -192,14 +158,6 @@ export default function AddPhotosScreen() {
       );
     } finally {
       setIsUploading(false);
-    }
-  };
-
-  const openAppSettings = () => {
-    if (Platform.OS === "ios") {
-      Linking.openURL("app-settings:");
-    } else {
-      Linking.openSettings();
     }
   };
 
@@ -280,23 +238,9 @@ export default function AddPhotosScreen() {
           onRequestClose={() => setIsPermissionModalVisible(false)}
         >
           <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Permission Required</Text>
-              <Text style={styles.modalText}>
-                Hey there! We need your awesome pics to make your dating profile
-                shine. Let's get those photos ready to impress potential
-                matches!
-              </Text>
-              <TouchableOpacity
-                style={styles.settingsButton}
-                onPress={() => {
-                  openAppSettings();
-                  setIsPermissionModalVisible(false);
-                }}
-              >
-                <Text style={styles.settingsButtonText}>Open Settings</Text>
-              </TouchableOpacity>
-            </View>
+            <PhotoPermissionsModal
+              onClose={() => setIsPermissionModalVisible(false)}
+            />
           </View>
         </Modal>
       </View>
@@ -388,52 +332,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     padding: 20,
-  },
-  modalContent: {
-    backgroundColor: "#F4F9F5",
-    borderRadius: 20,
-    padding: 20,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-    width: "100%",
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 15,
-  },
-  modalText: {
-    marginBottom: 15,
-    textAlign: "center",
-  },
-  settingsButton: {
-    backgroundColor: "#4CAF50",
-    borderRadius: 8,
-    padding: 10,
-    elevation: 2,
-    width: "100%",
-  },
-  settingsButtonText: {
-    color: "white",
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  closeButton: {
-    backgroundColor: "#2196F3",
-    borderRadius: 20,
-    padding: 10,
-    elevation: 2,
-  },
-  closeButtonText: {
-    color: "white",
-    fontWeight: "bold",
-    textAlign: "center",
   },
 });

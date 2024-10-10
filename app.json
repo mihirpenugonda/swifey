@@ -2,9 +2,9 @@
   "expo": {
     "name": "kissOrRug",
     "slug": "kissOrRug",
-    "version": "1.0.14",
+    "version": "1.0.15",
     "orientation": "portrait",
-    "icon": "./assets/images/splashIcon.png",
+    "icon": "./assets/images/appIcon.jpg",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
