@@ -41,7 +41,7 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
 
   const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
-  const bottomNavHeight = 72 + topInset;
+  const bottomNavHeight = 72 + topInset + 8;
   const topBarHeight = 48 + bottomInset;
 
   const cardHeight = screenHeight - bottomNavHeight - topBarHeight - 84;
@@ -250,7 +250,7 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
   }
 
   return (
-    <View style={styles.container}>
+    <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
       <View style={styles.swiperContainer}>
         {allSwiped ? (
           <View style={styles.noProfilesContainer}>
@@ -310,7 +310,7 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
           <Text style={styles.buttonText}>😘</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 

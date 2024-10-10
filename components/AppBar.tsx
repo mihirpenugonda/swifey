@@ -34,6 +34,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F4F9F5",
     paddingHorizontal: 16,
     width: "100%",
+    paddingTop: 8
   },
   leftContainer: {
     flexDirection: "row",
