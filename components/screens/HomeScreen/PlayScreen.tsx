@@ -20,7 +20,12 @@ import InsufficientPlaysModal from "@/components/modals/InsufficientPlaysModal";
 import LottieView from "lottie-react-native";
 import SwipeProfile from "@/components/SwipeProfile";
 
-export default function PlayScreen() {
+interface PlayScreenProps {
+  topInset: number;
+  bottomInset: number;
+}
+
+export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,8 +40,12 @@ export default function PlayScreen() {
   const { setWalletBalance, walletBalance } = useMainContext();
 
   const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
-  const cardHeight = screenHeight * 0.65; // Adjust this value as needed
-  const cardWidth = screenWidth * 0.9; // Adjust this value as needed
+
+  const bottomNavHeight = 72 + topInset;
+  const topBarHeight = 48 + bottomInset;
+
+  const cardHeight = screenHeight - bottomNavHeight - topBarHeight - 84;
+  const cardWidth = screenWidth - 32; // Adjust this value as needed
 
   const preloadImages = async (profiles: any[]) => {
     if (profiles.length === 0) return;
@@ -241,72 +250,67 @@ export default function PlayScreen() {
   }
 
   return (
-    <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollViewContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        <View style={styles.swiperContainer}>
-          {allSwiped ? (
-            <View style={styles.noProfilesContainer}>
-              <Text style={styles.noProfilesText}>
-                No profiles left to be swiped
-              </Text>
-            </View>
-          ) : Array.isArray(profiles) && profiles.length > 0 ? (
-            <Swiper
-              ref={swiperRef}
-              cards={profiles}
-              renderCard={(profile) => (
-                <SwipeProfile
-                  profile={profile}
-                  cardHeight={cardHeight}
-                  cardWidth={cardWidth}
-                />
-              )}
-              onSwipedLeft={handleSwipeLeft}
-              onSwipedRight={handleSwipeRight}
-              onSwipedAll={() => {
-                console.log("All cards swiped");
-                setAllSwiped(true);
-                setCurrentProfileIndex(0);
-              }}
-              cardIndex={currentProfileIndex}
-              stackSize={3}
-              backgroundColor="transparent"
-              cardVerticalMargin={20}
-              animateCardOpacity
-              key={profiles.length}
-              cardStyle={{
-                height: cardHeight,
-                width: cardWidth,
-              }}
-            />
-          ) : (
-            <View style={styles.noProfilesContainer}>
-              <Text style={styles.noProfilesText}>No profiles available</Text>
-            </View>
-          )}
-        </View>
+    <View style={styles.container}>
+      <View style={styles.swiperContainer}>
+        {allSwiped ? (
+          <View style={styles.noProfilesContainer}>
+            <Text style={styles.noProfilesText}>
+              No profiles left to be swiped
+            </Text>
+          </View>
+        ) : Array.isArray(profiles) && profiles.length > 0 ? (
+          <Swiper
+            ref={swiperRef}
+            cards={profiles}
+            renderCard={(profile) => (
+              <SwipeProfile
+                profile={profile}
+                cardHeight={cardHeight}
+                cardWidth={cardWidth}
+              />
+            )}
+            onSwipedLeft={handleSwipeLeft}
+            onSwipedRight={handleSwipeRight}
+            onSwipedAll={() => {
+              console.log("All cards swiped");
+              setAllSwiped(true);
+              setCurrentProfileIndex(0);
+            }}
+            cardIndex={currentProfileIndex}
+            stackSize={3}
+            backgroundColor="transparent"
+            animateCardOpacity
+            key={profiles.length}
+            containerStyle={{
+              height: "100%",
+              width: "100%",
+            }}
+            marginTop={16}
+            cardVerticalMargin={0}
+            cardHorizontalMargin={16}
+          />
+        ) : (
+          <View style={styles.noProfilesContainer}>
+            <Text style={styles.noProfilesText}>No profiles available</Text>
+          </View>
+        )}
+      </View>
 
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => handleSwipe("left", true)}
-          >
-            <Text style={styles.buttonText}>❌</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => handleSwipe("right", true)}
-          >
-            <Text style={styles.buttonText}>😘</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </LinearGradient>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => handleSwipe("left", true)}
+        >
+          <Text style={styles.buttonText}>❌</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => handleSwipe("right", true)}
+        >
+          <Text style={styles.buttonText}>😘</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
 
@@ -320,19 +324,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollViewContent: {
-    flexGrow: 1,
-  },
   swiperContainer: {
     flex: 1,
-    marginBottom: 25,
-    alignItems: "center",
     justifyContent: "center",
+    alignItems: "center",
   },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-evenly",
-    marginBottom: 20,
+    marginBottom: 12,
   },
   button: {
     width: 60,
@@ -346,6 +346,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 2,
     elevation: 5,
+    borderWidth: 2,
+    borderColor: "#848282",
+    borderStyle: "solid",
   },
   buttonText: {
     fontSize: 24,

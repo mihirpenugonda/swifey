@@ -26,7 +26,12 @@ interface MoveItem {
   imageUri?: string;
 }
 
-export default function YourMoveScreen() {
+interface YourMoveScreenProps {
+  topInset: number;
+  bottomInset: number;
+}
+
+export default function YourMoveScreen({ topInset, bottomInset }: YourMoveScreenProps) {
   const [data, setData] = useState<MoveItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setModalVisible] = useState(false);

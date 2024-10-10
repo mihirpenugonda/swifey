@@ -16,7 +16,12 @@ import BuyPlaysModal from "@/components/modals/BuyPlaysModal";
 
 import TrophySvg from "../../../assets/images/icons/trophyIcon.svg";
 
-export default function BagScreen() {
+type BagScreenProps = {
+  topInset: number;
+  bottomInset: number;
+};
+
+export default function BagScreen({ topInset, bottomInset }: BagScreenProps) {
   const { showModal } = useBottomModal();
   const { walletBalance, refreshBalance } = useMainContext();
   const [refreshing, setRefreshing] = React.useState(false);

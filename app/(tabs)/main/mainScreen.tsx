@@ -38,17 +38,23 @@ function MainScreenContent() {
   const renderScreen = () => {
     switch (currentScreen) {
       case "Kisses":
-        return <KissesScreen />;
+        return (
+          <KissesScreen topInset={insets.top} bottomInset={insets.bottom} />
+        );
       case "Your Turn":
-        return <YourMoveScreen />;
+        return (
+          <YourMoveScreen topInset={insets.top} bottomInset={insets.bottom} />
+        );
       case "Play":
-        return <HomeScreen />;
+        return <HomeScreen topInset={insets.top} bottomInset={insets.bottom} />;
       case "Bag":
-        return <BagScreen />;
+        return <BagScreen topInset={insets.top} bottomInset={insets.bottom} />;
       case "Profile":
-        return <ProfileScreen />;
+        return (
+          <ProfileScreen topInset={insets.top} bottomInset={insets.bottom} />
+        );
       default:
-        return <HomeScreen />;
+        return <HomeScreen topInset={insets.top} bottomInset={insets.bottom} />;
     }
   };
 
@@ -165,13 +171,13 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   tabIcon: {
-    width: 32,
-    height: 32,
+    width: 28,
+    height: 28,
     marginBottom: 4,
   },
   tabText: {
     color: "#FFFFFF",
-    fontSize: 12,
+    fontSize: 10,
   },
   activeTabText: {
     color: "#CDFF8B",
@@ -203,8 +209,8 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
   },
   playIcon: {
-    width: 64,
-    height: 64,
+    width: 58,
+    height: 58,
     marginTop: -20,
   },
 });

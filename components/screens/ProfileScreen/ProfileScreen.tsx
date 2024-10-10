@@ -7,13 +7,12 @@ import { supabase } from "../../../supabaseClient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMainContext } from "@/helpers/context/mainContext";
 
-interface UserProfile {
-  name: string;
-  date_of_birth: string;
-  photos: string[] | null;
+interface ProfileScreenProps {
+  topInset: number;
+  bottomInset: number;
 }
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ topInset, bottomInset }: ProfileScreenProps) => {
   const router = useRouter();
 
   const { profileDetails } = useMainContext();
@@ -39,37 +38,35 @@ const ProfileScreen = () => {
   };
 
   return (
-    <>
-      <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
-        {profileDetails ? (
-          <Image source={{ uri: profileDetails.image }} style={styles.avatar} />
-        ) : (
-          <View style={[styles.avatar, styles.placeholderAvatar]}>
-            <Text style={styles.placeholderText}>No Image</Text>
-          </View>
-        )}
+    <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
+      {profileDetails ? (
+        <Image source={{ uri: profileDetails.image }} style={styles.avatar} />
+      ) : (
+        <View style={[styles.avatar, styles.placeholderAvatar]}>
+          <Text style={styles.placeholderText}>No Image</Text>
+        </View>
+      )}
 
-        {profileDetails && (
-          <Text style={styles.profileName}>
-            {profileDetails.name}, {calculateAge(profileDetails.date_of_birth)}
-          </Text>
-        )}
+      {profileDetails && (
+        <Text style={styles.profileName}>
+          {profileDetails.name}, {calculateAge(profileDetails.date_of_birth)}
+        </Text>
+      )}
 
-        <TouchableOpacity
-          style={styles.buttonWrapper}
-          onPress={navigateToEditProfile}
+      <TouchableOpacity
+        style={styles.buttonWrapper}
+        onPress={navigateToEditProfile}
+      >
+        <LinearGradient
+          colors={["#FF56F8", "#B6E300"]}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={styles.gradientButton}
         >
-          <LinearGradient
-            colors={["#FF56F8", "#B6E300"]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={styles.gradientButton}
-          >
-            <Text style={styles.buttonText}>EDIT PROFILE</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </LinearGradient>
-    </>
+          <Text style={styles.buttonText}>EDIT PROFILE</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+    </LinearGradient>
   );
 };
 

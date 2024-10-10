@@ -2,7 +2,6 @@ import React from "react";
 import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
 import Logo from "../assets/images/logos/kissOrRugTextLogo.svg";
 import { useMainContext } from "@/helpers/context/mainContext";
-import { router } from "expo-router";
 
 interface AppBarProps {
   showRightSide?: boolean;
@@ -14,7 +13,7 @@ const AppBar: React.FC<AppBarProps> = ({ showRightSide = true }) => {
   return (
     <View style={styles.appBar}>
       <View style={styles.leftContainer}>
-        <Logo height={60} style={styles.logo} />
+        <Logo style={styles.logo} />
       </View>
       {showRightSide && (
         <View style={styles.rightContainer}>

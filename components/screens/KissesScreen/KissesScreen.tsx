@@ -15,6 +15,11 @@ import { useMainContext } from "@/helpers/context/mainContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { ScrollView } from "react-native-gesture-handler";
 
+type KissesScreenProps = {
+  topInset: number;
+  bottomInset: number;
+};
+
 interface MatchItem {
   match_id: string;
   name: string;
@@ -24,7 +29,10 @@ interface MatchItem {
   is_verified: boolean;
 }
 
-export default function KissesScreen() {
+export default function KissesScreen({
+  topInset,
+  bottomInset,
+}: KissesScreenProps) {
   const router = useRouter();
   const { matches, loadMatches } = useMainContext();
   const [refreshing, setRefreshing] = useState(false);
