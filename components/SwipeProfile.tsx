@@ -5,12 +5,10 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Dimensions,
-  StyleProp,
-  ViewStyle,
   ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+
 import NumOfKiss from "../assets/images/numofkiss.svg";
 import NumOfRug from "../assets/images/numofrug.svg";
 
@@ -63,7 +61,7 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
   };
 
   const handleImageLoad = (index: number) => {
-    setImageLoadingStates(prevStates => {
+    setImageLoadingStates((prevStates) => {
       const newStates = [...prevStates];
       newStates[index] = false;
       return newStates;
@@ -109,33 +107,63 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
         style={styles.gradient}
       />
 
-      <View style={styles.profileInfo}>
-        <View style={styles.profileInfoInner}>
-          <View style={styles.nameContainer}>
-            <Text style={styles.profileName}>
-              {profile?.name || "Unknown"},{" "}
-              {profile?.date_of_birth
-                ? calculateAge(profile.date_of_birth)
-                : "N/A"}
-            </Text>
-          </View>
-          <View style={styles.countsContainer}>
-            <View style={styles.countContainer}>
-              <NumOfKiss width={20} height={20} />
-              <Text style={styles.countText}>
-                {profile?.num_of_kisses_sent || 0}
+      <View style={styles.profileInfoContainer}>
+        <View style={styles.profileInfo}>
+          <View style={styles.profileInfoInner}>
+            <View style={styles.nameContainer}>
+              <Text style={styles.profileName}>
+                {profile?.name || "Unknown"},{" "}
+                {profile?.date_of_birth
+                  ? calculateAge(profile.date_of_birth)
+                  : "N/A"}
               </Text>
             </View>
-            <View style={styles.countContainer}>
-              <NumOfRug width={20} height={20} />
-              <Text style={styles.countText}>
-                {profile?.num_of_kisses_received || 0}
-              </Text>
+            <View style={styles.countsContainer}>
+              <View style={styles.countContainer}>
+                <NumOfKiss width={18} height={18} />
+                <Text style={styles.countText}>
+                  {profile?.num_of_kisses_sent || 0}
+                </Text>
+              </View>
+              <View style={styles.countContainer}>
+                <NumOfRug width={18} height={18} />
+                <Text style={styles.countText}>
+                  {profile?.num_of_kisses_received || 0}
+                </Text>
+              </View>
             </View>
           </View>
+          {profile?.bio && (
+            <Text style={styles.profileDescription}>{profile?.bio || ""}</Text>
+          )}
         </View>
-        {profile?.bio && (
-          <Text style={styles.profileDescription}>{profile?.bio || ""}</Text>
+
+        {profile?.recent_swipes && (
+          <View style={styles.last5PlaysContainer}>
+            <Image
+              source={require("../assets/images/icons/profile/last5PlaysText.png")}
+              style={{
+                width: 12,
+                height: 80,
+                resizeMode: "contain",
+                marginRight: 6,
+              }}
+            />
+            {profile?.recent_swipes?.map((swipe: any, index: number) => (
+              <View
+                key={`${swipe}-${index}`}
+                style={{
+                  backgroundColor: swipe == "kiss" ? "#9BFFD5" : "#FFD8CF",
+                  borderRadius: 9999,
+                  padding: 4,
+                }}
+              >
+                <Text style={{ fontSize: 12 }}>
+                  {swipe == "kiss" ? "😘" : "❌"}
+                </Text>
+              </View>
+            ))}
+          </View>
         )}
       </View>
 
@@ -159,6 +187,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: "hidden",
     backgroundColor: "#F4F9F5",
+    borderWidth: 1,
+    borderColor: "#313131",
   },
   image: {
     width: "100%",
@@ -196,12 +226,23 @@ const styles = StyleSheet.create({
     height: "100%",
     width: "100%",
   },
-  profileInfo: {
+  profileInfoContainer: {
     position: "absolute",
-    bottom: 60,
+    bottom: 40,
     left: 20,
     right: 20,
     zIndex: 2,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  last5PlaysContainer: {
+    gap: 6,
+    alignItems: "flex-end",
+    justifyContent: "center"
   },
   profileInfoInner: {
     flexDirection: "column",
@@ -227,8 +268,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#fff",
     padding: 4,
+    paddingHorizontal: 8,
     borderRadius: 9999,
-    gap: 2,
   },
   countText: {
     marginLeft: 5,
