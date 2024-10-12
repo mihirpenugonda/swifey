@@ -13,12 +13,15 @@ import Animated, {
   useSharedValue,
   withTiming,
   interpolate,
-  Extrapolate,
+  Extrapolation,
 } from "react-native-reanimated";
 import { Easing } from "react-native-reanimated";
 
 import NumOfKiss from "../assets/images/numofkiss.svg";
 import NumOfRug from "../assets/images/numofrug.svg";
+
+import CrossSvg from "../assets/images/icons/profile/cross.svg";
+import HeartSvg from "../assets/images/icons/profile/heart.svg";
 
 interface SwipeProfileProps {
   profile: any;
@@ -38,8 +41,8 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
 
   const activationProgress = useSharedValue(0);
   const deactivateButtonScale = useSharedValue(0);
+  const last5PlaysOpacity = useSharedValue(0);
 
-  // Add this new useEffect hook to reset currentImageIndex when profile changes
   useEffect(() => {
     setCurrentImageIndex(0);
     if (profile?.photos) {
@@ -58,8 +61,16 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
         duration: 300,
         easing: Easing.bezier(0.25, 0.1, 0.25, 1),
       });
+      last5PlaysOpacity.value = withTiming(1, {
+        duration: 300,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      });
     } else {
       deactivateButtonScale.value = withTiming(0, {
+        duration: 300,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      });
+      last5PlaysOpacity.value = withTiming(0, {
         duration: 300,
         easing: Easing.bezier(0.25, 0.1, 0.25, 1),
       });
@@ -83,12 +94,12 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
   };
 
   const handleImageTap = (direction: "left" | "right") => {
+    const imagesLength = profile?.photos?.length || 0;
     setCurrentImageIndex((prevIndex) => {
-      const imagesLength = profile?.photos?.length || 0;
-      if (direction === "left" && prevIndex > 0) {
-        return prevIndex - 1;
-      } else if (direction === "right" && prevIndex < imagesLength - 1) {
-        return prevIndex + 1;
+      if (direction === "left") {
+        return prevIndex > 0 ? prevIndex - 1 : prevIndex;
+      } else if (direction === "right") {
+        return prevIndex < imagesLength - 1 ? prevIndex + 1 : prevIndex;
       }
       return prevIndex;
     });
@@ -112,8 +123,8 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
     const opacity = interpolate(
       activationProgress.value,
       [0, 1],
-      [1, 0.5],
-      Extrapolate.CLAMP
+      [1, 0.2],
+      Extrapolation.CLAMP
     );
     return {
       opacity,
@@ -127,6 +138,16 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
     };
   });
 
+  const last5PlaysContainerStyle = useAnimatedStyle(() => {
+    return {
+      opacity: last5PlaysOpacity.value,
+    };
+  });
+
+  const handleDeactivate = () => {
+    setIsActivated(false);
+  };
+
   return (
     <Animated.View style={[styles.card, containerStyle]}>
       <Image
@@ -138,7 +159,7 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
         }}
         style={styles.image}
         onLoad={() => handleImageLoad(currentImageIndex)}
-        onError={() => handleImageLoad(currentImageIndex)} // Add this line to handle load errors
+        onError={() => handleImageLoad(currentImageIndex)}
       />
 
       <TouchableOpacity
@@ -194,23 +215,54 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
         </View>
       </Animated.View>
 
-      <View style={styles.imageIndicatorContainer}>
-        {profile?.photos?.map((_: any, index: number) => (
-          <View
-            key={index}
-            style={[
-              styles.imageIndicator,
-              index === currentImageIndex && styles.activeImageIndicator,
-            ]}
-          />
-        ))}
-      </View>
+      {profile?.photos && profile.photos.length > 1 && (
+        <View style={styles.imageIndicatorContainer}>
+          {profile.photos.map((_: any, index: number) => (
+            <View
+              key={index}
+              style={[
+                styles.imageIndicator,
+                index === currentImageIndex && styles.activeImageIndicator,
+              ]}
+            />
+          ))}
+        </View>
+      )}
 
-      <Animated.View style={[styles.deactivateButton, deactivateButtonStyle]}>
-        <TouchableOpacity onPress={() => setIsActivated(false)}>
-          <Text style={styles.deactivateButtonText}>❌</Text>
-        </TouchableOpacity>
-      </Animated.View>
+      {isActivated && (
+        <View style={styles.bottomContainer}>
+          <Animated.View
+            style={[styles.last5PlaysContainer, last5PlaysContainerStyle]}
+          >
+            <View style={{ flexDirection: "row", gap: 2 }}>
+              {profile?.recent_swipes?.map((swipe: any, index: number) => (
+                <View key={`${swipe}-${index}`}>
+                  {swipe === "kiss" ? (
+                    <HeartSvg width={24} height={24} />
+                  ) : (
+                    <CrossSvg width={24} height={24} />
+                  )}
+                </View>
+              ))}
+            </View>
+            <Text style={{ color: "#ffffff" }}>
+              {profile?.name || "Unknown"}’s Last {profile?.recent_swipes?.length || 0} ⚡
+            </Text>
+          </Animated.View>
+          <Animated.View style={[deactivateButtonStyle, {
+            position: "absolute",
+            right: 10
+          }]}>
+            <TouchableOpacity
+              style={styles.deactivateButton}
+              onPress={handleDeactivate}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.deactivateButtonText}>❌</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+      )}
     </Animated.View>
   );
 };
@@ -242,7 +294,7 @@ const styles = StyleSheet.create({
     top: 0,
     width: "50%",
     height: "100%",
-    zIndex: 1,
+    zIndex: 100,
   },
   rightTapArea: {
     position: "absolute",
@@ -250,7 +302,7 @@ const styles = StyleSheet.create({
     top: 0,
     width: "50%",
     height: "100%",
-    zIndex: 1,
+    zIndex: 100,
   },
   gradient: {
     position: "absolute",
@@ -259,13 +311,14 @@ const styles = StyleSheet.create({
     bottom: 0,
     height: "100%",
     width: "100%",
+    zIndex: 2,
   },
   profileInfoContainer: {
     position: "absolute",
     bottom: 20,
     left: 20,
     right: 20,
-    zIndex: 2,
+    zIndex: 3,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
@@ -274,9 +327,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   last5PlaysContainer: {
-    gap: 6,
-    alignItems: "flex-end",
+    flexDirection: "column",
+    flex: 1,
+    alignItems: "center",
     justifyContent: "center",
+    gap: 2,
   },
   profileInfoInner: {
     flexDirection: "column",
@@ -322,7 +377,7 @@ const styles = StyleSheet.create({
     right: 10,
     flexDirection: "row",
     justifyContent: "center",
-    zIndex: 2,
+    zIndex: 4,
   },
   imageIndicator: {
     width: "100%",
@@ -335,15 +390,18 @@ const styles = StyleSheet.create({
   activeImageIndicator: {
     backgroundColor: "#F8D000", // Active color
   },
-  deactivateButton: {
+  bottomContainer: {
     position: "absolute",
-    bottom: 20,
-    right: 20,
-    backgroundColor: "white",
-    borderRadius: 9999,
-    justifyContent: "center",
+    bottom: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    zIndex: 3,
+    zIndex: 9999,
+    paddingHorizontal: 10,
+  },
+  deactivateButton: {
+    backgroundColor: "#B7B7B7",
+    borderRadius: 9999,
     padding: 10,
     shadowColor: "#000",
     shadowOffset: {
@@ -353,6 +411,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+    zIndex: 10000,
   },
   deactivateButtonText: {
     fontSize: 20,

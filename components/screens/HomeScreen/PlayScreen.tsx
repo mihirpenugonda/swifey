@@ -24,6 +24,9 @@ import InsufficientPlaysModal from "@/components/modals/InsufficientPlaysModal";
 import LottieView from "lottie-react-native";
 import SwipeProfile from "@/components/SwipeProfile";
 
+import KissCard from "../../../assets/images/icons/profile/kissCard.svg";
+import RugCard from "../../../assets/images/icons/profile/rugCard.svg";
+
 interface PlayScreenProps {
   topInset: number;
   bottomInset: number;
@@ -42,6 +45,7 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
   const buttonContainerHeight = useSharedValue(72);
   const buttonContainerOpacity = useSharedValue(1);
   const swiperContainerMarginBottom = useSharedValue(0);
+  const cardContainerBottom = useSharedValue(0);
 
   const swiperRef = useRef<Swiper<any>>(null);
   const { showModal } = useBottomModal();
@@ -191,6 +195,8 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
         }
         return nextIndex;
       });
+
+      setIsActivated(false);
     } catch (error) {
       console.error(`Error in handleSwipe (${direction}):`, error);
 
@@ -245,6 +251,12 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
     };
   });
 
+  const cardContainerStyle = useAnimatedStyle(() => {
+    return {
+      bottom: cardContainerBottom.value,
+    };
+  });
+
   useEffect(() => {
     if (isActivated) {
       buttonContainerHeight.value = withTiming(0, {
@@ -263,9 +275,13 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
         duration: 300,
         easing: Easing.inOut(Easing.ease),
       });
+      cardContainerBottom.value = withTiming(80, {
+        duration: 300,
+        easing: Easing.inOut(Easing.ease),
+      });
     } else {
       buttonContainerHeight.value = withTiming(64, {
-        duration: 300,
+        duration: 50,
         easing: Easing.inOut(Easing.ease),
       });
       buttonContainerOpacity.value = withTiming(1, {
@@ -278,6 +294,10 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
       });
       swiperContainerMarginBottom.value = withTiming(12, {
         duration: 300,
+        easing: Easing.inOut(Easing.ease),
+      });
+      cardContainerBottom.value = withTiming(-300, {
+        duration: 150,
         easing: Easing.inOut(Easing.ease),
       });
     }
@@ -319,6 +339,7 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
           </View>
         )}
       </Animated.View>
+
       <Animated.View style={[styles.buttonContainer, buttonContainerStyle]}>
         <TouchableOpacity
           style={styles.button}
@@ -341,6 +362,33 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
           onPress={() => setIsActivated(!isActivated)}
         >
           <Text style={styles.buttonText}>🎲 Play</Text>
+        </TouchableOpacity>
+      </Animated.View>
+
+      <Animated.View style={[styles.cardContainer, cardContainerStyle]}>
+        <TouchableOpacity onPress={() => handleSwipeLeft()}>
+          <RugCard
+            style={{
+              transform: [{ rotate: "-7deg" }],
+              shadowColor: "#000000",
+              shadowOffset: { width: 0, height: 11.77 },
+              shadowOpacity: 0.25,
+              shadowRadius: 12.86,
+              elevation: 12,
+            }}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleSwipeRight()}>
+          <KissCard
+            style={{
+              transform: [{ rotate: "7deg" }],
+              shadowColor: "#000000",
+              shadowOffset: { width: 0, height: 11.77 },
+              shadowOpacity: 0.25,
+              shadowRadius: 12.86,
+              elevation: 12,
+            }}
+          />
         </TouchableOpacity>
       </Animated.View>
     </LinearGradient>
@@ -400,5 +448,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#313131",
     fontFamily: "Tomorrow_700Bold_Italic",
+  },
+  cardContainer: {
+    flexDirection: "row",
+    position: "absolute",
+    width: "auto",
+    left: 0,
+    right: 0,
+    paddingBottom: 0,
+    justifyContent: "center",
+    height: "auto",
   },
 });
