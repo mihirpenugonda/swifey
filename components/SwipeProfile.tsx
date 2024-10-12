@@ -8,29 +8,63 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+  interpolate,
+  Extrapolate,
+} from "react-native-reanimated";
+import { Easing } from "react-native-reanimated";
 
 import NumOfKiss from "../assets/images/numofkiss.svg";
 import NumOfRug from "../assets/images/numofrug.svg";
 
 interface SwipeProfileProps {
   profile: any;
-  cardHeight: number;
-  cardWidth: number;
+  isActivated: boolean;
+  containerHeight: Animated.SharedValue<number>;
+  setIsActivated: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const SwipeProfile: React.FC<SwipeProfileProps> = ({
   profile,
-  cardHeight,
-  cardWidth,
+  isActivated,
+  containerHeight,
+  setIsActivated,
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageLoadingStates, setImageLoadingStates] = useState<boolean[]>([]);
 
+  const activationProgress = useSharedValue(0);
+  const deactivateButtonScale = useSharedValue(0);
+
+  // Add this new useEffect hook to reset currentImageIndex when profile changes
   useEffect(() => {
+    setCurrentImageIndex(0);
     if (profile?.photos) {
       setImageLoadingStates(new Array(profile.photos.length).fill(true));
     }
-  }, [profile?.photos]);
+  }, [profile]);
+
+  useEffect(() => {
+    activationProgress.value = withTiming(isActivated ? 1 : 0, {
+      duration: 300,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+    });
+
+    if (isActivated) {
+      deactivateButtonScale.value = withTiming(1, {
+        duration: 300,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      });
+    } else {
+      deactivateButtonScale.value = withTiming(0, {
+        duration: 300,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      });
+    }
+  }, [isActivated]);
 
   const calculateAge = (dateOfBirth: string): number => {
     const today = new Date();
@@ -68,13 +102,33 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
     });
   };
 
+  const containerStyle = useAnimatedStyle(() => {
+    return {
+      height: `${containerHeight.value}%`,
+    };
+  });
+
+  const profileInfoStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      activationProgress.value,
+      [0, 1],
+      [1, 0.5],
+      Extrapolate.CLAMP
+    );
+    return {
+      opacity,
+    };
+  });
+
+  const deactivateButtonStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: deactivateButtonScale.value }],
+      opacity: deactivateButtonScale.value,
+    };
+  });
+
   return (
-    <View style={[styles.card, { height: cardHeight, width: cardWidth }]}>
-      {imageLoadingStates[currentImageIndex] && (
-        <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#FFF" />
-        </View>
-      )}
+    <Animated.View style={[styles.card, containerStyle]}>
       <Image
         source={{
           uri: profile?.photos?.[currentImageIndex]?.startsWith("https://")
@@ -84,6 +138,7 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
         }}
         style={styles.image}
         onLoad={() => handleImageLoad(currentImageIndex)}
+        onError={() => handleImageLoad(currentImageIndex)} // Add this line to handle load errors
       />
 
       <TouchableOpacity
@@ -107,7 +162,7 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
         style={styles.gradient}
       />
 
-      <View style={styles.profileInfoContainer}>
+      <Animated.View style={[styles.profileInfoContainer, profileInfoStyle]}>
         <View style={styles.profileInfo}>
           <View style={styles.profileInfoInner}>
             <View style={styles.nameContainer}>
@@ -137,35 +192,7 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
             <Text style={styles.profileDescription}>{profile?.bio || ""}</Text>
           )}
         </View>
-
-        {profile?.recent_swipes && (
-          <View style={styles.last5PlaysContainer}>
-            <Image
-              source={require("../assets/images/icons/profile/last5PlaysText.png")}
-              style={{
-                width: 12,
-                height: 80,
-                resizeMode: "contain",
-                marginRight: 6,
-              }}
-            />
-            {profile?.recent_swipes?.map((swipe: any, index: number) => (
-              <View
-                key={`${swipe}-${index}`}
-                style={{
-                  backgroundColor: swipe == "kiss" ? "#9BFFD5" : "#FFD8CF",
-                  borderRadius: 9999,
-                  padding: 4,
-                }}
-              >
-                <Text style={{ fontSize: 12 }}>
-                  {swipe == "kiss" ? "😘" : "❌"}
-                </Text>
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
+      </Animated.View>
 
       <View style={styles.imageIndicatorContainer}>
         {profile?.photos?.map((_: any, index: number) => (
@@ -178,17 +205,24 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
           />
         ))}
       </View>
-    </View>
+
+      <Animated.View style={[styles.deactivateButton, deactivateButtonStyle]}>
+        <TouchableOpacity onPress={() => setIsActivated(false)}>
+          <Text style={styles.deactivateButtonText}>❌</Text>
+        </TouchableOpacity>
+      </Animated.View>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 8,
+    borderRadius: 12,
     overflow: "hidden",
     backgroundColor: "#F4F9F5",
     borderWidth: 1,
     borderColor: "#313131",
+    width: "100%",
   },
   image: {
     width: "100%",
@@ -228,7 +262,7 @@ const styles = StyleSheet.create({
   },
   profileInfoContainer: {
     position: "absolute",
-    bottom: 40,
+    bottom: 20,
     left: 20,
     right: 20,
     zIndex: 2,
@@ -242,7 +276,7 @@ const styles = StyleSheet.create({
   last5PlaysContainer: {
     gap: 6,
     alignItems: "flex-end",
-    justifyContent: "center"
+    justifyContent: "center",
   },
   profileInfoInner: {
     flexDirection: "column",
@@ -291,14 +325,37 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   imageIndicator: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
-    marginHorizontal: 3,
+    width: "100%",
+    height: 4,
+    backgroundColor: "#D9D9D9", // Inactive color
+    marginHorizontal: 2,
+    flex: 1,
+    borderRadius: 2,
   },
   activeImageIndicator: {
-    backgroundColor: "#fff",
+    backgroundColor: "#F8D000", // Active color
+  },
+  deactivateButton: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    backgroundColor: "white",
+    borderRadius: 9999,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 3,
+    padding: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  deactivateButtonText: {
+    fontSize: 20,
   },
 });
 

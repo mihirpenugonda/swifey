@@ -87,37 +87,11 @@ function MainScreenContent() {
         </View>
         <View style={styles.content}>{renderScreen()}</View>
         <View style={[styles.tabBar, { paddingBottom: insets.bottom }]}>
-          <View style={styles.playButtonContainer}>
-            <TouchableOpacity
-              style={styles.playButton}
-              onPress={() => {
-                console.log("Play button pressed");
-                setCurrentScreen("Play");
-                if (lottieRef.current) {
-                  lottieRef.current.play();
-                }
-              }}
-              activeOpacity={0.7}
-            >
-              <LottieView
-                ref={lottieRef}
-                source={require("../../../assets/animations/dice.json")}
-                style={styles.playIcon}
-                loop={false}
-                speed={2.5}
-                autoPlay={false}
-              />
-              <Text style={styles.playButtonText}>Play</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.tabGroup}>
-            <TabButton name="Kisses" icon={KissesIcon} />
-            <TabButton name="Your Turn" icon={YourTurnIcon} />
-          </View>
-          <View style={styles.tabGroup}>
-            <TabButton name="Bag" icon={BagIcon} />
-            <TabButton name="Profile" icon={ProfileIcon} />
-          </View>
+          <TabButton name="Kisses" icon={KissesIcon} />
+          <TabButton name="Your Turn" icon={YourTurnIcon} />
+          <TabButton name="Home" icon={PlayIcon} />
+          <TabButton name="Bag" icon={BagIcon} />
+          <TabButton name="Profile" icon={ProfileIcon} />
         </View>
       </SafeAreaProvider>
 
@@ -149,12 +123,11 @@ const styles = StyleSheet.create({
   tabBar: {
     flexDirection: "row",
     backgroundColor: "#000000",
-    justifyContent: "space-between",
+    justifyContent: "space-around",
     alignItems: "center",
     paddingTop: 8,
     paddingBottom: 8,
     paddingHorizontal: 20,
-    gap: 48,
   },
   tabGroup: {
     flexDirection: "row",
