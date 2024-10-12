@@ -32,10 +32,8 @@ interface PlayScreenProps {
 export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [currentProfileIndex, setCurrentProfileIndex] = useState(0);
   const [allSwiped, setAllSwiped] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [firstProfileImagesLoaded, setFirstProfileImagesLoaded] =
     useState(false);
 
@@ -48,11 +46,6 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
   const swiperRef = useRef<Swiper<any>>(null);
   const { showModal } = useBottomModal();
   const { setWalletBalance, walletBalance } = useMainContext();
-
-  const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
-
-  const bottomNavHeight = 72 + bottomInset;
-  const topBarHeight = 48 + topInset;
 
   const preloadImages = async (profiles: any[]) => {
     if (profiles.length === 0) return;
@@ -92,7 +85,6 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
       if (!is_refreshing) {
         setLoading(true);
       }
-      setError(null);
 
       const fetchedProfiles = await fetchProfiles(20, 0);
       console.log("Fetched profiles:", fetchedProfiles);
@@ -106,17 +98,14 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
           "No profiles found or invalid response format:",
           fetchedProfiles
         );
-        setError("No profiles found or invalid response format");
         setProfiles([]);
       }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "An unknown error occurred";
       console.error("Error fetching profiles:", errorMessage);
-      setError(errorMessage);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
@@ -189,7 +178,9 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
         console.log(`Updating balance: ${response.balance}`);
       }
 
-      console.log(`Moving to next profile. Current index: ${currentProfileIndex}`);
+      console.log(
+        `Moving to next profile. Current index: ${currentProfileIndex}`
+      );
 
       setCurrentProfileIndex((prevIndex) => {
         const nextIndex = prevIndex + 1;
@@ -238,11 +229,6 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
       response.match_id
     );
   };
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    loadProfiles(true);
-  }, []);
 
   const profileStyle = useAnimatedStyle(() => {
     return {
@@ -336,7 +322,17 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
       <Animated.View style={[styles.buttonContainer, buttonContainerStyle]}>
         <TouchableOpacity
           style={styles.button}
-          onPress={() => handleSwipe("left", true)}
+          onPress={() => {
+            setCurrentProfileIndex((prevIndex) => {
+              const nextIndex = prevIndex + 1;
+              console.log(`New profile index: ${nextIndex}`);
+              if (nextIndex >= profiles.length) {
+                setAllSwiped(true);
+                return prevIndex;
+              }
+              return nextIndex;
+            });
+          }}
         >
           <Text style={styles.buttonText}>❌ Skip</Text>
         </TouchableOpacity>
