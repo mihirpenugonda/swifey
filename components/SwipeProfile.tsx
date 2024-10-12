@@ -246,13 +246,24 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
               ))}
             </View>
             <Text style={{ color: "#ffffff" }}>
-              {profile?.name || "Unknown"}’s Last {profile?.recent_swipes?.length || 0} ⚡
+              {profile?.recent_swipes?.length === 0
+                ? "Zero Plays"
+                : profile?.recent_swipes?.length === 1
+                ? `${profile?.name || ""}'s Last Play`
+                : `${profile?.name || ""}'s Last ${
+                    profile?.recent_swipes?.length
+                  } ⚡`}
             </Text>
           </Animated.View>
-          <Animated.View style={[deactivateButtonStyle, {
-            position: "absolute",
-            right: 10
-          }]}>
+          <Animated.View
+            style={[
+              deactivateButtonStyle,
+              {
+                position: "absolute",
+                right: 10,
+              },
+            ]}
+          >
             <TouchableOpacity
               style={styles.deactivateButton}
               onPress={handleDeactivate}

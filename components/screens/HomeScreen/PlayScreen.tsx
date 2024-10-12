@@ -96,6 +96,7 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
       if (Array.isArray(fetchedProfiles) && fetchedProfiles.length > 0) {
         setProfiles(fetchedProfiles);
         setAllSwiped(false);
+        setLoading(false);
         await preloadImages(fetchedProfiles);
       } else {
         console.error(
@@ -303,7 +304,7 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
     }
   }, [isActivated]);
 
-  if (loading || !firstProfileImagesLoaded) {
+  if (loading) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <LottieView
