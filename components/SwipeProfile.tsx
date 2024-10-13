@@ -28,6 +28,8 @@ interface SwipeProfileProps {
   isActivated: boolean;
   containerHeight: Animated.SharedValue<number>;
   setIsActivated: React.Dispatch<React.SetStateAction<boolean>>;
+  currentClick: "kiss" | "rug" | null;
+  setCurrentClick: React.Dispatch<React.SetStateAction<"kiss" | "rug" | null>>;
 }
 
 const SwipeProfile: React.FC<SwipeProfileProps> = ({
@@ -35,9 +37,12 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
   isActivated,
   containerHeight,
   setIsActivated,
+  currentClick,
+  setCurrentClick,
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageLoadingStates, setImageLoadingStates] = useState<boolean[]>([]);
+  const [isImageChanging, setIsImageChanging] = useState(false);
 
   const activationProgress = useSharedValue(0);
   const deactivateButtonScale = useSharedValue(0);
@@ -94,14 +99,27 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
   };
 
   const handleImageTap = (direction: "left" | "right") => {
+    if (isImageChanging) return; // Prevent rapid tapping
+
     const imagesLength = profile?.photos?.length || 0;
     setCurrentImageIndex((prevIndex) => {
+      let newIndex = prevIndex;
       if (direction === "left") {
-        return prevIndex > 0 ? prevIndex - 1 : prevIndex;
+        newIndex = prevIndex > 0 ? prevIndex - 1 : prevIndex;
       } else if (direction === "right") {
-        return prevIndex < imagesLength - 1 ? prevIndex + 1 : prevIndex;
+        newIndex = prevIndex < imagesLength - 1 ? prevIndex + 1 : prevIndex;
       }
-      return prevIndex;
+
+      if (newIndex !== prevIndex) {
+        setIsImageChanging(true);
+        setImageLoadingStates((prevStates) => {
+          const newStates = [...prevStates];
+          newStates[newIndex] = true;
+          return newStates;
+        });
+      }
+
+      return newIndex;
     });
   };
 
@@ -111,6 +129,7 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
       newStates[index] = false;
       return newStates;
     });
+    setIsImageChanging(false);
   };
 
   const containerStyle = useAnimatedStyle(() => {
@@ -145,7 +164,9 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
   });
 
   const handleDeactivate = () => {
-    setIsActivated(false);
+    if (currentClick === null) {
+      setIsActivated(false);
+    }
   };
 
   return (
@@ -161,6 +182,12 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
         onLoad={() => handleImageLoad(currentImageIndex)}
         onError={() => handleImageLoad(currentImageIndex)}
       />
+
+      {imageLoadingStates[currentImageIndex] && (
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color="#ffffff" />
+        </View>
+      )}
 
       <TouchableOpacity
         style={styles.leftTapArea}
@@ -235,23 +262,37 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
             style={[styles.last5PlaysContainer, last5PlaysContainerStyle]}
           >
             <View style={{ flexDirection: "row", gap: 2 }}>
-              {profile?.recent_swipes?.map((swipe: any, index: number) => (
-                <View key={`${swipe}-${index}`}>
-                  {swipe === "kiss" ? (
-                    <HeartSvg width={24} height={24} />
-                  ) : (
-                    <CrossSvg width={24} height={24} />
-                  )}
-                </View>
-              ))}
+              {profile?.recent_swipes?.length > 0 ? (
+                profile.recent_swipes.map((swipe: any, index: number) => (
+                  <View key={`${swipe}-${index}`}>
+                    {swipe === "kiss" ? (
+                      <HeartSvg width={24} height={24} />
+                    ) : (
+                      <CrossSvg width={24} height={24} />
+                    )}
+                  </View>
+                ))
+              ) : (
+                <View
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: "#ffffff",
+                  }}
+                />
+              )}
             </View>
             <Text style={{ color: "#ffffff" }}>
-              {profile?.recent_swipes?.length === 0
+              {!profile?.recent_swipes
                 ? "Zero Plays"
-                : profile?.recent_swipes?.length === 1
+                : profile.recent_swipes.length === 0
+                ? "Zero Plays"
+                : profile.recent_swipes.length === 1
                 ? `${profile?.name || ""}'s Last Play`
                 : `${profile?.name || ""}'s Last ${
-                    profile?.recent_swipes?.length
+                    profile.recent_swipes.length
                   } ⚡`}
             </Text>
           </Animated.View>
@@ -265,9 +306,13 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
             ]}
           >
             <TouchableOpacity
-              style={styles.deactivateButton}
+              style={[
+                styles.deactivateButton,
+                currentClick !== null && styles.disabledDeactivateButton,
+              ]}
               onPress={handleDeactivate}
               activeOpacity={0.8}
+              disabled={currentClick !== null}
             >
               <Text style={styles.deactivateButtonText}>❌</Text>
             </TouchableOpacity>
@@ -426,6 +471,9 @@ const styles = StyleSheet.create({
   },
   deactivateButtonText: {
     fontSize: 20,
+  },
+  disabledDeactivateButton: {
+    opacity: 0.5,
   },
 });
 

@@ -2,9 +2,6 @@ import React, { useEffect, useState } from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import AppBar from "../../../components/AppBar";
-import { supabase } from "../../../supabaseClient";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMainContext } from "@/helpers/context/mainContext";
 
 interface ProfileScreenProps {
