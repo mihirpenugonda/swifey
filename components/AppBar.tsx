@@ -1,6 +1,6 @@
 import React from "react";
 import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
-import Logo from "../assets/images/logos/kissOrRugTextLogo.svg";
+import SwifeyLogo from "../assets/images/logos/swifeyTextLogo.svg";
 import { useMainContext } from "@/helpers/context/mainContext";
 
 interface AppBarProps {
@@ -13,7 +13,7 @@ const AppBar: React.FC<AppBarProps> = ({ showRightSide = true }) => {
   return (
     <View style={styles.appBar}>
       <View style={styles.leftContainer}>
-        <Logo style={styles.logo} />
+        <SwifeyLogo style={styles.logo} />
       </View>
       {showRightSide && (
         <View style={styles.rightContainer}>
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     width: "100%",
     paddingTop: 8,
-    paddingBottom: 12
+    paddingBottom: 12,
   },
   leftContainer: {
     flexDirection: "row",
