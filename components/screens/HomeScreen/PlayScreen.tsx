@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import Animated, {
   Easing,
   runOnJS,
   withSpring,
+  withSequence,
 } from "react-native-reanimated";
 import { fetchProfiles, sendSwipe } from "../../../services/apiService";
 import eventEmitter from "@/services/eventEmitter";
@@ -60,6 +61,10 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
   const rugCardOpacity = useSharedValue(1);
   const kissCardOpacity = useSharedValue(1);
 
+  const fadeValue = useSharedValue(1);
+  const cardCenterX = useSharedValue(0);
+  const cardCenterY = useSharedValue(0);
+
   const preloadImages = async (profiles: any[]) => {
     if (profiles.length === 0) return;
 
@@ -87,6 +92,8 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
       if (Array.isArray(fetchedProfiles) && fetchedProfiles.length > 0) {
         setProfiles(fetchedProfiles);
         setAllSwiped(false);
+        setLoading(false);
+
         await preloadImages(fetchedProfiles);
       } else {
         console.error(
@@ -98,8 +105,8 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "An unknown error occurred";
+
       console.error("Error fetching profiles:", errorMessage);
-    } finally {
       setLoading(false);
     }
   };
@@ -114,62 +121,41 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
     }
   }, [currentProfileIndex, profiles]);
 
-  const handleSwipe = async (direction: "kiss" | "rug") => {
+  const handleSwipe = (direction: "kiss" | "rug") => {
     const currentProfile = profiles[currentProfileIndex];
 
-    try {
-      setSelectedCard(direction);
-
-      if (walletBalance === 0 && direction === "kiss") {
-        showModal(<InsufficientPlaysModal />);
-        return;
-      }
-
-      if (!currentProfile?.id) {
-        console.error("Profile ID is missing");
-        return;
-      }
-
-      const response = await sendSwipe(currentProfile.id, direction);
-
-      if (response?.message === "You have already swiped on this profile") {
-        console.log(
-          `Already swiped on this profile. Past decision: ${response.past_decision}`
-        );
-        return;
-      }
-
-      processSwipeResponse(response);
-      setWalletBalance(response.balance ?? 0);
-
-      if (response.decision === "match") {
-        eventEmitter.emit("matchMade");
-      }
-
-      setCurrentProfileIndex((prevIndex) => {
-        const nextIndex = prevIndex + 1;
-        if (nextIndex >= profiles.length) {
-          setAllSwiped(true);
-          return prevIndex;
-        }
-        return nextIndex;
-      });
-
-      setIsActivated(false);
-    } catch (error) {
-      console.error(`Error in handleSwipe (${direction}):`, error);
-
-      if (
-        error instanceof Error &&
-        error.message.toLowerCase().includes("insufficient balance")
-      ) {
-        showModal(<InsufficientPlaysModal />);
-      }
-
-      setAllSwiped(false);
-    } finally {
-      setSelectedCard(null);
+    if (!currentProfile?.id) {
+      console.error("Profile ID is missing");
+      return;
     }
+
+    sendSwipe(currentProfile.id, direction)
+      .then((response) => {
+        if (response?.message === "You have already swiped on this profile") {
+          console.log(
+            `Already swiped on this profile. Past decision: ${response.past_decision}`
+          );
+          return;
+        }
+
+        processSwipeResponse(response);
+        setWalletBalance(response.balance ?? 0);
+
+        if (response.decision === "match") {
+          eventEmitter.emit("matchMade");
+        }
+      })
+      .catch((error) => {
+        console.error(`Error in handleSwipe (${direction}):`, error);
+        if (
+          error instanceof Error &&
+          error.message.toLowerCase().includes("insufficient balance")
+        ) {
+          showModal(<InsufficientPlaysModal />);
+        }
+        // Add the problematic profile to the back of the stack
+        setProfiles((prevProfiles) => [currentProfile, ...prevProfiles]);
+      });
   };
 
   const processSwipeResponse = (response: {
@@ -229,14 +215,19 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
       buttonContainerOpacity.value = withTiming(1, animationConfig);
       profileHeight.value = withTiming(100, animationConfig);
       swiperContainerMarginBottom.value = withTiming(12, animationConfig);
-      cardContainerBottom.value = withTiming(-300, {
+      cardContainerBottom.value = withTiming(-500, {
         ...animationConfig,
-        duration: 150,
+        duration: 25,
       });
     }
   }, [isActivated]);
 
   const handleCardPress = async (card: "kiss" | "rug") => {
+    if (walletBalance === 0 && card === "kiss") {
+      showModal(<InsufficientPlaysModal />);
+      return;
+    }
+
     setSelectedCard(card);
 
     const springConfig = {
@@ -244,6 +235,7 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
       stiffness: 90,
     };
 
+    // Move card to center
     cardScale.value = withSpring(1.5, springConfig);
     cardTranslateX.value = withSpring(card === "rug" ? 44 : -44, springConfig);
     cardTranslateY.value = withSpring(-100, springConfig);
@@ -251,23 +243,52 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
     if (card === "rug") {
       rugCardRotation.value = withSpring("0deg", springConfig);
       rugCardOpacity.value = withSpring(1, springConfig);
-      kissCardOpacity.value = withSpring(0.5, springConfig);
+      kissCardOpacity.value = withSpring(0, springConfig);
     } else {
       kissCardRotation.value = withSpring("0deg", springConfig);
       kissCardOpacity.value = withSpring(1, springConfig);
-      rugCardOpacity.value = withSpring(0.5, springConfig);
+      rugCardOpacity.value = withSpring(0, springConfig);
     }
 
-    await handleSwipe(card);
+    // Wait for the animation to complete
+    handleSwipe(card);
 
-    await resetCardPosition();
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Fade out everything
+    fadeValue.value = withTiming(0, { duration: 300 });
+
+    // Wait for fade out
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    setCurrentProfileIndex((prevIndex) => {
+      const nextIndex = prevIndex + 1;
+      if (nextIndex >= profiles.length) {
+        setAllSwiped(true);
+        return prevIndex;
+      }
+      return nextIndex;
+    });
+
     setIsActivated(false);
+
+    // Reset card positions
+    resetCardPosition();
+
+    // Wait a bit before fading in the new profile
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    // Fade in the new profile
+    fadeValue.value = withTiming(1, { duration: 300 });
+
+    // Reset selected card
+    setSelectedCard(null);
   };
 
-  const resetCardPosition = async () => {
+  const resetCardPosition = () => {
     const timingConfig = {
-      duration: 200, // Adjust this value to control the speed of the animation
-      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      duration: 1, // Make this instant
+      easing: Easing.linear,
     };
 
     cardScale.value = withTiming(1, timingConfig);
@@ -277,10 +298,6 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
     rugCardRotation.value = withTiming("-7deg", timingConfig);
     kissCardOpacity.value = withTiming(1, timingConfig);
     rugCardOpacity.value = withTiming(1, timingConfig);
-
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
-    runOnJS(setSelectedCard)(null);
   };
 
   const rugCardStyle = useAnimatedStyle(() => ({
@@ -305,6 +322,17 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
     zIndex: selectedCard === "kiss" ? 2 : 1,
   }));
 
+  const fadeStyle = useAnimatedStyle(() => ({
+    opacity: fadeValue.value,
+  }));
+
+  // Use onLayout to get the center position of the card container
+  const onCardContainerLayout = (event: any) => {
+    const { width, height } = event.nativeEvent.layout;
+    cardCenterX.value = width / 2 - 50; // Adjust based on card width
+    cardCenterY.value = -height / 2 + 50; // Adjust based on card height
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -321,91 +349,87 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
 
   return (
     <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
-      <Animated.View style={[styles.swiperContainer, profileStyle]}>
-        {allSwiped ? (
-          <View style={styles.noProfilesContainer}>
-            <Text style={styles.noProfilesText}>
-              No profiles left to be swiped
-            </Text>
-          </View>
-        ) : profiles.length > 0 ? (
-          <SwipeProfile
-            profile={profiles[currentProfileIndex]}
-            isActivated={isActivated}
-            setIsActivated={setIsActivated}
-            containerHeight={profileHeight}
-            currentClick={selectedCard}
-            setCurrentClick={setSelectedCard}
-          />
-        ) : (
-          <View style={styles.noProfilesContainer}>
-            <Text style={styles.noProfilesText}>No profiles available</Text>
-          </View>
-        )}
-      </Animated.View>
-
-      <Animated.View style={[styles.buttonContainer, buttonContainerStyle]}>
-        <TouchableOpacity
-          style={[styles.button]}
-          onPress={() => {
-            if (selectedCard === null) {
-              // Add this condition
-              setCurrentProfileIndex((prevIndex) => {
-                const nextIndex = prevIndex + 1;
-                if (nextIndex >= profiles.length) {
-                  setAllSwiped(true);
-                  return prevIndex;
-                }
-                return nextIndex;
-              });
-            }
-          }}
-          disabled={selectedCard !== null} // Add this line
-        >
-          <Text style={[styles.buttonText]}>❌ Skip</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => setIsActivated(!isActivated)}
-        >
-          <Text style={styles.buttonText}>🎲 Play</Text>
-        </TouchableOpacity>
-      </Animated.View>
-
-      <Animated.View style={[styles.cardContainer, cardContainerStyle]}>
-        <TouchableOpacity
-          onPress={() => handleCardPress("rug")}
-          disabled={selectedCard !== null}
-          style={{ zIndex: selectedCard === "rug" ? 2 : 1 }}
-        >
-          <Animated.View style={rugCardStyle}>
-            <View style={styles.cardContent}>
-              <RugCard style={styles.cardShadow} />
-              {selectedCard === "rug" && (
-                <View style={styles.cardOverlay}>
-                  <ActivityIndicator size="small" color="white" />
-                </View>
-              )}
+      <Animated.View style={[styles.content, fadeStyle]}>
+        <Animated.View style={[styles.swiperContainer, profileStyle]}>
+          {allSwiped ? (
+            <View style={styles.noProfilesContainer}>
+              <Text style={styles.noProfilesText}>
+                No profiles left to be swiped
+              </Text>
             </View>
-          </Animated.View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => handleCardPress("kiss")}
-          disabled={selectedCard !== null}
-          style={{ zIndex: selectedCard === "kiss" ? 2 : 1 }}
-        >
-          <Animated.View style={kissCardStyle}>
-            <View style={styles.cardContent}>
-              <KissCard style={styles.cardShadow} />
-              {selectedCard === "kiss" && (
-                <View style={styles.cardOverlay}>
-                  <ActivityIndicator size="small" color="white" />
-                </View>
-              )}
+          ) : profiles.length > 0 ? (
+            <SwipeProfile
+              profile={profiles[currentProfileIndex]}
+              isActivated={isActivated}
+              setIsActivated={setIsActivated}
+              containerHeight={profileHeight}
+              currentClick={selectedCard}
+              setCurrentClick={setSelectedCard}
+              key={currentProfileIndex}
+            />
+          ) : (
+            <View style={styles.noProfilesContainer}>
+              <Text style={styles.noProfilesText}>No profiles available</Text>
             </View>
-          </Animated.View>
-        </TouchableOpacity>
+          )}
+        </Animated.View>
+
+        <Animated.View style={[styles.buttonContainer, buttonContainerStyle]}>
+          <TouchableOpacity
+            style={[styles.button]}
+            onPress={() => {
+              if (selectedCard === null) {
+                // Add this condition
+                setCurrentProfileIndex((prevIndex) => {
+                  const nextIndex = prevIndex + 1;
+                  if (nextIndex >= profiles.length) {
+                    setAllSwiped(true);
+                    return prevIndex;
+                  }
+                  return nextIndex;
+                });
+              }
+            }}
+            disabled={selectedCard !== null} // Add this line
+          >
+            <Text style={[styles.buttonText]}>❌ Skip</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => setIsActivated(!isActivated)}
+          >
+            <Text style={styles.buttonText}>🎲 Play</Text>
+          </TouchableOpacity>
+        </Animated.View>
+
+        <Animated.View
+          style={[styles.cardContainer, cardContainerStyle]}
+          onLayout={onCardContainerLayout}
+        >
+          <TouchableOpacity
+            onPress={() => handleCardPress("rug")}
+            disabled={selectedCard !== null}
+            style={{ zIndex: selectedCard === "rug" ? 2 : 1 }}
+          >
+            <Animated.View style={rugCardStyle}>
+              <View style={styles.cardContent}>
+                <RugCard style={styles.cardShadow} />
+              </View>
+            </Animated.View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => handleCardPress("kiss")}
+            disabled={selectedCard !== null}
+            style={{ zIndex: selectedCard === "kiss" ? 2 : 1 }}
+          >
+            <Animated.View style={kissCardStyle}>
+              <View style={styles.cardContent}>
+                <KissCard style={styles.cardShadow} />
+              </View>
+            </Animated.View>
+          </TouchableOpacity>
+        </Animated.View>
       </Animated.View>
     </LinearGradient>
   );
@@ -495,5 +519,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 12.86,
     elevation: 12,
+  },
+  content: {
+    flex: 1,
   },
 });
