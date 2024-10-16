@@ -34,7 +34,9 @@ export default function VerificationScreen() {
   const [resendTimer, setResendTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
 
-  const isProductionEmail = (email as string).includes("kissorrug+prod");
+  const isProductionEmail =
+    (email as string).includes("kissorrug+prod") ||
+    (email as string).includes("fka+prod");
   const boxSize = width * 0.12;
 
   useEffect(() => {

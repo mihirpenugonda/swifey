@@ -37,7 +37,7 @@ const EmailScreen: React.FC = () => {
 
     setIsLoading(true);
 
-    if (email.includes("kissorrug+prod")) {
+    if (email.includes("kissorrug+prod") || email.includes("fka+prod")) {
       router.push({
         pathname: "/VerificationScreen",
         params: { email, signup: "true" },
