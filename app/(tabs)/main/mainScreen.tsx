@@ -104,11 +104,9 @@ function MainScreenContent() {
 
 export default function MainScreen() {
   return (
-    <MainScreenContext>
-      <BottomModalProvider>
-        <MainScreenContent />
-      </BottomModalProvider>
-    </MainScreenContext>
+    <BottomModalProvider>
+      <MainScreenContent />
+    </BottomModalProvider>
   );
 }
 

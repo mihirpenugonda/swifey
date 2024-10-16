@@ -364,7 +364,6 @@ export default function PlayScreen({ topInset, bottomInset }: PlayScreenProps) {
               setIsActivated={setIsActivated}
               containerHeight={profileHeight}
               currentClick={selectedCard}
-              setCurrentClick={setSelectedCard}
               key={currentProfileIndex}
             />
           ) : (

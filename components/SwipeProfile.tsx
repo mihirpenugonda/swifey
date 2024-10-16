@@ -16,20 +16,27 @@ import Animated, {
   Extrapolation,
 } from "react-native-reanimated";
 import { Easing } from "react-native-reanimated";
+import { useNavigation } from "@react-navigation/native";
 
 import NumOfKiss from "../assets/images/numofkiss.svg";
 import NumOfRug from "../assets/images/numofrug.svg";
 
 import CrossSvg from "../assets/images/icons/profile/cross.svg";
 import HeartSvg from "../assets/images/icons/profile/heart.svg";
+import EditSvg from "../assets/images/icons/profile/edit.svg";
+import { router } from "expo-router";
 
 interface SwipeProfileProps {
   profile: any;
-  isActivated: boolean;
+
   containerHeight: Animated.SharedValue<number>;
-  setIsActivated: React.Dispatch<React.SetStateAction<boolean>>;
-  currentClick: "kiss" | "rug" | null;
-  setCurrentClick: React.Dispatch<React.SetStateAction<"kiss" | "rug" | null>>;
+
+  isActivated?: boolean;
+  setIsActivated?: React.Dispatch<React.SetStateAction<boolean>>;
+
+  currentClick?: "kiss" | "rug" | null;
+
+  isEditEnabled?: boolean;
 }
 
 const SwipeProfile: React.FC<SwipeProfileProps> = ({
@@ -38,7 +45,7 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
   containerHeight,
   setIsActivated,
   currentClick,
-  setCurrentClick,
+  isEditEnabled,
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageLoadingStates, setImageLoadingStates] = useState<boolean[]>([]);
@@ -48,6 +55,8 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
   const deactivateButtonScale = useSharedValue(0);
   const last5PlaysOpacity = useSharedValue(0);
 
+  const navigation = useNavigation();
+
   useEffect(() => {
     setCurrentImageIndex(0);
     if (profile?.photos) {
@@ -56,29 +65,31 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
   }, [profile]);
 
   useEffect(() => {
-    activationProgress.value = withTiming(isActivated ? 1 : 0, {
-      duration: 300,
-      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-    });
+    if (isActivated !== undefined) {
+      activationProgress.value = withTiming(isActivated ? 1 : 0, {
+        duration: 300,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      });
 
-    if (isActivated) {
-      deactivateButtonScale.value = withTiming(1, {
-        duration: 300,
-        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-      });
-      last5PlaysOpacity.value = withTiming(1, {
-        duration: 300,
-        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-      });
-    } else {
-      deactivateButtonScale.value = withTiming(0, {
-        duration: 300,
-        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-      });
-      last5PlaysOpacity.value = withTiming(0, {
-        duration: 300,
-        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-      });
+      if (isActivated) {
+        deactivateButtonScale.value = withTiming(1, {
+          duration: 300,
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        });
+        last5PlaysOpacity.value = withTiming(1, {
+          duration: 300,
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        });
+      } else {
+        deactivateButtonScale.value = withTiming(0, {
+          duration: 300,
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        });
+        last5PlaysOpacity.value = withTiming(0, {
+          duration: 300,
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        });
+      }
     }
   }, [isActivated]);
 
@@ -164,10 +175,12 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
   });
 
   const handleDeactivate = () => {
-    if (currentClick === null) {
+    if (currentClick === null && setIsActivated) {
       setIsActivated(false);
     }
   };
+
+  const hasMultipleImages = profile?.photos && profile.photos.length > 1;
 
   return (
     <Animated.View style={[styles.card, containerStyle]}>
@@ -242,7 +255,7 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
         </View>
       </Animated.View>
 
-      {profile?.photos && profile.photos.length > 1 && (
+      {hasMultipleImages && (
         <View style={styles.imageIndicatorContainer}>
           {profile.photos.map((_: any, index: number) => (
             <View
@@ -254,6 +267,18 @@ const SwipeProfile: React.FC<SwipeProfileProps> = ({
             />
           ))}
         </View>
+      )}
+
+      {isEditEnabled && (
+        <TouchableOpacity
+          style={[
+            styles.editButton,
+            hasMultipleImages ? styles.editButtonWithIndicator : styles.editButtonWithoutIndicator
+          ]}
+          onPress={() => router.push("/EditProfileScreen")}
+        >
+          <EditSvg width={32} height={32} />
+        </TouchableOpacity>
       )}
 
       {isActivated && (
@@ -429,8 +454,8 @@ const styles = StyleSheet.create({
   imageIndicatorContainer: {
     position: "absolute",
     top: 10,
-    left: 10,
-    right: 10,
+    left: 20,
+    right: 20,
     flexDirection: "row",
     justifyContent: "center",
     zIndex: 4,
@@ -474,6 +499,28 @@ const styles = StyleSheet.create({
   },
   disabledDeactivateButton: {
     opacity: 0.5,
+  },
+  editButton: {
+    position: "absolute",
+    right: 20,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 9999,
+    padding: 8,
+    zIndex: 100,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  editButtonWithIndicator: {
+    top: 24, // Positioned just below the image indicator
+  },
+  editButtonWithoutIndicator: {
+    top: 20, // Positioned at the top when there's no image indicator
   },
 });
 

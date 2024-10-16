@@ -36,7 +36,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>exp+swifeyfkakissorrug</string>
+          <string>exp+swifeyfkakisrsorrug</string>
         </array>
       </dict>
     </array>
@@ -65,6 +65,7 @@
     <string>This app needs access to your photo library to allow you to upload photos.</string>
     <key>NSUserActivityTypes</key>
     <array>
+      <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>

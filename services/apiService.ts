@@ -256,7 +256,6 @@ export const updateUserProfile = async (profileData: {
   date_of_birth?: string;
   location?: Record<string, any>;
   gender_preference?: string[];
-  cryptonoun?: string;
   onboarding_step?: string;
 }) => {
   try {
@@ -285,6 +284,41 @@ export const updateUserProfile = async (profileData: {
     return await response.json();
   } catch (error) {
     console.error("Error updating user profile:", error);
+    throw error;
+  }
+};
+
+export const fetchProfile = async (user_id: string) => {
+  try {
+    const jwtToken = await getJwtToken();
+
+    if (!jwtToken) {
+      throw new Error("No JWT token found");
+    }
+
+    const response = await fetch(`${API_URL}/fetch-profile`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${jwtToken}`,
+      },
+      body: JSON.stringify({ user_id }),
+    });
+
+    if (!response.ok) {
+      const errorMessage = await response.text();
+      throw new Error(
+        `Failed to fetch profile: ${response.statusText} - ${errorMessage}`
+      );
+    }
+
+    const data = await response.json();
+
+    console.log("response", data[0]);
+
+    return data[0];
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
     throw error;
   }
 };

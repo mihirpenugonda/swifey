@@ -18,6 +18,7 @@ import {
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { LinearGradient } from "expo-linear-gradient"; // Corrected import
 import { SafeAreaView } from "react-native-safe-area-context"; // Import SafeAreaView
+import { MainScreenContext } from "@/helpers/context/mainContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -46,13 +47,15 @@ export default function RootLayout() {
   const gradientColors = ["#F4F9F5", "#EDDCCC"];
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-      </LinearGradient>
-    </ThemeProvider>
+    <MainScreenContext>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+        </LinearGradient>
+      </ThemeProvider>
+    </MainScreenContext>
   );
 }

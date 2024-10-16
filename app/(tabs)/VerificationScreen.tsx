@@ -18,48 +18,48 @@ import { supabase } from "../../supabaseClient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getAuthenticatedUser } from "@/helpers/auth";
 import { LinearGradient } from "expo-linear-gradient";
-
 import Logo from "../../assets/images/newLogo.svg";
 import { inputStyle } from "@/helpers/styles";
+import { useMainContext } from "@/helpers/context/mainContext";
 
 export default function VerificationScreen() {
   const router = useRouter();
-  const { width } = Dimensions.get("window");
   const { email } = useLocalSearchParams();
-  const boxSize = width * 0.12;
-  const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
-  const inputRefs = useRef<TextInput[]>([]);
-  const [password, setPassword] = useState("");
-  const isProductionEmail = (email as string).includes("kissorrug+prod");
+  const { refreshAllData } = useMainContext();
+  const { width } = Dimensions.get("window");
 
+  const inputRefs = useRef<TextInput[]>([]);
+  const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
+  const [password, setPassword] = useState("");
   const [resendTimer, setResendTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (resendTimer > 0) {
-      interval = setInterval(() => {
-        setResendTimer((prevTimer) => prevTimer - 1);
-      }, 1000);
-    } else {
-      setCanResend(true);
-    }
+  const isProductionEmail = (email as string).includes("kissorrug+prod");
+  const boxSize = width * 0.12;
 
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [resendTimer]);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setResendTimer((prevTimer) => {
+        if (prevTimer <= 1) {
+          clearInterval(interval);
+          setCanResend(true);
+          return 0;
+        }
+        return prevTimer - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleOtpChange = (text: string, index: number) => {
     if (text.length > 0) {
       const updatedOtp = [...otp];
       updatedOtp[index] = text;
       setOtp(updatedOtp);
-
       if (index < otp.length - 1) {
         inputRefs.current[index + 1]?.focus();
       }
-
       if (updatedOtp.every((value) => value.trim().length > 0)) {
         verifyOtp(updatedOtp.join(""));
       }
@@ -73,7 +73,6 @@ export default function VerificationScreen() {
         token: otpCode,
         type: "email",
       });
-
       if (error) {
         Alert.alert("Verification Failed", error.message);
         resetOtpFields();
@@ -91,7 +90,6 @@ export default function VerificationScreen() {
         email: email as string,
         password: password,
       });
-
       if (error) {
         Alert.alert("Sign In Failed", error.message);
       } else if (data.session) {
@@ -107,15 +105,10 @@ export default function VerificationScreen() {
     userId: string | undefined
   ) => {
     if (jwtToken && userId) {
-      console.log(jwtToken, "jwtToken");
       await AsyncStorage.setItem("jwtToken", jwtToken);
-
       const authorizedUser = await getAuthenticatedUser();
-
       await AsyncStorage.setItem("userId", authorizedUser.id);
-
-      console.log("JWT Token and User ID stored:", jwtToken, userId);
-
+      await refreshAllData();
       router.push(
         authorizedUser.onboarding_step === "completed"
           ? "/main/mainScreen"
@@ -142,7 +135,7 @@ export default function VerificationScreen() {
 
   const handleResendOtp = async () => {
     try {
-      const { data, error } = await supabase.auth.signInWithOtp({
+      const { error } = await supabase.auth.signInWithOtp({
         email: email as string,
         options: {
           shouldCreateUser: true,
@@ -162,7 +155,7 @@ export default function VerificationScreen() {
   };
 
   const handleNotYou = () => {
-    router.back(); // Go back to the previous screen
+    router.back();
   };
 
   const maskEmail = (email: string) => {
@@ -212,12 +205,7 @@ export default function VerificationScreen() {
                       <TextInput
                         value={password}
                         placeholder="Enter your password"
-                        style={[
-                          inputStyle,
-                          {
-                            width: "100%",
-                          },
-                        ]}
+                        style={[inputStyle, { width: "100%" }]}
                         placeholderTextColor="#666"
                         secureTextEntry
                         onChangeText={setPassword}
@@ -339,13 +327,13 @@ const styles = StyleSheet.create({
   },
   resendText: {
     color: "#313131",
-    textAlign: "left", // Changed from 'center' to 'left'
+    textAlign: "left",
     marginTop: 20,
     textDecorationLine: "underline",
   },
   timerText: {
     color: "#666",
-    textAlign: "left", // Changed from 'center' to 'left'
+    textAlign: "left",
     marginTop: 20,
   },
   emailInfoContainer: {

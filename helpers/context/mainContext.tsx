@@ -2,6 +2,7 @@ import {
   fetchUserWallet,
   fetchMatches,
   fetchMyTurnProfiles,
+  fetchProfile,
 } from "@/services/apiService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
@@ -12,16 +13,14 @@ import React, {
   ReactNode,
   useEffect,
 } from "react";
-import { getAuthenticatedUser } from "../auth";
-import { supabase } from "@/supabaseClient";
+import { getAuthenticatedUser, getAuthStatus } from "../auth";
 import { Image } from "react-native";
 
 interface MainContextType {
   walletBalance: number;
   setWalletBalance: React.Dispatch<React.SetStateAction<number>>;
   refreshBalance: () => Promise<void>;
-  profileDetails: any;
-  fetchUserProfile: () => Promise<void>;
+
   matches: any[] | null;
   loadMatches: () => Promise<void>;
   yourTurnProfiles: any[] | null;
@@ -29,6 +28,10 @@ interface MainContextType {
 
   currentScreen: string;
   setCurrentScreen: React.Dispatch<React.SetStateAction<string>>;
+  userProfile: any | null;
+  fetchUserProfileDetails: () => Promise<void>;
+
+  refreshAllData: () => Promise<void>;
 }
 
 const MainContext = createContext<MainContextType | undefined>(undefined);
@@ -37,10 +40,10 @@ export const MainScreenContext: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [walletBalance, setWalletBalance] = useState<number>(0);
-  const [profileDetails, setProfileDetails] = useState<any | null>(null);
   const [matches, setMatches] = useState<any[] | null>(null);
   const [yourTurnProfiles, setYourTurnProfiles] = useState<any[] | null>(null);
   const [currentScreen, setCurrentScreen] = useState<string>("Play");
+  const [userProfile, setUserProfile] = useState<any | null>(null);
 
   const refreshBalance = async () => {
     try {
@@ -58,52 +61,27 @@ export const MainScreenContext: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  const fetchUserProfile = async () => {
+  const fetchUserProfileDetails = async () => {
     try {
       const authenticatedUser = await getAuthenticatedUser();
+      console.log("authenticatedUser here", authenticatedUser);
+      const profileData = await fetchProfile(authenticatedUser.id);
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", authenticatedUser.id)
-        .single();
+      // Preload images
+      if (profileData.photos && profileData.photos.length > 0) {
+        const imageUrls = profileData.photos.map((photo: string) =>
+          photo.startsWith("https://")
+            ? photo
+            : `https://exftzdxtyfbiwlpmecmd.supabase.co/storage/v1/object/public/photos/${photo}`
+        );
 
-      if (error) {
-        throw new Error(`Error fetching profile: ${error.message}`);
+        await Promise.all(imageUrls.map((url: string) => Image.prefetch(url)));
+        console.log("Profile images preloaded successfully");
       }
 
-      let image;
-
-      if (data.photos && data.photos.length > 0) {
-        let avatarPath = data.photos[0];
-
-        if (avatarPath.startsWith("https://")) {
-          image = avatarPath;
-        } else {
-          const fullUrl = `https://exftzdxtyfbiwlpmecmd.supabase.co/storage/v1/object/public/photos/${avatarPath}`;
-          image = fullUrl;
-        }
-
-        // Preload the image
-        Image.prefetch(image)
-          .then(() => {
-            console.log("Image preloaded successfully");
-          })
-          .catch((error) => {
-            console.error("Error preloading image:", error);
-          });
-      }
-
-      setProfileDetails({
-        name: data.name,
-        date_of_birth: data.date_of_birth,
-        image: image,
-      });
+      setUserProfile(profileData);
     } catch (error) {
-      console.error(
-        "Error:",
-        error instanceof Error ? error.message : "Unknown error"
-      );
+      console.error("Error fetching user profile details:", error);
     }
   };
 
@@ -130,11 +108,31 @@ export const MainScreenContext: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  // Add this new function to refresh all data
+  const refreshAllData = async () => {
+    try {
+      await Promise.all([
+        refreshBalance(),
+        loadMatches(),
+        loadYourTurnProfiles(),
+        fetchUserProfileDetails(),
+      ]);
+      console.log("All data refreshed successfully");
+    } catch (error) {
+      console.error("Error refreshing all data:", error);
+    }
+  };
+
   useEffect(() => {
-    refreshBalance();
-    fetchUserProfile();
-    loadMatches();
-    loadYourTurnProfiles();
+    const checkAuthStatus = async () => {
+      const authStatus = await getAuthStatus();
+
+      if (authStatus.status) {
+        refreshAllData(); // Use the new function here
+      }
+    };
+
+    checkAuthStatus();
   }, []);
 
   return (
@@ -143,14 +141,15 @@ export const MainScreenContext: React.FC<{ children: ReactNode }> = ({
         walletBalance,
         setWalletBalance,
         refreshBalance,
-        profileDetails,
-        fetchUserProfile,
         matches,
         loadMatches,
         yourTurnProfiles,
         loadYourTurnProfiles,
         currentScreen,
         setCurrentScreen,
+        userProfile,
+        fetchUserProfileDetails,
+        refreshAllData,
       }}
     >
       {children}

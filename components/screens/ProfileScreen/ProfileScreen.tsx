@@ -1,68 +1,67 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useRef, useCallback } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
 import { useMainContext } from "@/helpers/context/mainContext";
+import SwipeProfile from "@/components/SwipeProfile";
+import { useSharedValue } from "react-native-reanimated";
+import InviteFriendsSvg from "../../../assets/images/icons/profile/inviteFriends.svg";
 
+import ShareModal from "@/components/modals/ShareModal";
+import BottomSheet, {
+  BottomSheetRefProps,
+} from "@/components/modals/BottomSheet";
 interface ProfileScreenProps {
   topInset: number;
   bottomInset: number;
 }
 
-const ProfileScreen = ({ topInset, bottomInset }: ProfileScreenProps) => {
-  const router = useRouter();
+const ProfileScreen = ({ bottomInset }: ProfileScreenProps) => {
+  const { userProfile } = useMainContext();
 
-  const { profileDetails } = useMainContext();
+  const bottomSheetRef = useRef<BottomSheetRefProps>(null);
 
-  const calculateAge = (dateOfBirth: string): number => {
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDifference = today.getMonth() - birthDate.getMonth();
+  const containerHeight = useSharedValue(100);
 
-    if (
-      monthDifference < 0 ||
-      (monthDifference === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-
-    return age;
-  };
-
-  const navigateToEditProfile = () => {
-    router.push("/EditProfileScreen");
-  };
+  // Callback to handle opening the bottom sheet
+  const handleOpenBottomSheet = useCallback(() => {
+    bottomSheetRef?.current?.scrollTo(-200);
+  }, []);
 
   return (
     <LinearGradient colors={["#F4F9F5", "#EDDCCC"]} style={styles.container}>
-      {profileDetails ? (
-        <Image source={{ uri: profileDetails.image }} style={styles.avatar} />
-      ) : (
-        <View style={[styles.avatar, styles.placeholderAvatar]}>
-          <Text style={styles.placeholderText}>No Image</Text>
-        </View>
-      )}
-
-      {profileDetails && (
-        <Text style={styles.profileName}>
-          {profileDetails.name}, {calculateAge(profileDetails.date_of_birth)}
-        </Text>
-      )}
-
-      <TouchableOpacity
-        style={styles.buttonWrapper}
-        onPress={navigateToEditProfile}
+      <View style={styles.swipeProfileContainer}>
+        <SwipeProfile
+          profile={userProfile}
+          isActivated={false}
+          containerHeight={containerHeight}
+          isEditEnabled={true}
+        />
+      </View>
+      
+      {/* <TouchableOpacity
+        style={[styles.inviteButton]}
+        onPress={handleOpenBottomSheet}
       >
         <LinearGradient
-          colors={["#FF56F8", "#B6E300"]}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={styles.gradientButton}
+          colors={["#35A3F2", "#5E41FE"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.inviteGradient}
         >
-          <Text style={styles.buttonText}>EDIT PROFILE</Text>
+          <InviteFriendsSvg />
+          <Text style={styles.inviteButtonText}>INVITE FRIENDS</Text>
         </LinearGradient>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
+
+      <BottomSheet ref={bottomSheetRef}>
+        <View style={{ flex: 1, backgroundColor: "orange" }} />
+      </BottomSheet>
     </LinearGradient>
   );
 };
@@ -75,66 +74,32 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
   },
-  avatarContainer: {
-    marginTop: 20,
-    marginBottom: 10,
-    alignItems: "center",
+  swipeProfileContainer: {
+    flex: 1,
     justifyContent: "center",
-    position: "relative",
+    alignItems: "center",
+    width: "100%",
+    height: "100%",
+    marginBottom: 12
   },
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 2,
-    borderColor: "#FFF",
-  },
-  verificationButton: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    backgroundColor: "white",
-    borderRadius: 15,
-    padding: 5,
-    elevation: 5,
-  },
-  verificationIcon: {
-    width: 20,
-    height: 20,
-  },
-  profileName: {
-    color: "#000",
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-    marginTop: 12,
-  },
-  buttonWrapper: {
-    width: "80%",
-    borderRadius: 30,
-    overflow: "hidden",
-    alignSelf: "center",
-    marginBottom: 20,
-  },
-  gradientButton: {
+  inviteButton: {
+    width: "100%",
+    alignItems: "center",
     paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 30,
   },
-  buttonText: {
-    color: "#000",
-    fontSize: 14,
-    fontWeight: "500",
-    textAlign: "center",
-  },
-  placeholderAvatar: {
-    backgroundColor: "#CCCCCC",
-    justifyContent: "center",
+  inviteGradient: {
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    width: "100%",
   },
-  placeholderText: {
-    color: "#666666",
-    fontSize: 16,
+  inviteButtonText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "500",
+    marginLeft: 10,
   },
 });
