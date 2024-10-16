@@ -37,7 +37,11 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-    "plugins": ["expo-router", "expo-font", "react-native-iap"],
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "react-native-iap"
+    ],
     "experiments": {
       "typedRoutes": true
     },
@@ -46,8 +50,9 @@
         "origin": false
       },
       "eas": {
-        "projectId": "ff2c6826-2f62-49bf-9e71-9aa5937b4173"
+        "projectId": "5ff5c469-bb57-4d6c-a7f7-3b6f95847943"
       }
-    }
+    },
+    "owner": "0xshilltime"
   }
 }
