@@ -109,10 +109,10 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.kissOrRug.kissOrRug'
+    namespace 'com.room42.swifey'
     defaultConfig {
 missingDimensionStrategy "store", "play"
-        applicationId 'com.kissOrRug.kissOrRug'
+        applicationId 'com.room42.swifey'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

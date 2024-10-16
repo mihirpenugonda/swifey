@@ -44,7 +44,7 @@ if (getRNMinorVersion() >= 75) {
   }
 }
 
-rootProject.name = 'Swifey (fka KissOrRug)'
+rootProject.name = 'Swifey'
 
 dependencyResolutionManagement {
   versionCatalogs {

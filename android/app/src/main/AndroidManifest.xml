@@ -28,10 +28,8 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="myapp"/>
-        <data android:scheme="com.kissOrRug.kissOrRug"/>
-        <data android:scheme="exp+kissorrug"/>
-        <data android:scheme="exp+swifeyfkakissorrug"/>
-        <data android:scheme="exp+swifeyfkakisrsorrug"/>
+        <data android:scheme="com.room42.swifey"/>
+        <data android:scheme="exp+swifey"/>
       </intent-filter>
     </activity>
     <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" android:exported="false"/>

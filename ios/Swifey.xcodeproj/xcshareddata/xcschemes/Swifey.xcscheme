@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "SwifeyfkaKissOrRug.app"
-               BlueprintName = "kissOrRug"
-               ReferencedContainer = "container:kissOrRug.xcodeproj">
+               BuildableName = "Swifey.app"
+               BlueprintName = "Swifey"
+               ReferencedContainer = "container:Swifey.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "kissOrRugTests.xctest"
-               BlueprintName = "kissOrRugTests"
-               ReferencedContainer = "container:kissOrRug.xcodeproj">
+               BuildableName = "SwifeyTests.xctest"
+               BlueprintName = "SwifeyTests"
+               ReferencedContainer = "container:Swifey.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "SwifeyfkaKissOrRug.app"
-            BlueprintName = "kissOrRug"
-            ReferencedContainer = "container:kissOrRug.xcodeproj">
+            BuildableName = "Swifey.app"
+            BlueprintName = "Swifey"
+            ReferencedContainer = "container:Swifey.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "SwifeyfkaKissOrRug.app"
-            BlueprintName = "kissOrRug"
-            ReferencedContainer = "container:kissOrRug.xcodeproj">
+            BuildableName = "Swifey.app"
+            BlueprintName = "Swifey"
+            ReferencedContainer = "container:Swifey.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

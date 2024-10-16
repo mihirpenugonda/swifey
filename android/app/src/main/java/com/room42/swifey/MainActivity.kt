@@ -1,4 +1,4 @@
-package com.kissOrRug.kissOrRug
+package com.room42.swifey
 
 import android.os.Build
 import android.os.Bundle

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Swifey (fka KissOrRug)",
-    "slug": "Swifey (fka KisrsOrRug)",
+    "name": "Swifey",
+    "slug": "Swifey",
     "version": "1.0.21",
     "orientation": "portrait",
     "icon": "./assets/images/appIcon.jpg",
@@ -18,7 +18,7 @@
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to allow you to upload photos.",
         "NSLocationWhenInUseUsageDescription": "This app needs access to your location to match you with other users nearby."
       },
-      "bundleIdentifier": "com.kissOrRug.kissOrRug"
+      "bundleIdentifier": "com.room42.swifey"
     },
     "android": {
       "adaptiveIcon": {
@@ -30,7 +30,7 @@
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
       ],
-      "package": "com.kissOrRug.kissOrRug"
+      "package": "com.room42.swifey"
     },
     "web": {
       "bundler": "metro",

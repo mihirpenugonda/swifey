@@ -1,4 +1,4 @@
-package com.kissOrRug.kissOrRug
+package com.room42.swifey
 
 import android.app.Application
 import android.content.res.Configuration
